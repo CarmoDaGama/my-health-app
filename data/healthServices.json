@@ -1,0 +1,116 @@
+{
+  "healthServices": [
+    {
+      "id": "1",
+      "name": "Hospital São Lucas",
+      "type": "hospital",
+      "address": "Rua das Flores, 123 - Centro",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5505,
+        "longitude": -46.6333
+      },
+      "phone": "(11) 1234-5678",
+      "description": "Hospital geral com atendimento 24 horas"
+    },
+    {
+      "id": "2",
+      "name": "Clínica Vida Nova",
+      "type": "clinic",
+      "address": "Avenida Paulista, 1000 - Bela Vista",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5629,
+        "longitude": -46.6544
+      },
+      "phone": "(11) 2345-6789",
+      "description": "Clínica especializada em consultas médicas"
+    },
+    {
+      "id": "3",
+      "name": "Farmácia Popular",
+      "type": "pharmacy",
+      "address": "Rua Augusta, 456 - Consolação",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5558,
+        "longitude": -46.6396
+      },
+      "phone": "(11) 3456-7890",
+      "description": "Farmácia com medicamentos populares"
+    },
+    {
+      "id": "4",
+      "name": "UPA 24h Centro",
+      "type": "emergency",
+      "address": "Praça da Sé, 50 - Centro",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5489,
+        "longitude": -46.6388
+      },
+      "phone": "(11) 4567-8901",
+      "description": "Unidade de Pronto Atendimento 24 horas"
+    },
+    {
+      "id": "5",
+      "name": "Laboratório MedLab",
+      "type": "laboratory",
+      "address": "Rua Oscar Freire, 789 - Jardins",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5622,
+        "longitude": -46.6722
+      },
+      "phone": "(11) 5678-9012",
+      "description": "Laboratório de análises clínicas"
+    },
+    {
+      "id": "6",
+      "name": "Hospital Albert Einstein",
+      "type": "hospital",
+      "address": "Avenida Albert Einstein, 627 - Morumbi",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5986,
+        "longitude": -46.7133
+      },
+      "phone": "(11) 2151-1233",
+      "description": "Hospital de referência em tratamentos de alta complexidade"
+    },
+    {
+      "id": "7",
+      "name": "Drogasil",
+      "type": "pharmacy",
+      "address": "Rua 25 de Março, 200 - Centro",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5451,
+        "longitude": -46.6289
+      },
+      "phone": "(11) 6789-0123",
+      "description": "Rede de farmácias com diversos medicamentos"
+    },
+    {
+      "id": "8",
+      "name": "Clínica Oftalmológica Vision",
+      "type": "clinic",
+      "address": "Rua dos Três Irmãos, 348 - Vila Progredior",
+      "city": "São Paulo",
+      "state": "SP",
+      "coordinates": {
+        "latitude": -23.5436,
+        "longitude": -46.7019
+      },
+      "phone": "(11) 7890-1234",
+      "description": "Clínica especializada em oftalmologia"
+    }
+  ]
+}
