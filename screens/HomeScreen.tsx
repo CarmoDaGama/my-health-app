@@ -3,18 +3,17 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
   StyleSheet,
   Alert,
-  SafeAreaView,
   StatusBar,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
-import { HealthService } from '../types';
+import { HealthService, Region } from '../types';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { HealthServiceAPI } from '../services/api';
 import { useLocation } from '../hooks/useLocation';
-import { ServiceListItem } from '../components/specific/ServiceListItem';
-import { Button } from '../components/common/Button';
+import { MapView } from '../components/specific/MapView';
 import { Colors, spacing, borderRadius, fontSize } from '../constants';
 import i18n from '../utils/i18n';
 
@@ -27,6 +26,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [services, setServices] = useState<HealthService[]>([]);
   const [filteredServices, setFilteredServices] = useState<HealthService[]>([]);
   const [loading, setLoading] = useState(false);
+  const [region, setRegion] = useState<Region>({
+    latitude: -8.8379,  // Luanda default
+    longitude: 13.2894,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  });
   
   const { location, loading: locationLoading, error: locationError } = useLocation();
 
@@ -37,6 +42,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   useEffect(() => {
     if (location) {
       loadNearbyServices();
+      updateRegionToUserLocation();
     }
   }, [location]);
 
@@ -52,6 +58,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       setFilteredServices(allServices);
     } catch (error) {
       console.error('Error loading services:', error);
+      Alert.alert(
+        i18n.t('app.errorTitle'),
+        i18n.t('app.loadingError')
+      );
     } finally {
       setLoading(false);
     }
@@ -61,14 +71,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     if (!location) return;
     
     try {
-      setLoading(true);
       const nearbyServices = HealthServiceAPI.getNearbyServices(location, 10);
       setServices(nearbyServices);
-      setFilteredServices(nearbyServices);
+      setFilteredServices(searchQuery ? HealthServiceAPI.searchServices(searchQuery) : nearbyServices);
     } catch (error) {
       console.error('Error loading nearby services:', error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const updateRegionToUserLocation = () => {
+    if (location) {
+      setRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
     }
   };
 
@@ -86,11 +104,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     navigation.navigate('ServiceDetail', { service });
   };
 
-  const handleShowMap = () => {
-    navigation.navigate('Map', { 
-      services: filteredServices,
-      userLocation: location || undefined
-    });
+  const handleProfilePress = () => {
+    navigation.navigate('Profile');
   };
 
   const handleLocationError = () => {
@@ -108,69 +123,53 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     handleLocationError();
   }
 
-  const renderServiceItem = ({ item }: { item: HealthService }) => {
-    const distance = location 
-      ? HealthServiceAPI.calculateDistance(location, item.coordinates)
-      : undefined;
-
-    return (
-      <ServiceListItem
-        service={item}
-        onPress={() => handleServicePress(item)}
-        distance={distance}
-      />
-    );
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      
-      <View style={styles.header}>
-        <Text style={styles.title}>{i18n.t('app.title')}</Text>
+    <View style={styles.container}>
+      <StatusBar hidden />
+
+      {/* Map View - Full Screen */}
+      <View style={styles.mapContainer}>
+        <MapView
+          region={region}
+          services={filteredServices}
+          userLocation={location || undefined}
+          onServicePress={handleServicePress}
+        />
         
-        <View style={styles.searchContainer}>
+        {/* Loading overlay */}
+        {(loading || locationLoading) && (
+          <View style={styles.loadingOverlay}>
+            <Text style={styles.loadingText}>
+              {locationLoading ? 'Obtendo localização...' : 'Carregando...'}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Floating Profile Button */}
+      <TouchableOpacity style={styles.floatingProfileButton} onPress={handleProfilePress}>
+        <Text style={styles.floatingProfileIcon}>👤</Text>
+      </TouchableOpacity>
+
+      {/* Bottom Search Bar */}
+      <View style={styles.bottomSearchContainer}>
+        <View style={styles.searchBarContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder={i18n.t('app.search')}
+            placeholder="Pesquisar serviços de saúde..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor={Colors.text.secondary}
           />
-        </View>
-        
-        <View style={styles.buttonContainer}>
-          <Button
-            title={i18n.t('screens.map')}
-            onPress={handleShowMap}
-            variant="outline"
-            size="medium"
-          />
+          <TouchableOpacity style={styles.micButton}>
+            <Text style={styles.micIcon}>🎤</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}>
+            <Text style={styles.menuIcon}>👤</Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      <View style={styles.content}>
-        {locationLoading && (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>{i18n.t('app.loading')}</Text>
-          </View>
-        )}
-
-        {filteredServices.length === 0 && !loading && !locationLoading && (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{i18n.t('app.noResults')}</Text>
-          </View>
-        )}
-
-        <FlatList
-          data={filteredServices}
-          renderItem={renderServiceItem}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -179,60 +178,97 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
+  mapContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  floatingProfileButton: {
+    position: 'absolute',
+    top: 20,
+    right: spacing.lg,
     backgroundColor: Colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  title: {
-    fontSize: fontSize.xxl,
-    fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  searchContainer: {
-    marginBottom: spacing.md,
-  },
-  searchInput: {
-    backgroundColor: Colors.background,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: fontSize.md,
-    color: Colors.text.primary,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  buttonContainer: {
-    alignItems: 'center',
-  },
-  content: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 10,
+  },
+  floatingProfileIcon: {
+    fontSize: 20,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
   },
   loadingText: {
+    color: Colors.text.onPrimary,
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  bottomSearchContainer: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    left: spacing.md,
+    right: spacing.md,
+    zIndex: 10,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  emptyText: {
-    fontSize: fontSize.lg,
-    color: Colors.text.secondary,
-    textAlign: 'center',
+  searchInput: {
+    flex: 1,
+    fontSize: fontSize.md,
+    color: Colors.text.primary,
+    paddingVertical: spacing.sm,
   },
-  listContainer: {
-    paddingBottom: spacing.xl,
+  micButton: {
+    padding: spacing.sm,
+    marginLeft: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: Colors.background,
+  },
+  micIcon: {
+    fontSize: 18,
+  },
+  menuButton: {
+    padding: spacing.sm,
+    marginLeft: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: Colors.background,
+  },
+  menuIcon: {
+    fontSize: 18,
   },
 });

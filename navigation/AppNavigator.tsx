@@ -2,9 +2,12 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
+import { SplashScreen } from '../screens/SplashScreen';
+import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MapScreen } from '../screens/MapScreen';
 import { ServiceDetailScreen } from '../screens/ServiceDetailScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { Colors } from '../constants';
 import i18n from '../utils/i18n';
 
@@ -14,7 +17,7 @@ export const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Home"
+        initialRouteName="Splash"
         screenOptions={{
           headerStyle: {
             backgroundColor: Colors.primary,
@@ -25,6 +28,22 @@ export const AppNavigator: React.FC = () => {
           },
         }}
       >
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        
+        <Stack.Screen
+          name="Welcome"
+          component={WelcomeScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        
         <Stack.Screen
           name="Home"
           component={HomeScreen}
@@ -46,6 +65,14 @@ export const AppNavigator: React.FC = () => {
           component={ServiceDetailScreen}
           options={{
             title: i18n.t('screens.details'),
+          }}
+        />
+        
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            title: 'Perfil',
           }}
         />
       </Stack.Navigator>
