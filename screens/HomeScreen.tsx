@@ -12,7 +12,7 @@ import {
   ScrollView,
   FlatList,
 } from 'react-native';
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { Ionicons } from '@expo/vector-icons';
 import { HealthService, Region } from '../types';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { HealthServiceAPI } from '../services/api';
@@ -27,7 +27,7 @@ interface HomeScreenProps {
 
 type TabType = 'profissionais' | 'instituicoes' | 'mais';
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [services, setServices] = useState<HealthService[]>([]);
   const [filteredServices, setFilteredServices] = useState<HealthService[]>([]);
@@ -50,67 +50,46 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     loadServices();
-  }, []);
-
-  useEffect(() => {
     if (location) {
-      loadNearbyServices();
-      updateRegionToUserLocation();
+      setRegion(prevRegion => ({
+        ...prevRegion,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      }));
     }
   }, [location]);
 
   useEffect(() => {
-    handleSearch();
+    filterServices();
   }, [searchQuery, services]);
 
-  const loadServices = () => {
+  const loadServices = async () => {
     try {
       setLoading(true);
-      const allServices = HealthServiceAPI.getAllServices();
-      setServices(allServices);
-      setFilteredServices(allServices);
+      const data = HealthServiceAPI.getAllServices();
+      setServices(data);
     } catch (error) {
-      console.error('Error loading services:', error);
       Alert.alert(
-        i18n.t('app.errorTitle'),
-        i18n.t('app.loadingError')
+        i18n.t('error.title'),
+        i18n.t('error.loadingServices')
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const loadNearbyServices = () => {
-    if (!location) return;
-    
-    try {
-      const nearbyServices = HealthServiceAPI.getNearbyServices(location, 10);
-      setServices(nearbyServices);
-      setFilteredServices(searchQuery ? HealthServiceAPI.searchServices(searchQuery) : nearbyServices);
-    } catch (error) {
-      console.error('Error loading nearby services:', error);
-    }
-  };
-
-  const updateRegionToUserLocation = () => {
-    if (location) {
-      setRegion({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      });
-    }
-  };
-
-  const handleSearch = () => {
+  const filterServices = () => {
     if (!searchQuery.trim()) {
       setFilteredServices(services);
       return;
     }
 
-    const results = HealthServiceAPI.searchServices(searchQuery);
-    setFilteredServices(results);
+    const filtered = services.filter(service =>
+      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.address.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredServices(filtered);
   };
 
   const handleServicePress = (service: HealthService) => {
@@ -121,131 +100,191 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     navigation.navigate('Profile');
   };
 
+  const handleToggleCategories = () => {
+    setCategoriesVisible(!categoriesVisible);
+  };
+
+  // Animation effects
+  useEffect(() => {
+    Animated.timing(categoriesHeight, {
+      toValue: categoriesVisible ? 80 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [categoriesVisible]);
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: isFullScreenMode ? -Dimensions.get('window').height : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isFullScreenMode]);
+
+  // Tab navigation handlers
   const handleProfessionalsPress = () => {
-    setActiveTab('profissionais');
-    setIsFullScreenMode(true);
+    if (isFullScreenMode) {
+      setActiveTab('profissionais');
+    } else {
+      setIsFullScreenMode(true);
+      setActiveTab('profissionais');
+    }
   };
 
   const handleInstitutionsPress = () => {
-    setActiveTab('instituicoes');
-    setIsFullScreenMode(true);
+    if (isFullScreenMode) {
+      setActiveTab('instituicoes');
+    } else {
+      setIsFullScreenMode(true);
+      setActiveTab('instituicoes');
+    }
   };
 
   const handleMorePress = () => {
-    setActiveTab('mais');
-    setIsFullScreenMode(true);
+    if (isFullScreenMode) {
+      setActiveTab('mais');
+    } else {
+      setIsFullScreenMode(true);
+      setActiveTab('mais');
+    }
   };
 
-  const closeFullScreenMode = () => {
+  const handleBackPress = () => {
     setIsFullScreenMode(false);
   };
 
   const getTabData = () => {
+    let filteredData: HealthService[] = [];
+    
     switch (activeTab) {
       case 'profissionais':
-        return services.filter(service => 
+        filteredData = services.filter(service => 
           service.type === 'clinic' || service.name.toLowerCase().includes('dr.')
         );
+        // Se não há profissionais específicos, inclui todas as clínicas
+        if (filteredData.length === 0) {
+          filteredData = services.filter(service => service.type === 'clinic');
+        }
+        break;
       case 'instituicoes':
-        return services.filter(service => 
+        filteredData = services.filter(service => 
           service.type === 'hospital' || service.type === 'emergency'
         );
+        break;
       case 'mais':
-        return services.filter(service => 
-          service.type === 'laboratory'
+        filteredData = services.filter(service => 
+          service.type === 'laboratory' || service.type === 'pharmacy'
         );
+        // Se não há laboratórios/farmácias, inclui outros tipos
+        if (filteredData.length === 0) {
+          filteredData = services.filter(service => 
+            !['clinic', 'hospital', 'emergency'].includes(service.type)
+          );
+        }
+        break;
       default:
-        return services;
+        filteredData = services;
     }
+    
+    return filteredData;
   };
 
   const renderTabContent = () => {
     const data = getTabData();
     
+    // Se não há dados filtrados, mostra todos os serviços com um header informativo
+    const displayData = data.length > 0 ? data : services;
+    const showFallbackHeader = data.length === 0 && services.length > 0;
+    
+    if (displayData.length === 0) {
+      return (
+        <View style={styles.emptyStateContainer}>
+          <Text style={styles.emptyStateText}>
+            Nenhum serviço encontrado
+          </Text>
+          <Text style={styles.emptyStateSubtext}>
+            Tente carregar os dados novamente
+          </Text>
+        </View>
+      );
+    }
+
     return (
       <FlatList
-        data={data}
+        data={displayData}
         keyExtractor={(item) => item.id}
+        style={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={showFallbackHeader ? (
+          <View style={styles.fallbackHeaderContainer}>
+            <Text style={styles.fallbackHeaderText}>
+              Mostrando todos os serviços disponíveis
+            </Text>
+          </View>
+        ) : null}
         renderItem={({ item }) => (
           <TouchableOpacity 
             style={styles.listItem}
             onPress={() => handleServicePress(item)}
           >
             <View style={styles.serviceIconContainer}>
-              <Text style={styles.serviceIcon}>
-                {item.type === 'hospital' ? '🏥' : 
-                 item.type === 'clinic' ? '👨‍⚕️' : 
-                 item.type === 'emergency' ? '🚑' : '🔬'}
-              </Text>
+              <Ionicons 
+                name={
+                  item.type === 'hospital' ? 'medical' : 
+                  item.type === 'clinic' ? 'medical-outline' : 
+                  item.type === 'emergency' ? 'pulse' : 
+                  item.type === 'laboratory' ? 'flask' : 
+                  item.type === 'pharmacy' ? 'medical' : 'fitness'
+                } 
+                size={24} 
+                color={Colors.text.onPrimary} 
+              />
             </View>
             <View style={styles.serviceInfo}>
-              <Text style={styles.serviceName}>{item.name}</Text>
-              <Text style={styles.serviceAddress}>{item.address}</Text>
-              <Text style={styles.serviceDistance}>
-                2.3 km
+              <Text style={styles.serviceName} numberOfLines={2}>
+                {item.name}
+              </Text>
+              <Text style={styles.serviceType}>
+                {item.type === 'hospital' ? 'Hospital' :
+                 item.type === 'clinic' ? 'Clínica' :
+                 item.type === 'emergency' ? 'Emergência' :
+                 item.type === 'laboratory' ? 'Laboratório' :
+                 item.type === 'pharmacy' ? 'Farmácia' : 'Serviço de Saúde'}
+              </Text>
+              <Text style={styles.serviceAddress} numberOfLines={1}>
+                {item.address}
               </Text>
             </View>
-            <View style={styles.serviceRating}>
-              <Text style={styles.ratingText}>⭐ 4.5</Text>
+            <View style={styles.serviceActions}>
+              <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
             </View>
           </TouchableOpacity>
         )}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
       />
     );
   };
 
-  const toggleCategories = () => {
-    const toValue = categoriesVisible ? 0 : 80; // 80px height for categories
-    setCategoriesVisible(!categoriesVisible);
-    
-    Animated.timing(categoriesHeight, {
-      toValue,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const onGestureEvent = (event: PanGestureHandlerGestureEvent) => {
-    const { translationY } = event.nativeEvent;
-    
-    // Drag up to show categories, drag down to hide
-    if (translationY < -20 && !categoriesVisible) {
-      toggleCategories();
-    } else if (translationY > 20 && categoriesVisible) {
-      toggleCategories();
-    }
-  };
-
-  const handleLocationError = () => {
-    Alert.alert(
-      i18n.t('app.locationPermission'),
-      i18n.t('app.locationPermissionMessage'),
-      [
-        { text: i18n.t('actions.cancel'), style: 'cancel' },
-        { text: i18n.t('actions.ok'), onPress: loadServices },
-      ]
-    );
-  };
-
-  if (locationError) {
-    handleLocationError();
-  }
-
   return (
     <View style={styles.container}>
-      <StatusBar hidden />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      
+      {/* Map View */}
+      <View style={styles.mapContainer}>
+        <MapView 
+          region={region}
+          services={filteredServices}
+          onServicePress={handleServicePress}
+        />
+      </View>
 
+      {/* Full Screen Mode */}
       {isFullScreenMode ? (
-        /* Full Screen Tab Mode */
         <View style={styles.fullScreenContainer}>
-          {/* Top Bar with Search and Categories */}
+          {/* Top Bar with Back Button and Search */}
           <View style={styles.fullScreenTopBar}>
-            <TouchableOpacity style={styles.backButton} onPress={closeFullScreenMode}>
-              <Text style={styles.backIcon}>←</Text>
+            <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+              <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
             </TouchableOpacity>
-            
             <View style={styles.fullScreenSearchContainer}>
               <TextInput
                 style={styles.fullScreenSearchInput}
@@ -254,9 +293,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 onChangeText={setSearchQuery}
                 placeholderTextColor={Colors.text.secondary}
               />
-              <TouchableOpacity style={styles.micButton}>
-                <Text style={styles.micIcon}>🎤</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -267,7 +303,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => setActiveTab('profissionais')}
             >
               <View style={styles.tabIconContainer}>
-                <Text style={styles.tabIcon}>👨‍⚕️</Text>
+                <Ionicons 
+                  name="people" 
+                  size={20} 
+                  color={activeTab === 'profissionais' ? Colors.primary : Colors.text.primary} 
+                />
               </View>
               <Text style={[styles.tabText, activeTab === 'profissionais' && styles.activeTabText]}>
                 Profissionais
@@ -279,7 +319,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => setActiveTab('instituicoes')}
             >
               <View style={styles.tabIconContainer}>
-                <Text style={styles.tabIcon}>🏥</Text>
+                <Ionicons 
+                  name="business" 
+                  size={20} 
+                  color={activeTab === 'instituicoes' ? Colors.primary : Colors.text.primary} 
+                />
               </View>
               <Text style={[styles.tabText, activeTab === 'instituicoes' && styles.activeTabText]}>
                 Instituições
@@ -291,7 +335,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onPress={() => setActiveTab('mais')}
             >
               <View style={styles.tabIconContainer}>
-                <Text style={styles.tabIcon}>⋯</Text>
+                <Ionicons 
+                  name="medical" 
+                  size={20} 
+                  color={activeTab === 'mais' ? Colors.primary : Colors.text.primary} 
+                />
               </View>
               <Text style={[styles.tabText, activeTab === 'mais' && styles.activeTabText]}>
                 Mais
@@ -305,85 +353,63 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
       ) : (
-        /* Normal Map Mode */
         <>
-          {/* Map View - Full Screen */}
-          <View style={styles.mapContainer}>
-            <MapView
-              region={region}
-              services={filteredServices}
-              userLocation={location || undefined}
-              onServicePress={handleServicePress}
-            />
-            
-            {/* Loading overlay */}
-            {(loading || locationLoading) && (
-              <View style={styles.loadingOverlay}>
-                <Text style={styles.loadingText}>
-                  {locationLoading ? 'Obtendo localização...' : 'Carregando...'}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Floating Profile Button */}
-          <TouchableOpacity style={styles.floatingProfileButton} onPress={handleProfilePress}>
-            <Text style={styles.floatingProfileIcon}>👤</Text>
-          </TouchableOpacity>
-
-          {/* Full Width Bottom Bar */}
-          <PanGestureHandler onGestureEvent={onGestureEvent}>
-            <Animated.View style={styles.fullWidthBottomContainer}>
-              <View style={styles.unifiedBarContainer}>
-                {/* Search Row */}
-                <TouchableOpacity style={styles.dragIndicator} onPress={toggleCategories}>
-                  <View style={styles.dragHandle} />
+          {/* Bottom Search Bar */}
+          <Animated.View style={[styles.bottomBar, { transform: [{ translateY }] }]}>
+            <View style={styles.searchBarContainer}>
+              <View style={styles.searchInputContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Pesquisar serviços de saúde..."
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholderTextColor={Colors.text.secondary}
+                />
+                <TouchableOpacity style={styles.menuButton} onPress={handleProfilePress}>
+                  <Ionicons name="person" size={20} color={Colors.text.primary} />
                 </TouchableOpacity>
-                
-                <View style={styles.searchRowContainer}>
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Pesquisar serviços de saúde..."
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholderTextColor={Colors.text.secondary}
-                  />
-                  <TouchableOpacity style={styles.micButton}>
-                    <Text style={styles.micIcon}>🎤</Text>
+              </View>
+
+              {/* Categories Toggle Button */}
+              <TouchableOpacity 
+                style={styles.categoriesToggle} 
+                onPress={handleToggleCategories}
+              >
+                <Ionicons 
+                  name={categoriesVisible ? "chevron-down" : "chevron-up"} 
+                  size={20} 
+                  color={Colors.text.primary} 
+                />
+                <Text style={styles.categoriesToggleText}>Categorias</Text>
+              </TouchableOpacity>
+
+              {/* Categories Row - Animated */}
+              <Animated.View style={[styles.categoriesContainer, { height: categoriesHeight }]}>
+                <View style={styles.categoriesRowContainer}>
+                  <TouchableOpacity style={styles.categoryButton} onPress={handleProfessionalsPress}>
+                    <View style={styles.categoryIconContainer}>
+                      <Ionicons name="people" size={16} color={Colors.text.onPrimary} />
+                    </View>
+                    <Text style={styles.categoryText} numberOfLines={1}>Profissionais</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.menuButton}>
-                    <Text style={styles.menuIcon}>👤</Text>
+
+                  <TouchableOpacity style={styles.categoryButton} onPress={handleInstitutionsPress}>
+                    <View style={styles.categoryIconContainer}>
+                      <Ionicons name="business" size={16} color={Colors.text.onPrimary} />
+                    </View>
+                    <Text style={styles.categoryText} numberOfLines={1}>Instituições</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.categoryButton} onPress={handleMorePress}>
+                    <View style={styles.categoryIconContainer}>
+                      <Ionicons name="medical" size={16} color={Colors.text.onPrimary} />
+                    </View>
+                    <Text style={styles.categoryText} numberOfLines={1}>Mais</Text>
                   </TouchableOpacity>
                 </View>
-
-                {/* Categories Row - Animated */}
-                <Animated.View style={[styles.categoriesContainer, { height: categoriesHeight }]}>
-                  <View style={styles.categoriesRowContainer}>
-                    <TouchableOpacity style={styles.categoryButton} onPress={handleProfessionalsPress}>
-                      <View style={styles.categoryIconContainer}>
-                        <Text style={styles.categoryIcon}>👨‍⚕️</Text>
-                      </View>
-                      <Text style={styles.categoryText} numberOfLines={1}>Profissionais</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.categoryButton} onPress={handleInstitutionsPress}>
-                      <View style={styles.categoryIconContainer}>
-                        <Text style={styles.categoryIcon}>🏥</Text>
-                      </View>
-                      <Text style={styles.categoryText} numberOfLines={1}>Instituições</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.categoryButton} onPress={handleMorePress}>
-                      <View style={styles.categoryIconContainer}>
-                        <Text style={styles.categoryIcon}>⋯</Text>
-                      </View>
-                      <Text style={styles.categoryText} numberOfLines={1}>Mais</Text>
-                    </TouchableOpacity>
-                  </View>
-                </Animated.View>
-              </View>
-            </Animated.View>
-          </PanGestureHandler>
+              </Animated.View>
+            </View>
+          </Animated.View>
         </>
       )}
     </View>
@@ -399,130 +425,94 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
   },
-  floatingProfileButton: {
+  bottomBar: {
     position: 'absolute',
-    top: 20,
-    right: spacing.lg,
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: Colors.surface,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  searchBarContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    height: 48,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    zIndex: 10,
-  },
-  floatingProfileIcon: {
-    fontSize: 20,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 5,
-  },
-  loadingText: {
-    color: Colors.text.onPrimary,
-    fontSize: fontSize.md,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  fullWidthBottomContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  unifiedBarContainer: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  dragIndicator: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: Colors.border,
-    borderRadius: 2,
-  },
-  searchRowContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
     fontSize: fontSize.md,
     color: Colors.text.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    backgroundColor: Colors.background,
-    borderRadius: borderRadius.md,
-    marginRight: spacing.sm,
-  },
-  micButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: Colors.background,
-    marginRight: spacing.sm,
-  },
-  micIcon: {
-    fontSize: 18,
   },
   menuButton: {
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: Colors.background,
-  },
-  menuIcon: {
-    fontSize: 18,
+    padding: spacing.sm,
+    marginLeft: spacing.sm,
   },
   categoriesContainer: {
     overflow: 'hidden',
   },
+  categoriesToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  categoriesToggleText: {
+    fontSize: fontSize.sm,
+    color: Colors.text.primary,
+    marginLeft: spacing.xs,
+    fontWeight: '500',
+  },
   categoriesRowContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
-    maxWidth: 120, // Limita a largura para evitar sobreposição
+    marginHorizontal: spacing.xs,
+    backgroundColor: Colors.background,
+    borderRadius: borderRadius.lg,
+    minHeight: 50,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   categoryIconContainer: {
     width: 24,
@@ -533,15 +523,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: spacing.xs,
   },
-  categoryIcon: {
-    fontSize: 14,
-    color: Colors.text.onPrimary,
-  },
   categoryText: {
     fontSize: fontSize.sm,
     color: Colors.text.primary,
     fontWeight: '500',
     textAlign: 'center',
+    flex: 1,
   },
   // Full Screen Mode Styles
   fullScreenContainer: {
@@ -568,11 +555,6 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginRight: spacing.md,
   },
-  backIcon: {
-    fontSize: 24,
-    color: Colors.text.primary,
-    fontWeight: 'bold',
-  },
   fullScreenSearchContainer: {
     flex: 1,
     flexDirection: 'row',
@@ -591,7 +573,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: Colors.surface,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -604,9 +586,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     borderRadius: borderRadius.md,
+    marginHorizontal: spacing.xs,
   },
   activeTabButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: 'transparent',
+    borderBottomWidth: 3,
+    borderBottomColor: Colors.primary,
   },
   tabIconContainer: {
     width: 24,
@@ -617,16 +602,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: spacing.xs,
   },
-  tabIcon: {
-    fontSize: 16,
-  },
   tabText: {
     fontSize: fontSize.sm,
     color: Colors.text.primary,
     fontWeight: '500',
   },
   activeTabText: {
-    color: Colors.text.onPrimary,
+    color: Colors.primary,
+    fontWeight: '600',
   },
   tabContentContainer: {
     flex: 1,
@@ -648,9 +631,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   serviceIconContainer: {
     width: 48,
@@ -659,11 +642,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.lg,
-  },
-  serviceIcon: {
-    fontSize: 24,
-    color: Colors.text.onPrimary,
+    marginRight: spacing.md,
   },
   serviceInfo: {
     flex: 1,
@@ -674,24 +653,50 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     marginBottom: spacing.xs,
   },
-  serviceAddress: {
-    fontSize: fontSize.sm,
-    color: Colors.text.secondary,
-    marginBottom: spacing.xs,
-  },
-  serviceDistance: {
+  serviceType: {
     fontSize: fontSize.sm,
     color: Colors.primary,
     fontWeight: '500',
+    marginBottom: spacing.xs,
   },
-  serviceRating: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
-  },
-  ratingText: {
+  serviceAddress: {
     fontSize: fontSize.sm,
     color: Colors.text.secondary,
+  },
+  serviceActions: {
+    marginLeft: spacing.md,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  emptyStateSubtext: {
+    fontSize: fontSize.md,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+  },
+  fallbackHeaderContainer: {
+    backgroundColor: Colors.warning,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.lg,
+  },
+  fallbackHeaderText: {
+    fontSize: fontSize.sm,
+    color: Colors.text.onPrimary,
+    textAlign: 'center',
     fontWeight: '500',
   },
 });
+
+// Export apenas uma vez
+export default HomeScreen;

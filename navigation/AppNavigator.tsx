@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
-import { HomeScreen } from '../screens/HomeScreen';
+import HomeScreen from '../screens/HomeScreen';
 import { MapScreen } from '../screens/MapScreen';
 import { ServiceDetailScreen } from '../screens/ServiceDetailScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
