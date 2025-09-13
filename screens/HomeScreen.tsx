@@ -42,6 +42,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
+  const [mapOptimizing, setMapOptimizing] = useState(false);
   
   // Animation refs
   const translateY = useRef(new Animated.Value(0)).current;
@@ -52,18 +53,25 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     loadServices();
-    if (location) {
-      setRegion(prevRegion => ({
-        ...prevRegion,
-        latitude: location.latitude,
-        longitude: location.longitude,
-      }));
-    }
-  }, [location]);
+  }, []);
+
+  // Atualizar região quando localização ou serviços mudarem
+  useEffect(() => {
+    updateMapRegion();
+  }, [location, services]);
 
   useEffect(() => {
     filterServices();
   }, [searchQuery, services]);
+
+  // Atualizar região do mapa quando os serviços filtrados mudarem
+  useEffect(() => {
+    if (filteredServices.length > 0 && searchQuery.trim()) {
+      // Se há busca ativa, centralizar nos resultados filtrados
+      const filteredRegion = findCenterOfServices(filteredServices);
+      setRegion(filteredRegion);
+    }
+  }, [filteredServices]);
 
   const loadServices = async () => {
     try {
@@ -92,6 +100,213 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       service.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredServices(filtered);
+  };
+
+  // Função para calcular distância entre dois pontos
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Raio da Terra em km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Função para encontrar o centro com maior densidade de serviços
+  const findOptimalMapCenter = (): { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } => {
+    if (services.length === 0) {
+      // Fallback para Luanda se não há serviços
+      return {
+        latitude: -8.8379,
+        longitude: 13.2894,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      };
+    }
+
+    // Filtrar apenas profissionais e instituições relevantes
+    const relevantServices = services.filter(service => 
+      service.type === 'professional' || 
+      service.type === 'hospital' || 
+      service.type === 'clinic' || 
+      service.type === 'emergency'
+    );
+
+    if (relevantServices.length === 0) {
+      // Se não há serviços relevantes, usar todos os serviços
+      return findCenterOfServices(services);
+    }
+
+    // Priorizar serviços com melhor avaliação
+    const highQualityServices = relevantServices.filter(service => 
+      service.rating && service.rating >= 4.0
+    );
+
+    // Se temos localização do usuário, priorizar serviços próximos
+    if (location) {
+      const nearbyServices = relevantServices.filter(service => {
+        const distance = calculateDistance(
+          location.latitude, 
+          location.longitude, 
+          service.coordinates.latitude, 
+          service.coordinates.longitude
+        );
+        return distance <= 10; // 10km de raio
+      });
+
+      // Priorizar serviços próximos e com boa avaliação
+      const nearbyQualityServices = nearbyServices.filter(service => 
+        service.rating && service.rating >= 3.5
+      );
+
+      if (nearbyQualityServices.length >= 2) {
+        console.log(`🎯 Centralizando em ${nearbyQualityServices.length} serviços próximos e bem avaliados`);
+        return findCenterOfServices(nearbyQualityServices);
+      } else if (nearbyServices.length >= 3) {
+        console.log(`📍 Centralizando em ${nearbyServices.length} serviços próximos`);
+        return findCenterOfServices(nearbyServices);
+      } else if (nearbyServices.length > 0) {
+        // Se há poucos serviços próximos, incluir mais um pouco da área
+        const center = findCenterOfServices(nearbyServices);
+        console.log(`🔍 Expandindo área para mostrar ${nearbyServices.length} serviços próximos`);
+        return {
+          ...center,
+          latitudeDelta: 0.08, // Área ligeiramente maior
+          longitudeDelta: 0.08,
+        };
+      }
+    }
+
+    // Se há serviços de alta qualidade, priorizá-los
+    if (highQualityServices.length >= 5) {
+      console.log(`⭐ Centralizando em ${highQualityServices.length} serviços bem avaliados`);
+      return findCenterOfServices(highQualityServices);
+    }
+
+    // Algoritmo de clustering simples para encontrar área com maior densidade
+    const clusters = findServiceClusters(relevantServices);
+    const bestCluster = clusters.reduce((max, cluster) => {
+      // Considerar tanto quantidade quanto qualidade
+      const maxScore = max.services.length + (max.services.filter(s => s.rating && s.rating >= 4.0).length * 0.5);
+      const clusterScore = cluster.services.length + (cluster.services.filter(s => s.rating && s.rating >= 4.0).length * 0.5);
+      return clusterScore > maxScore ? cluster : max;
+    });
+
+    console.log(`🏘️ Centralizando no cluster com ${bestCluster.services.length} serviços`);
+    return findCenterOfServices(bestCluster.services);
+  };
+
+  // Função para agrupar serviços por proximidade
+  const findServiceClusters = (serviceList: HealthService[]) => {
+    const clusters: { center: { lat: number; lng: number }; services: HealthService[] }[] = [];
+    const clusterRadius = 3; // 3km de raio para clustering
+
+    serviceList.forEach(service => {
+      let addedToCluster = false;
+
+      // Tentar adicionar a um cluster existente
+      for (const cluster of clusters) {
+        const distance = calculateDistance(
+          cluster.center.lat,
+          cluster.center.lng,
+          service.coordinates.latitude,
+          service.coordinates.longitude
+        );
+
+        if (distance <= clusterRadius) {
+          cluster.services.push(service);
+          // Recalcular centro do cluster
+          const avgLat = cluster.services.reduce((sum, s) => sum + s.coordinates.latitude, 0) / cluster.services.length;
+          const avgLng = cluster.services.reduce((sum, s) => sum + s.coordinates.longitude, 0) / cluster.services.length;
+          cluster.center = { lat: avgLat, lng: avgLng };
+          addedToCluster = true;
+          break;
+        }
+      }
+
+      // Se não foi adicionado a nenhum cluster, criar um novo
+      if (!addedToCluster) {
+        clusters.push({
+          center: { lat: service.coordinates.latitude, lng: service.coordinates.longitude },
+          services: [service]
+        });
+      }
+    });
+
+    return clusters;
+  };
+
+  // Função para encontrar o centro geográfico de uma lista de serviços
+  const findCenterOfServices = (serviceList: HealthService[]) => {
+    if (serviceList.length === 0) {
+      return {
+        latitude: -8.8379,
+        longitude: 13.2894,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      };
+    }
+
+    // Calcular centro médio
+    const avgLat = serviceList.reduce((sum, service) => sum + service.coordinates.latitude, 0) / serviceList.length;
+    const avgLng = serviceList.reduce((sum, service) => sum + service.coordinates.longitude, 0) / serviceList.length;
+
+    // Calcular bounds para determinar zoom apropriado
+    const latitudes = serviceList.map(s => s.coordinates.latitude);
+    const longitudes = serviceList.map(s => s.coordinates.longitude);
+    
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+
+    // Adicionar padding para melhor visualização
+    const latPadding = (maxLat - minLat) * 0.3 || 0.02;
+    const lngPadding = (maxLng - minLng) * 0.3 || 0.02;
+
+    return {
+      latitude: avgLat,
+      longitude: avgLng,
+      latitudeDelta: Math.max((maxLat - minLat) + latPadding, 0.01),
+      longitudeDelta: Math.max((maxLng - minLng) + lngPadding, 0.01),
+    };
+  };
+
+  // Função principal para atualizar a região do mapa
+  const updateMapRegion = async () => {
+    if (services.length === 0) {
+      return; // Aguardar carregar os serviços
+    }
+
+    setMapOptimizing(true);
+    
+    // Pequeno delay para mostrar o indicador
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    console.log('🗺️ Calculando região otimizada do mapa...');
+    console.log(`📊 Total de serviços: ${services.length}`);
+    
+    const optimalRegion = findOptimalMapCenter();
+    
+    const relevantServicesCount = services.filter(service => 
+      service.type === 'professional' || 
+      service.type === 'hospital' || 
+      service.type === 'clinic' || 
+      service.type === 'emergency'
+    ).length;
+    
+    console.log('📍 Nova região:', {
+      lat: optimalRegion.latitude.toFixed(4),
+      lng: optimalRegion.longitude.toFixed(4),
+      zoom: `${optimalRegion.latitudeDelta.toFixed(3)}°`,
+      relevantServices: relevantServicesCount
+    });
+
+    setRegion(optimalRegion);
+    setMapOptimizing(false);
   };
 
   const handleServicePress = (service: HealthService) => {
@@ -401,6 +616,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               services={filteredServices}
               onServicePress={handleServicePress}
             />
+            
+            {/* Map Optimization Indicator */}
+            {mapOptimizing && (
+              <View style={styles.mapOptimizingContainer}>
+                <View style={styles.mapOptimizingContent}>
+                  <Ionicons name="location" size={20} color={Colors.primary} />
+                  <Text style={styles.mapOptimizingText}>
+                    Otimizando visualização...
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Bottom Search Bar */}
@@ -790,6 +1017,37 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: Colors.text.secondary,
     marginLeft: spacing.xs,
+  },
+  // Map Optimization Indicator Styles
+  mapOptimizingContainer: {
+    position: 'absolute',
+    top: spacing.xl,
+    left: spacing.lg,
+    right: spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: borderRadius.lg,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 100,
+  },
+  mapOptimizingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  mapOptimizingText: {
+    fontSize: fontSize.sm,
+    color: Colors.text.primary,
+    fontWeight: '500',
+    marginLeft: spacing.sm,
   },
 });
 

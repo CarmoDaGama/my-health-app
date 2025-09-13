@@ -93,9 +93,9 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
         longitudeDelta: 0.05,
       });
     }
-  }, [location, service, selectedMode]);
+  }, [location, service]);
 
-  const fetchRoute = async () => {
+  const fetchRoute = async (transportMode?: keyof typeof ROUTE_PROFILES) => {
     if (!location) {
       Alert.alert(
         'Localização Necessária',
@@ -104,18 +104,20 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
       );
       return;
     }
+
+    const modeToUse = transportMode || selectedMode;
     
     setIsLoadingRoute(true);
     try {
       console.log('Iniciando busca de rota...');
       console.log('Origem:', location.latitude, location.longitude);
       console.log('Destino:', service.coordinates.latitude, service.coordinates.longitude);
-      console.log('Modo:', selectedMode);
+      console.log('Modo:', modeToUse);
       
       const route = await RoutingService.getRoute(
         { latitude: location.latitude, longitude: location.longitude },
         { latitude: service.coordinates.latitude, longitude: service.coordinates.longitude },
-        selectedMode
+        modeToUse
       );
       
       console.log('Rota obtida com sucesso:', route.distance, route.duration);
@@ -172,7 +174,10 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
 
   const handleModeChange = (mode: keyof typeof ROUTE_PROFILES) => {
     if (mode !== selectedMode) {
+      console.log(`🚀 Mudando modo de transporte: ${selectedMode} → ${mode}`);
       setSelectedMode(mode);
+      // Recalcular a rota com o novo modo de transporte
+      fetchRoute(mode);
     }
   };
 
@@ -310,18 +315,27 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
             key={mode.id}
             style={[
               styles.modeButton,
-              selectedMode === mode.id && styles.modeButtonActive
+              selectedMode === mode.id && styles.modeButtonActive,
+              isLoadingRoute && styles.modeButtonDisabled
             ]}
             onPress={() => handleModeChange(mode.id)}
+            disabled={isLoadingRoute}
           >
             <Ionicons 
               name={mode.icon as any} 
               size={20} 
-              color={selectedMode === mode.id ? Colors.text.onPrimary : Colors.primary} 
+              color={
+                isLoadingRoute 
+                  ? Colors.text.secondary 
+                  : selectedMode === mode.id 
+                    ? Colors.text.onPrimary 
+                    : Colors.primary
+              } 
             />
             <Text style={[
               styles.modeButtonText,
-              selectedMode === mode.id && styles.modeButtonTextActive
+              selectedMode === mode.id && styles.modeButtonTextActive,
+              isLoadingRoute && styles.modeButtonTextDisabled
             ]}>
               {mode.name}
             </Text>
@@ -333,7 +347,9 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
       {isLoadingRoute && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={Colors.primary} />
-          <Text style={styles.loadingText}>Calculando rota...</Text>
+          <Text style={styles.loadingText}>
+            Recalculando rota para {transportModes.find(m => m.id === selectedMode)?.name.toLowerCase()}...
+          </Text>
         </View>
       )}
 
@@ -550,5 +566,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: Colors.text.secondary,
     marginLeft: spacing.sm,
+  },
+  modeButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: Colors.background,
+  },
+  modeButtonTextDisabled: {
+    color: Colors.text.secondary,
   },
 });
