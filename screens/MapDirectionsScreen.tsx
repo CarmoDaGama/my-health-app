@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { HealthService, Region } from '../types';
 import { MapDirectionsScreenNavigationProp, MapDirectionsScreenRouteProp } from '../types/navigation';
@@ -33,9 +33,10 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
 }) => {
   const { service } = route.params;
   const { location } = useLocation();
+  const webViewRef = React.useRef<WebView>(null);
   const [region, setRegion] = useState<Region>({
-    latitude: service.coordinates.latitude,
-    longitude: service.coordinates.longitude,
+    latitude: service.coordinates.latitude || -8.8379,
+    longitude: service.coordinates.longitude || 13.2894,
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
@@ -47,24 +48,43 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
 
   useEffect(() => {
     if (location) {
-      // Calcular a região que inclui tanto o usuário quanto o destino
-      const minLat = Math.min(location.latitude, service.coordinates.latitude);
-      const maxLat = Math.max(location.latitude, service.coordinates.latitude);
-      const minLon = Math.min(location.longitude, service.coordinates.longitude);
-      const maxLon = Math.max(location.longitude, service.coordinates.longitude);
-      
-      const latDelta = (maxLat - minLat) * 1.5 || 0.01;
-      const lonDelta = (maxLon - minLon) * 1.5 || 0.01;
-      
-      setRegion({
-        latitude: (minLat + maxLat) / 2,
-        longitude: (minLon + maxLon) / 2,
-        latitudeDelta: Math.max(latDelta, 0.01),
-        longitudeDelta: Math.max(lonDelta, 0.01),
-      });
+      try {
+        // Calcular a região que inclui tanto o usuário quanto o destino
+        const minLat = Math.min(location.latitude, service.coordinates.latitude);
+        const maxLat = Math.max(location.latitude, service.coordinates.latitude);
+        const minLon = Math.min(location.longitude, service.coordinates.longitude);
+        const maxLon = Math.max(location.longitude, service.coordinates.longitude);
+        
+        const latDelta = (maxLat - minLat) * 1.5 || 0.05;
+        const lonDelta = (maxLon - minLon) * 1.5 || 0.05;
+        
+        setRegion({
+          latitude: (minLat + maxLat) / 2,
+          longitude: (minLon + maxLon) / 2,
+          latitudeDelta: Math.max(latDelta, 0.01),
+          longitudeDelta: Math.max(lonDelta, 0.01),
+        });
 
-      // Simular direções (em uma implementação real, você usaria uma API de rotas)
-      generateMockDirections();
+        // Simular direções (em uma implementação real, você usaria uma API de rotas)
+        generateMockDirections();
+      } catch (error) {
+        console.log('Error setting region:', error);
+        // Fallback para coordenadas padrão de Luanda
+        setRegion({
+          latitude: -8.8379,
+          longitude: 13.2894,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        });
+      }
+    } else {
+      // Se não temos localização, centramos no destino
+      setRegion({
+        latitude: service.coordinates.latitude || -8.8379,
+        longitude: service.coordinates.longitude || 13.2894,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      });
     }
   }, [location, service]);
 
@@ -124,6 +144,100 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     setShowDirections(!showDirections);
   };
 
+  const generateMapHTML = () => {
+    const userLat = location?.latitude || -8.8379;
+    const userLng = location?.longitude || 13.2894;
+    const destLat = service.coordinates.latitude;
+    const destLng = service.coordinates.longitude;
+    
+    // Calcular centro e zoom
+    const centerLat = (userLat + destLat) / 2;
+    const centerLng = (userLng + destLng) / 2;
+    
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <style>
+            body { margin: 0; padding: 0; }
+            #map { height: 100vh; width: 100vw; }
+            .user-marker {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background-color: #4285f4;
+                border: 3px solid white;
+                box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
+            }
+            .dest-marker {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background-color: #ea4335;
+                border: 3px solid white;
+                box-shadow: 0 0 0 2px rgba(234, 67, 53, 0.3);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script>
+            // Inicializar mapa
+            const map = L.map('map').setView([${centerLat}, ${centerLng}], 13);
+            
+            // Adicionar tiles do OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Marcador do usuário
+            const userIcon = L.divIcon({
+                className: 'user-marker',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+            
+            L.marker([${userLat}, ${userLng}], { icon: userIcon })
+                .addTo(map)
+                .bindPopup('Sua localização');
+            
+            // Marcador do destino
+            const destIcon = L.divIcon({
+                className: 'dest-marker',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            
+            L.marker([${destLat}, ${destLng}], { icon: destIcon })
+                .addTo(map)
+                .bindPopup('${service.name}<br>${service.address}');
+            
+            // Linha da rota
+            const routeLine = L.polyline([
+                [${userLat}, ${userLng}],
+                [${destLat}, ${destLng}]
+            ], {
+                color: '#2E7D32',
+                weight: 4,
+                opacity: 0.8
+            }).addTo(map);
+            
+            // Ajustar zoom para mostrar toda a rota
+            const group = new L.featureGroup([
+                L.marker([${userLat}, ${userLng}]),
+                L.marker([${destLat}, ${destLng}])
+            ]);
+            map.fitBounds(group.getBounds().pad(0.1));
+        </script>
+    </body>
+    </html>
+    `;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
@@ -139,54 +253,14 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
       </View>
 
       <View style={styles.mapContainer}>
-        <MapView
+        <WebView
+          ref={webViewRef}
           style={styles.map}
-          region={region}
-          provider={PROVIDER_GOOGLE}
-          showsUserLocation={true}
-          showsMyLocationButton={false}
-          followsUserLocation={false}
-        >
-          {/* Marcador do usuário */}
-          {location && (
-            <Marker
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              title="Sua localização"
-            >
-              <View style={styles.userMarker}>
-                <Ionicons name="person" size={20} color={Colors.text.onPrimary} />
-              </View>
-            </Marker>
-          )}
-
-          {/* Marcador do destino */}
-          <Marker
-            coordinate={service.coordinates}
-            title={service.name}
-            description={service.address}
-          >
-            <View style={styles.destinationMarker}>
-              <Ionicons 
-                name={service.type === 'professional' ? 'person' : 'medical'} 
-                size={20} 
-                color={Colors.text.onPrimary} 
-              />
-            </View>
-          </Marker>
-
-          {/* Linha da rota */}
-          {routeCoordinates.length > 0 && (
-            <Polyline
-              coordinates={routeCoordinates}
-              strokeColor={Colors.primary}
-              strokeWidth={4}
-              lineDashPattern={[0]}
-            />
-          )}
-        </MapView>
+          source={{ html: generateMapHTML() }}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          startInLoadingState={true}
+        />
       </View>
 
       {/* Informações da rota */}
