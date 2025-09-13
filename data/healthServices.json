@@ -2,115 +2,242 @@
   "healthServices": [
     {
       "id": "1",
-      "name": "Hospital São Lucas",
+      "name": "Hospital Américo Boavida",
       "type": "hospital",
-      "address": "Rua das Flores, 123 - Centro",
-      "city": "São Paulo",
-      "state": "SP",
+      "address": "Rua Direita do Cemitério, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
       "coordinates": {
-        "latitude": -23.5505,
-        "longitude": -46.6333
+        "latitude": -8.8379,
+        "longitude": 13.2894
       },
-      "phone": "(11) 1234-5678",
-      "description": "Hospital geral com atendimento 24 horas"
+      "phone": "+244 222 390 000",
+      "description": "Hospital público de referência em Luanda",
+      "rating": 4.2,
+      "services": ["Emergência", "Cirurgia", "Pediatria", "Cardiologia"]
     },
     {
       "id": "2",
-      "name": "Clínica Vida Nova",
+      "name": "Clínica Multiperfil",
       "type": "clinic",
-      "address": "Avenida Paulista, 1000 - Bela Vista",
-      "city": "São Paulo",
-      "state": "SP",
+      "address": "Rua Rainha Ginga, Maianga, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
       "coordinates": {
-        "latitude": -23.5629,
-        "longitude": -46.6544
+        "latitude": -8.8156,
+        "longitude": 13.2302
       },
-      "phone": "(11) 2345-6789",
-      "description": "Clínica especializada em consultas médicas"
+      "phone": "+244 222 334 567",
+      "description": "Clínica particular com várias especialidades",
+      "rating": 4.5,
+      "services": ["Consultas", "Exames", "Vacinação", "Check-up"]
     },
     {
       "id": "3",
-      "name": "Farmácia Popular",
-      "type": "pharmacy",
-      "address": "Rua Augusta, 456 - Consolação",
-      "city": "São Paulo",
-      "state": "SP",
+      "name": "Hospital Pediatrico",
+      "type": "hospital",
+      "address": "Bairro Operário, Luanda",
+      "city": "Luanda",
+      "state": "Luanda", 
+      "country": "Angola",
       "coordinates": {
-        "latitude": -23.5558,
-        "longitude": -46.6396
+        "latitude": -8.8500,
+        "longitude": 13.2700
       },
-      "phone": "(11) 3456-7890",
-      "description": "Farmácia com medicamentos populares"
+      "phone": "+244 222 445 678",
+      "description": "Hospital especializado em pediatria",
+      "rating": 4.3,
+      "services": ["Pediatria", "Neonatologia", "Emergência Infantil"]
     },
     {
       "id": "4",
-      "name": "UPA 24h Centro",
-      "type": "emergency",
-      "address": "Praça da Sé, 50 - Centro",
-      "city": "São Paulo",
-      "state": "SP",
+      "name": "Centro Médico Talatona",
+      "type": "clinic",
+      "address": "Talatona, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola", 
       "coordinates": {
-        "latitude": -23.5489,
-        "longitude": -46.6388
+        "latitude": -8.9667,
+        "longitude": 13.1833
       },
-      "phone": "(11) 4567-8901",
-      "description": "Unidade de Pronto Atendimento 24 horas"
+      "phone": "+244 222 556 789",
+      "description": "Centro médico moderno em Talatona",
+      "rating": 4.7,
+      "services": ["Consultas", "Diagnóstico", "Fisioterapia"]
     },
     {
       "id": "5",
-      "name": "Laboratório MedLab",
-      "type": "laboratory",
-      "address": "Rua Oscar Freire, 789 - Jardins",
-      "city": "São Paulo",
-      "state": "SP",
+      "name": "Hospital Municipal da Talatona",
+      "type": "hospital",
+      "address": "Talatona, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
       "coordinates": {
-        "latitude": -23.5622,
-        "longitude": -46.6722
+        "latitude": -8.9700,
+        "longitude": 13.1900
       },
-      "phone": "(11) 5678-9012",
-      "description": "Laboratório de análises clínicas"
+      "phone": "+244 222 667 890",
+      "description": "Hospital público em Talatona",
+      "rating": 4.0,
+      "services": ["Emergência", "Internamento", "Cirurgia"]
+    },
+    {
+      "id": "prof1",
+      "name": "Dr. António Silva",
+      "type": "professional",
+      "specialty": "Cardiologia",
+      "clinic": "Clínica Multiperfil",
+      "address": "Rua Rainha Ginga, Maianga, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
+      "coordinates": {
+        "latitude": -8.8156,
+        "longitude": 13.2302
+      },
+      "phone": "+244 222 334 567",
+      "email": "antonio.silva@multiperfil.ao",
+      "description": "Cardiologista com 15 anos de experiência",
+      "rating": 4.8,
+      "reviews": 156,
+      "services": ["Consulta Cardiológica", "Ecocardiograma", "Eletrocardiograma", "Holter"],
+      "schedule": {
+        "monday": "08:00-17:00",
+        "tuesday": "08:00-17:00", 
+        "wednesday": "08:00-17:00",
+        "thursday": "08:00-17:00",
+        "friday": "08:00-16:00"
+      },
+      "education": "Faculdade de Medicina da Universidade Agostinho Neto",
+      "experience": "15 anos"
+    },
+    {
+      "id": "prof2", 
+      "name": "Dra. Maria Santos",
+      "type": "professional",
+      "specialty": "Pediatria",
+      "clinic": "Hospital Pediatrico",
+      "address": "Bairro Operário, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
+      "coordinates": {
+        "latitude": -8.8500,
+        "longitude": 13.2700
+      },
+      "phone": "+244 222 445 678",
+      "email": "maria.santos@hospitalpediatrico.ao",
+      "description": "Pediatra especializada em neonatologia",
+      "rating": 4.9,
+      "reviews": 203,
+      "services": ["Consulta Pediátrica", "Vacinação", "Puericultura", "Emergência Infantil"],
+      "schedule": {
+        "monday": "07:00-16:00",
+        "tuesday": "07:00-16:00",
+        "wednesday": "07:00-16:00", 
+        "thursday": "07:00-16:00",
+        "friday": "07:00-15:00"
+      },
+      "education": "Faculdade de Medicina da Universidade Agostinho Neto",
+      "experience": "12 anos"
+    },
+    {
+      "id": "prof3",
+      "name": "Dr. João Pereira",
+      "type": "professional", 
+      "specialty": "Ortopedia",
+      "clinic": "Centro Médico Talatona",
+      "address": "Talatona, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
+      "coordinates": {
+        "latitude": -8.9667,
+        "longitude": 13.1833
+      },
+      "phone": "+244 222 556 789",
+      "email": "joao.pereira@talatona.ao",
+      "description": "Ortopedista especializado em cirurgia artroscópica",
+      "rating": 4.6,
+      "reviews": 89,
+      "services": ["Consulta Ortopédica", "Cirurgia Artroscópica", "Infiltrações", "Fisioterapia"],
+      "schedule": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-17:00"
+      },
+      "education": "Faculdade de Medicina da Universidade de Coimbra",
+      "experience": "18 anos"
+    },
+    {
+      "id": "prof4",
+      "name": "Dra. Ana Costa",
+      "type": "professional",
+      "specialty": "Ginecologia",
+      "clinic": "Clínica Multiperfil", 
+      "address": "Rua Rainha Ginga, Maianga, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
+      "coordinates": {
+        "latitude": -8.8156,
+        "longitude": 13.2302
+      },
+      "phone": "+244 222 334 567",
+      "email": "ana.costa@multiperfil.ao",
+      "description": "Ginecologista e obstetra",
+      "rating": 4.7,
+      "reviews": 174,
+      "services": ["Consulta Ginecológica", "Pré-natal", "Ultrassonografia", "Cirurgia Ginecológica"],
+      "schedule": {
+        "monday": "08:00-17:00",
+        "tuesday": "08:00-17:00",
+        "wednesday": "08:00-17:00",
+        "thursday": "08:00-17:00",
+        "friday": "08:00-16:00"
+      },
+      "education": "Faculdade de Medicina da Universidade Agostinho Neto",
+      "experience": "10 anos"
     },
     {
       "id": "6",
-      "name": "Hospital Albert Einstein",
-      "type": "hospital",
-      "address": "Avenida Albert Einstein, 627 - Morumbi",
-      "city": "São Paulo",
-      "state": "SP",
+      "name": "Farmácia Central",
+      "type": "pharmacy",
+      "address": "Rua Major Kanhangulo, Ingombota, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
       "coordinates": {
-        "latitude": -23.5986,
-        "longitude": -46.7133
+        "latitude": -8.8167,
+        "longitude": 13.2278
       },
-      "phone": "(11) 2151-1233",
-      "description": "Hospital de referência em tratamentos de alta complexidade"
+      "phone": "+244 222 778 901",
+      "description": "Farmácia central com amplo estoque de medicamentos",
+      "rating": 4.1,
+      "services": ["Medicamentos", "Perfumaria", "Dermocosméticos"]
     },
     {
       "id": "7",
-      "name": "Drogasil",
-      "type": "pharmacy",
-      "address": "Rua 25 de Março, 200 - Centro",
-      "city": "São Paulo",
-      "state": "SP",
+      "name": "Laboratório Angolabor",
+      "type": "laboratory", 
+      "address": "Rua Comandante Che Guevara, Maianga, Luanda",
+      "city": "Luanda",
+      "state": "Luanda",
+      "country": "Angola",
       "coordinates": {
-        "latitude": -23.5451,
-        "longitude": -46.6289
+        "latitude": -8.8200,
+        "longitude": 13.2350
       },
-      "phone": "(11) 6789-0123",
-      "description": "Rede de farmácias com diversos medicamentos"
-    },
-    {
-      "id": "8",
-      "name": "Clínica Oftalmológica Vision",
-      "type": "clinic",
-      "address": "Rua dos Três Irmãos, 348 - Vila Progredior",
-      "city": "São Paulo",
-      "state": "SP",
-      "coordinates": {
-        "latitude": -23.5436,
-        "longitude": -46.7019
-      },
-      "phone": "(11) 7890-1234",
-      "description": "Clínica especializada em oftalmologia"
+      "phone": "+244 222 889 012",
+      "description": "Laboratório de análises clínicas e patologia",
+      "rating": 4.4,
+      "services": ["Análises Clínicas", "Exames de Imagem", "Anatomia Patológica"]
     }
   ]
 }

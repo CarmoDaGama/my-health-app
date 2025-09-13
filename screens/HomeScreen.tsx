@@ -13,6 +13,7 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { HealthService, Region } from '../types';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { HealthServiceAPI } from '../services/api';
@@ -45,6 +46,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Animation refs
   const translateY = useRef(new Animated.Value(0)).current;
   const categoriesHeight = useRef(new Animated.Value(0)).current;
+  const fullScreenOpacity = useRef(new Animated.Value(0)).current;
   
   const { location, loading: locationLoading, error: locationError } = useLocation();
 
@@ -119,38 +121,34 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       duration: 300,
       useNativeDriver: true,
     }).start();
+
+    Animated.timing(fullScreenOpacity, {
+      toValue: isFullScreenMode ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   }, [isFullScreenMode]);
 
   // Tab navigation handlers
   const handleProfessionalsPress = () => {
-    if (isFullScreenMode) {
-      setActiveTab('profissionais');
-    } else {
-      setIsFullScreenMode(true);
-      setActiveTab('profissionais');
-    }
+    setIsFullScreenMode(true);
+    setActiveTab('profissionais');
   };
 
   const handleInstitutionsPress = () => {
-    if (isFullScreenMode) {
-      setActiveTab('instituicoes');
-    } else {
-      setIsFullScreenMode(true);
-      setActiveTab('instituicoes');
-    }
+    setIsFullScreenMode(true);
+    setActiveTab('instituicoes');
   };
 
   const handleMorePress = () => {
-    if (isFullScreenMode) {
-      setActiveTab('mais');
-    } else {
-      setIsFullScreenMode(true);
-      setActiveTab('mais');
-    }
+    setIsFullScreenMode(true);
+    setActiveTab('mais');
   };
 
   const handleBackPress = () => {
     setIsFullScreenMode(false);
+    // Reset search when going back
+    setSearchQuery('');
   };
 
   const getTabData = () => {
@@ -158,29 +156,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     
     switch (activeTab) {
       case 'profissionais':
+        // Filtra apenas profissionais
         filteredData = services.filter(service => 
-          service.type === 'clinic' || service.name.toLowerCase().includes('dr.')
+          service.type === 'professional'
         );
-        // Se não há profissionais específicos, inclui todas as clínicas
-        if (filteredData.length === 0) {
-          filteredData = services.filter(service => service.type === 'clinic');
-        }
         break;
       case 'instituicoes':
+        // Filtra apenas instituições de Luanda, Angola
         filteredData = services.filter(service => 
-          service.type === 'hospital' || service.type === 'emergency'
+          (service.type === 'hospital' || 
+           service.type === 'clinic' || 
+           service.type === 'emergency') &&
+          service.city === 'Luanda' &&
+          service.country === 'Angola'
         );
         break;
       case 'mais':
+        // Filtra laboratórios, farmácias e outros serviços de Luanda
         filteredData = services.filter(service => 
-          service.type === 'laboratory' || service.type === 'pharmacy'
+          (service.type === 'laboratory' || 
+           service.type === 'pharmacy') &&
+          service.city === 'Luanda' &&
+          service.country === 'Angola'
         );
-        // Se não há laboratórios/farmácias, inclui outros tipos
-        if (filteredData.length === 0) {
-          filteredData = services.filter(service => 
-            !['clinic', 'hospital', 'emergency'].includes(service.type)
-          );
-        }
         break;
       default:
         filteredData = services;
@@ -192,36 +190,48 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const renderTabContent = () => {
     const data = getTabData();
     
-    // Se não há dados filtrados, mostra todos os serviços com um header informativo
-    const displayData = data.length > 0 ? data : services;
-    const showFallbackHeader = data.length === 0 && services.length > 0;
-    
-    if (displayData.length === 0) {
+    if (data.length === 0) {
       return (
         <View style={styles.emptyStateContainer}>
           <Text style={styles.emptyStateText}>
             Nenhum serviço encontrado
           </Text>
           <Text style={styles.emptyStateSubtext}>
-            Tente carregar os dados novamente
+            Tente carregar os dados novamente ou verifique sua conexão
           </Text>
         </View>
       );
     }
 
+    const getTabTitle = () => {
+      switch (activeTab) {
+        case 'profissionais':
+          return 'Profissionais de Saúde';
+        case 'instituicoes':
+          return 'Instituições de Saúde';
+        case 'mais':
+          return 'Outros Serviços';
+        default:
+          return 'Serviços de Saúde';
+      }
+    };
+
     return (
       <FlatList
-        data={displayData}
+        data={data}
         keyExtractor={(item) => item.id}
         style={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={showFallbackHeader ? (
-          <View style={styles.fallbackHeaderContainer}>
-            <Text style={styles.fallbackHeaderText}>
-              Mostrando todos os serviços disponíveis
+        ListHeaderComponent={() => (
+          <View style={styles.listHeaderContainer}>
+            <Text style={styles.listHeaderTitle}>
+              {getTabTitle()}
+            </Text>
+            <Text style={styles.listHeaderSubtitle}>
+              {data.length} {data.length === 1 ? 'serviço encontrado' : 'serviços encontrados'}
             </Text>
           </View>
-        ) : null}
+        )}
         renderItem={({ item }) => (
           <TouchableOpacity 
             style={styles.listItem}
@@ -230,6 +240,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.serviceIconContainer}>
               <Ionicons 
                 name={
+                  item.type === 'professional' ? 'person' :
                   item.type === 'hospital' ? 'medical' : 
                   item.type === 'clinic' ? 'medical-outline' : 
                   item.type === 'emergency' ? 'pulse' : 
@@ -241,19 +252,56 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               />
             </View>
             <View style={styles.serviceInfo}>
-              <Text style={styles.serviceName} numberOfLines={2}>
-                {item.name}
-              </Text>
-              <Text style={styles.serviceType}>
-                {item.type === 'hospital' ? 'Hospital' :
-                 item.type === 'clinic' ? 'Clínica' :
-                 item.type === 'emergency' ? 'Emergência' :
-                 item.type === 'laboratory' ? 'Laboratório' :
-                 item.type === 'pharmacy' ? 'Farmácia' : 'Serviço de Saúde'}
-              </Text>
-              <Text style={styles.serviceAddress} numberOfLines={1}>
-                {item.address}
-              </Text>
+              {item.type === 'professional' ? (
+                // Layout para profissionais
+                <>
+                  <Text style={styles.serviceName} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.serviceSpecialty}>
+                    {item.specialty}
+                  </Text>
+                  <Text style={styles.serviceClinic} numberOfLines={1}>
+                    {item.clinic}
+                  </Text>
+                  <Text style={styles.serviceAddress} numberOfLines={1}>
+                    {item.address}
+                  </Text>
+                  {item.rating && (
+                    <View style={styles.ratingContainer}>
+                      <Ionicons name="star" size={14} color="#FFD700" />
+                      <Text style={styles.ratingText}>
+                        {item.rating} ({item.reviews} avaliações)
+                      </Text>
+                    </View>
+                  )}
+                </>
+              ) : (
+                // Layout para instituições
+                <>
+                  <Text style={styles.serviceName} numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.serviceType}>
+                    {item.type === 'hospital' ? 'Hospital' :
+                     item.type === 'clinic' ? 'Clínica' :
+                     item.type === 'emergency' ? 'Emergência' :
+                     item.type === 'laboratory' ? 'Laboratório' :
+                     item.type === 'pharmacy' ? 'Farmácia' : 'Serviço de Saúde'}
+                  </Text>
+                  <Text style={styles.serviceAddress} numberOfLines={1}>
+                    {item.address}
+                  </Text>
+                  {item.rating && (
+                    <View style={styles.ratingContainer}>
+                      <Ionicons name="star" size={14} color="#FFD700" />
+                      <Text style={styles.ratingText}>
+                        {item.rating}
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
             </View>
             <View style={styles.serviceActions}>
               <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
@@ -266,20 +314,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      
-      {/* Map View */}
-      <View style={styles.mapContainer}>
-        <MapView 
-          region={region}
-          services={filteredServices}
-          onServicePress={handleServicePress}
-        />
-      </View>
-
       {/* Full Screen Mode */}
       {isFullScreenMode ? (
-        <View style={styles.fullScreenContainer}>
+        <Animated.View style={[styles.fullScreenContainer, { opacity: fullScreenOpacity }]}>
+          <StatusBar barStyle="dark-content" backgroundColor={Colors.surface} />
           {/* Top Bar with Back Button and Search */}
           <View style={styles.fullScreenTopBar}>
             <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
@@ -351,9 +389,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.tabContentContainer}>
             {renderTabContent()}
           </View>
-        </View>
+        </Animated.View>
       ) : (
         <>
+          <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+          
+          {/* Map View */}
+          <View style={styles.mapContainer}>
+            <MapView 
+              region={region}
+              services={filteredServices}
+              onServicePress={handleServicePress}
+            />
+          </View>
+
           {/* Bottom Search Bar */}
           <Animated.View style={[styles.bottomBar, { transform: [{ translateY }] }]}>
             <View style={styles.searchBarContainer}>
@@ -532,8 +581,13 @@ const styles = StyleSheet.create({
   },
   // Full Screen Mode Styles
   fullScreenContainer: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: Colors.background,
+    zIndex: 1000,
   },
   fullScreenTopBar: {
     flexDirection: 'row',
@@ -541,7 +595,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    paddingTop: spacing.xl,
+    paddingTop: Constants.statusBarHeight + spacing.md,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -695,6 +749,47 @@ const styles = StyleSheet.create({
     color: Colors.text.onPrimary,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  listHeaderContainer: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    marginBottom: spacing.md,
+  },
+  listHeaderTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  listHeaderSubtitle: {
+    fontSize: fontSize.md,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+  },
+  serviceSpecialty: {
+    fontSize: fontSize.md,
+    color: Colors.primary,
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+  },
+  serviceClinic: {
+    fontSize: fontSize.sm,
+    color: Colors.text.primary,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  ratingText: {
+    fontSize: fontSize.sm,
+    color: Colors.text.secondary,
+    marginLeft: spacing.xs,
   },
 });
 
