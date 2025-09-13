@@ -7,24 +7,26 @@ import {
   StatusBar,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { HealthService, Region } from '../types';
 import { MapDirectionsScreenNavigationProp, MapDirectionsScreenRouteProp } from '../types/navigation';
-import { Colors, spacing, borderRadius, fontSize } from '../constants';
+import { Colors, spacing, borderRadius, fontSize, ROUTE_PROFILES } from '../constants';
 import { useLocation } from '../hooks/useLocation';
+import { RoutingService, RouteResponse, RouteStep } from '../services/routing';
 
 interface MapDirectionsScreenProps {
   navigation: MapDirectionsScreenNavigationProp;
   route: MapDirectionsScreenRouteProp;
 }
 
-interface DirectionStep {
-  instruction: string;
-  distance: string;
-  duration: string;
+interface TransportMode {
+  id: keyof typeof ROUTE_PROFILES;
+  name: string;
+  icon: string;
 }
 
 export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
@@ -40,11 +42,16 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
-  const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
-  const [directions, setDirections] = useState<DirectionStep[]>([]);
-  const [totalDistance, setTotalDistance] = useState<string>('');
-  const [totalDuration, setTotalDuration] = useState<string>('');
+  const [routeData, setRouteData] = useState<RouteResponse | null>(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<keyof typeof ROUTE_PROFILES>('DRIVING');
   const [showDirections, setShowDirections] = useState(false);
+  
+  const transportModes: TransportMode[] = [
+    { id: 'DRIVING', name: 'Carro', icon: 'car' },
+    { id: 'WALKING', name: 'A pé', icon: 'walk' },
+    { id: 'CYCLING', name: 'Bicicleta', icon: 'bicycle' },
+  ];
 
   useEffect(() => {
     if (location) {
@@ -65,8 +72,8 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
           longitudeDelta: Math.max(lonDelta, 0.01),
         });
 
-        // Simular direções (em uma implementação real, você usaria uma API de rotas)
-        generateMockDirections();
+        // Obter rota real
+        fetchRoute();
       } catch (error) {
         console.log('Error setting region:', error);
         // Fallback para coordenadas padrão de Luanda
@@ -86,42 +93,61 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
         longitudeDelta: 0.05,
       });
     }
-  }, [location, service]);
+  }, [location, service, selectedMode]);
 
-  const generateMockDirections = () => {
-    if (!location) return;
-
-    // Simular coordenadas da rota (linha reta simplificada)
-    const startLat = location.latitude;
-    const startLon = location.longitude;
-    const endLat = service.coordinates.latitude;
-    const endLon = service.coordinates.longitude;
-
-    // Criar pontos intermediários para simular uma rota
-    const steps = 5;
-    const coordinates = [];
-    for (let i = 0; i <= steps; i++) {
-      const lat = startLat + (endLat - startLat) * (i / steps);
-      const lon = startLon + (endLon - startLon) * (i / steps);
-      coordinates.push({ latitude: lat, longitude: lon });
+  const fetchRoute = async () => {
+    if (!location) {
+      Alert.alert(
+        'Localização Necessária',
+        'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
+        [{ text: 'OK' }]
+      );
+      return;
     }
-
-    setRouteCoordinates(coordinates);
-
-    // Calcular distância aproximada
-    const distance = calculateDistance(startLat, startLon, endLat, endLon);
-    const duration = Math.round(distance * 3); // Assumir ~20km/h de velocidade média
-
-    setTotalDistance(`${distance.toFixed(1)} km`);
-    setTotalDuration(`${duration} min`);
-
-    // Direções simuladas
-    setDirections([
-      { instruction: 'Siga em frente na sua rua atual', distance: '0.5 km', duration: '2 min' },
-      { instruction: 'Vire à direita na próxima esquina', distance: '0.3 km', duration: '1 min' },
-      { instruction: `Continue em direção a ${service.address}`, distance: `${(distance - 0.8).toFixed(1)} km`, duration: `${duration - 3} min` },
-      { instruction: 'Chegou ao destino', distance: '0 km', duration: '0 min' }
-    ]);
+    
+    setIsLoadingRoute(true);
+    try {
+      console.log('Iniciando busca de rota...');
+      console.log('Origem:', location.latitude, location.longitude);
+      console.log('Destino:', service.coordinates.latitude, service.coordinates.longitude);
+      console.log('Modo:', selectedMode);
+      
+      const route = await RoutingService.getRoute(
+        { latitude: location.latitude, longitude: location.longitude },
+        { latitude: service.coordinates.latitude, longitude: service.coordinates.longitude },
+        selectedMode
+      );
+      
+      console.log('Rota obtida com sucesso:', route.distance, route.duration);
+      setRouteData(route);
+    } catch (error) {
+      console.error('Erro ao obter rota:', error);
+      
+      // Mostrar erro específico baseado no tipo
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      if (errorMessage.includes('403') || errorMessage.includes('401')) {
+        Alert.alert(
+          'Serviço Temporariamente Indisponível',
+          'O serviço de rotas está temporariamente indisponível. Uma rota aproximada será exibida.',
+          [{ text: 'Entendi' }]
+        );
+      } else if (errorMessage.includes('Network') || errorMessage.includes('fetch')) {
+        Alert.alert(
+          'Problema de Conexão',
+          'Verifique sua conexão com a internet. Uma rota aproximada será exibida.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Aviso',
+          'Exibindo rota aproximada. Para rotas precisas, verifique sua conexão.',
+          [{ text: 'OK' }]
+        );
+      }
+    } finally {
+      setIsLoadingRoute(false);
+    }
   };
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -144,6 +170,12 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     setShowDirections(!showDirections);
   };
 
+  const handleModeChange = (mode: keyof typeof ROUTE_PROFILES) => {
+    if (mode !== selectedMode) {
+      setSelectedMode(mode);
+    }
+  };
+
   const generateMapHTML = () => {
     const userLat = location?.latitude || -8.8379;
     const userLng = location?.longitude || 13.2894;
@@ -153,6 +185,14 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     // Calcular centro e zoom
     const centerLat = (userLat + destLat) / 2;
     const centerLng = (userLng + destLng) / 2;
+    
+    // Preparar coordenadas da rota
+    const routeCoordinates = routeData?.coordinates || [
+      { latitude: userLat, longitude: userLng },
+      { latitude: destLat, longitude: destLng }
+    ];
+    
+    const routePoints = routeCoordinates.map(coord => `[${coord.latitude}, ${coord.longitude}]`).join(', ');
     
     return `
     <!DOCTYPE html>
@@ -216,14 +256,14 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
                 .addTo(map)
                 .bindPopup('${service.name}<br>${service.address}');
             
-            // Linha da rota
+            // Linha da rota (usando coordenadas reais da API)
             const routeLine = L.polyline([
-                [${userLat}, ${userLng}],
-                [${destLat}, ${destLng}]
+                ${routePoints}
             ], {
                 color: '#2E7D32',
                 weight: 4,
-                opacity: 0.8
+                opacity: 0.8,
+                smoothFactor: 1
             }).addTo(map);
             
             // Ajustar zoom para mostrar toda a rota
@@ -263,16 +303,50 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
         />
       </View>
 
+      {/* Seleção do modo de transporte */}
+      <View style={styles.transportModes}>
+        {transportModes.map((mode) => (
+          <TouchableOpacity
+            key={mode.id}
+            style={[
+              styles.modeButton,
+              selectedMode === mode.id && styles.modeButtonActive
+            ]}
+            onPress={() => handleModeChange(mode.id)}
+          >
+            <Ionicons 
+              name={mode.icon as any} 
+              size={20} 
+              color={selectedMode === mode.id ? Colors.text.onPrimary : Colors.primary} 
+            />
+            <Text style={[
+              styles.modeButtonText,
+              selectedMode === mode.id && styles.modeButtonTextActive
+            ]}>
+              {mode.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Loading indicator */}
+      {isLoadingRoute && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={Colors.primary} />
+          <Text style={styles.loadingText}>Calculando rota...</Text>
+        </View>
+      )}
+
       {/* Informações da rota */}
       <View style={styles.routeInfo}>
         <View style={styles.routeStats}>
           <View style={styles.statItem}>
             <Ionicons name="time" size={20} color={Colors.primary} />
-            <Text style={styles.statText}>{totalDuration}</Text>
+            <Text style={styles.statText}>{routeData?.duration || '--'}</Text>
           </View>
           <View style={styles.statItem}>
             <Ionicons name="location" size={20} color={Colors.primary} />
-            <Text style={styles.statText}>{totalDistance}</Text>
+            <Text style={styles.statText}>{routeData?.distance || '--'}</Text>
           </View>
           <TouchableOpacity style={styles.directionsButton} onPress={toggleDirections}>
             <Ionicons name="list" size={20} color={Colors.primary} />
@@ -282,9 +356,9 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-        {showDirections && (
+        {showDirections && routeData?.steps && (
           <View style={styles.directionsList}>
-            {directions.map((step, index) => (
+            {routeData.steps.map((step: RouteStep, index: number) => (
               <View key={index} style={styles.directionStep}>
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>{index + 1}</Text>
@@ -431,5 +505,50 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: Colors.text.secondary,
     marginTop: spacing.xs,
+  },
+  transportModes: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginHorizontal: spacing.xs,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.background,
+  },
+  modeButtonActive: {
+    backgroundColor: Colors.primary,
+  },
+  modeButtonText: {
+    fontSize: fontSize.sm,
+    color: Colors.primary,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
+  },
+  modeButtonTextActive: {
+    color: Colors.text.onPrimary,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    backgroundColor: Colors.surface,
+  },
+  loadingText: {
+    fontSize: fontSize.sm,
+    color: Colors.text.secondary,
+    marginLeft: spacing.sm,
   },
 });
