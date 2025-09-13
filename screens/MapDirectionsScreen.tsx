@@ -27,6 +27,11 @@ interface DirectionStep {
   duration: string;
 }
 
+interface RouteInfo {
+  distance: string;
+  duration: string;
+}
+
 export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
   navigation,
   route,
@@ -40,11 +45,22 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
-  const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
-  const [directions, setDirections] = useState<DirectionStep[]>([]);
-  const [totalDistance, setTotalDistance] = useState<string>('');
-  const [totalDuration, setTotalDuration] = useState<string>('');
-  const [showDirections, setShowDirections] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
+
+  // Função para lidar com mensagens do WebView
+  const handleWebViewMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'routeInfo') {
+        setRouteInfo({
+          distance: data.distance,
+          duration: data.duration
+        });
+      }
+    } catch (error) {
+      console.log('Erro ao processar mensagem do WebView:', error);
+    }
+  };
 
   useEffect(() => {
     if (location) {
@@ -64,9 +80,6 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
           latitudeDelta: Math.max(latDelta, 0.01),
           longitudeDelta: Math.max(lonDelta, 0.01),
         });
-
-        // Simular direções (em uma implementação real, você usaria uma API de rotas)
-        generateMockDirections();
       } catch (error) {
         console.log('Error setting region:', error);
         // Fallback para coordenadas padrão de Luanda
@@ -88,60 +101,8 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     }
   }, [location, service]);
 
-  const generateMockDirections = () => {
-    if (!location) return;
-
-    // Simular coordenadas da rota (linha reta simplificada)
-    const startLat = location.latitude;
-    const startLon = location.longitude;
-    const endLat = service.coordinates.latitude;
-    const endLon = service.coordinates.longitude;
-
-    // Criar pontos intermediários para simular uma rota
-    const steps = 5;
-    const coordinates = [];
-    for (let i = 0; i <= steps; i++) {
-      const lat = startLat + (endLat - startLat) * (i / steps);
-      const lon = startLon + (endLon - startLon) * (i / steps);
-      coordinates.push({ latitude: lat, longitude: lon });
-    }
-
-    setRouteCoordinates(coordinates);
-
-    // Calcular distância aproximada
-    const distance = calculateDistance(startLat, startLon, endLat, endLon);
-    const duration = Math.round(distance * 3); // Assumir ~20km/h de velocidade média
-
-    setTotalDistance(`${distance.toFixed(1)} km`);
-    setTotalDuration(`${duration} min`);
-
-    // Direções simuladas
-    setDirections([
-      { instruction: 'Siga em frente na sua rua atual', distance: '0.5 km', duration: '2 min' },
-      { instruction: 'Vire à direita na próxima esquina', distance: '0.3 km', duration: '1 min' },
-      { instruction: `Continue em direção a ${service.address}`, distance: `${(distance - 0.8).toFixed(1)} km`, duration: `${duration - 3} min` },
-      { instruction: 'Chegou ao destino', distance: '0 km', duration: '0 min' }
-    ]);
-  };
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Raio da Terra em km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
   const handleBack = () => {
     navigation.goBack();
-  };
-
-  const toggleDirections = () => {
-    setShowDirections(!showDirections);
   };
 
   const generateMapHTML = () => {
@@ -150,89 +111,247 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
     const destLat = service.coordinates.latitude;
     const destLng = service.coordinates.longitude;
     
-    // Calcular centro e zoom
+    // Calcular centro
     const centerLat = (userLat + destLat) / 2;
     const centerLng = (userLng + destLng) / 2;
+    
+    const apiKey = "AIzaSyCoqbjFQjZJSbU5-3xk7A9VqiDiMLKPeyM";
     
     return `
     <!DOCTYPE html>
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
         <style>
             body { margin: 0; padding: 0; }
             #map { height: 100vh; width: 100vw; }
-            .user-marker {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background-color: #4285f4;
-                border: 3px solid white;
-                box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
-            }
-            .dest-marker {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background-color: #ea4335;
-                border: 3px solid white;
-                box-shadow: 0 0 0 2px rgba(234, 67, 53, 0.3);
+            .gm-style-iw { 
+                font-family: Arial, sans-serif; 
+                font-size: 14px;
             }
         </style>
     </head>
     <body>
         <div id="map"></div>
-        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
         <script>
-            // Inicializar mapa
-            const map = L.map('map').setView([${centerLat}, ${centerLng}], 13);
+            function initMap() {
+                console.log('Inicializando Google Maps...');
+                const userLocation = { lat: ${userLat}, lng: ${userLng} };
+                const destination = { lat: ${destLat}, lng: ${destLng} };
+                
+                console.log('Localização do usuário:', userLocation);
+                console.log('Destino:', destination);
+                
+                // Criar o mapa
+                const map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 13,
+                    center: { lat: ${centerLat}, lng: ${centerLng} },
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    mapTypeControl: true,
+                    scaleControl: true,
+                    streetViewControl: true,
+                    rotateControl: false,
+                    fullscreenControl: true,
+                    clickableIcons: true,
+                    gestureHandling: 'auto',
+                    restriction: {
+                        latLngBounds: {
+                            north: -4.0,
+                            south: -18.0,
+                            west: 11.0,
+                            east: 24.0
+                        }
+                    }
+                });
+                
+                // Marcador do usuário (azul)
+                const userMarker = new google.maps.Marker({
+                    position: userLocation,
+                    map: map,
+                    title: 'Sua localização',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 10,
+                        fillColor: '#4285f4',
+                        fillOpacity: 1,
+                        strokeColor: 'white',
+                        strokeWeight: 3,
+                    }
+                });
+                
+                // Info window para usuário
+                const userInfoWindow = new google.maps.InfoWindow({
+                    content: '<div style="padding: 5px;"><strong>Sua localização</strong></div>'
+                });
+                
+                userMarker.addListener('click', () => {
+                    userInfoWindow.open(map, userMarker);
+                });
+                
+                // Marcador do destino (vermelho)
+                const destinationMarker = new google.maps.Marker({
+                    position: destination,
+                    map: map,
+                    title: '${service.name}',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 12,
+                        fillColor: '#ea4335',
+                        fillOpacity: 1,
+                        strokeColor: 'white',
+                        strokeWeight: 3,
+                    }
+                });
+                
+                // Info window para destino
+                const destInfoWindow = new google.maps.InfoWindow({
+                    content: '<div style="padding: 5px;"><strong>${service.name}</strong><br><small>${service.address}</small></div>'
+                });
+                
+                destinationMarker.addListener('click', () => {
+                    destInfoWindow.open(map, destinationMarker);
+                });
+                
+                // Serviço de direções
+                const directionsService = new google.maps.DirectionsService();
+                const directionsRenderer = new google.maps.DirectionsRenderer({
+                    map: map,
+                    suppressMarkers: true, // Não mostrar marcadores padrão
+                    draggable: false,
+                    preserveViewport: false,
+                    polylineOptions: {
+                        strokeColor: '#2E7D32',
+                        strokeOpacity: 0.8,
+                        strokeWeight: 6,
+                        geodesic: false, // Importante: seguir as vias
+                        icons: [{
+                            icon: {
+                                path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+                                strokeColor: '#2E7D32',
+                                strokeWeight: 3,
+                                scale: 1
+                            },
+                            repeat: '100px'
+                        }]
+                    },
+                    markerOptions: {
+                        visible: false
+                    }
+                });
+                
+                // Calcular rota com configurações otimizadas
+                console.log('Calculando rota...');
+                directionsService.route({
+                    origin: userLocation,
+                    destination: destination,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                    unitSystem: google.maps.UnitSystem.METRIC,
+                    avoidHighways: false,
+                    avoidTolls: false,
+                    optimizeWaypoints: true,
+                    region: 'AO' // Código do país Angola
+                }, (result, status) => {
+                    console.log('Status da rota:', status);
+                    if (status === 'OK') {
+                        console.log('Rota calculada com sucesso!');
+                        directionsRenderer.setDirections(result);
+                        
+                        // Enviar informações da rota para o React Native
+                        const route = result.routes[0];
+                        const leg = route.legs[0];
+                        const distance = leg.distance.text;
+                        const duration = leg.duration.text;
+                        
+                        window.ReactNativeWebView?.postMessage(JSON.stringify({
+                            type: 'routeInfo',
+                            distance: distance,
+                            duration: duration
+                        }));
+                    } else {
+                        console.error('Erro ao calcular rota:', status);
+                        
+                        // Tentar alternativas baseadas no tipo de erro
+                        if (status === 'ZERO_RESULTS') {
+                            // Tentar com modo a pé se carro não funcionar
+                            directionsService.route({
+                                origin: userLocation,
+                                destination: destination,
+                                travelMode: google.maps.TravelMode.WALKING,
+                                unitSystem: google.maps.UnitSystem.METRIC,
+                                region: 'AO'
+                            }, (walkResult, walkStatus) => {
+                                if (walkStatus === 'OK') {
+                                    directionsRenderer.setDirections(walkResult);
+                                    const route = walkResult.routes[0];
+                                    const leg = route.legs[0];
+                                    window.ReactNativeWebView?.postMessage(JSON.stringify({
+                                        type: 'routeInfo',
+                                        distance: leg.distance.text,
+                                        duration: leg.duration.text + ' (a pé)'
+                                    }));
+                                } else {
+                                    // Último fallback: linha reta estimada
+                                    drawStraightLine();
+                                }
+                            });
+                        } else {
+                            drawStraightLine();
+                        }
+                        
+                        function drawStraightLine() {
+                            const routePath = new google.maps.Polyline({
+                                path: [userLocation, destination],
+                                geodesic: true,
+                                strokeColor: '#FF9800',
+                                strokeOpacity: 0.8,
+                                strokeWeight: 4,
+                                strokeStyle: 'dashed'
+                            });
+                            routePath.setMap(map);
+                            
+                            // Calcular distância estimada
+                            const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                                new google.maps.LatLng(userLocation.lat, userLocation.lng),
+                                new google.maps.LatLng(destination.lat, destination.lng)
+                            );
+                            const distanceKm = (distance / 1000).toFixed(1);
+                            const estimatedTime = Math.round(distance / 1000 * 4); // ~15 km/h média
+                            
+                            window.ReactNativeWebView?.postMessage(JSON.stringify({
+                                type: 'routeInfo',
+                                distance: distanceKm + ' km',
+                                duration: estimatedTime + ' min (estimado)'
+                            }));
+                        }
+                    }
+                });
+                
+                // Ajustar bounds para mostrar ambos os pontos
+                const bounds = new google.maps.LatLngBounds();
+                bounds.extend(userLocation);
+                bounds.extend(destination);
+                map.fitBounds(bounds);
+                
+                // Adicionar padding aos bounds
+                google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+                    if (map.getZoom() > 15) {
+                        map.setZoom(15);
+                    }
+                });
+            }
             
-            // Adicionar tiles do OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // Marcador do usuário
-            const userIcon = L.divIcon({
-                className: 'user-marker',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
-            
-            L.marker([${userLat}, ${userLng}], { icon: userIcon })
-                .addTo(map)
-                .bindPopup('Sua localização');
-            
-            // Marcador do destino
-            const destIcon = L.divIcon({
-                className: 'dest-marker',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            });
-            
-            L.marker([${destLat}, ${destLng}], { icon: destIcon })
-                .addTo(map)
-                .bindPopup('${service.name}<br>${service.address}');
-            
-            // Linha da rota
-            const routeLine = L.polyline([
-                [${userLat}, ${userLng}],
-                [${destLat}, ${destLng}]
-            ], {
-                color: '#2E7D32',
-                weight: 4,
-                opacity: 0.8
-            }).addTo(map);
-            
-            // Ajustar zoom para mostrar toda a rota
-            const group = new L.featureGroup([
-                L.marker([${userLat}, ${userLng}]),
-                L.marker([${destLat}, ${destLng}])
-            ]);
-            map.fitBounds(group.getBounds().pad(0.1));
+            // Função para lidar com erros de carregamento
+            function handleError() {
+                document.getElementById('map').innerHTML = 
+                    '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial; color: #666;">' +
+                    'Erro ao carregar o mapa. Verifique sua conexão.' +
+                    '</div>';
+            }
         </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap&libraries=geometry,places&language=pt&region=AO" 
+                async defer onerror="handleError()"></script>
     </body>
     </html>
     `;
@@ -260,46 +379,29 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
           javaScriptEnabled={true}
           domStorageEnabled={true}
           startInLoadingState={true}
+          onMessage={handleWebViewMessage}
         />
       </View>
 
       {/* Informações da rota */}
-      <View style={styles.routeInfo}>
-        <View style={styles.routeStats}>
-          <View style={styles.statItem}>
-            <Ionicons name="time" size={20} color={Colors.primary} />
-            <Text style={styles.statText}>{totalDuration}</Text>
+      {routeInfo && (
+        <View style={styles.routeInfo}>
+          <View style={styles.routeStats}>
+            <View style={styles.statItem}>
+              <Ionicons name="time" size={20} color={Colors.primary} />
+              <Text style={styles.statText}>{routeInfo.duration}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Ionicons name="location" size={20} color={Colors.primary} />
+              <Text style={styles.statText}>{routeInfo.distance}</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Ionicons name="car" size={20} color={Colors.primary} />
+              <Text style={styles.statText}>Carro</Text>
+            </View>
           </View>
-          <View style={styles.statItem}>
-            <Ionicons name="location" size={20} color={Colors.primary} />
-            <Text style={styles.statText}>{totalDistance}</Text>
-          </View>
-          <TouchableOpacity style={styles.directionsButton} onPress={toggleDirections}>
-            <Ionicons name="list" size={20} color={Colors.primary} />
-            <Text style={styles.directionsButtonText}>
-              {showDirections ? 'Ocultar' : 'Ver'} Direções
-            </Text>
-          </TouchableOpacity>
         </View>
-
-        {showDirections && (
-          <View style={styles.directionsList}>
-            {directions.map((step, index) => (
-              <View key={index} style={styles.directionStep}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>{index + 1}</Text>
-                </View>
-                <View style={styles.stepInfo}>
-                  <Text style={styles.stepInstruction}>{step.instruction}</Text>
-                  <Text style={styles.stepDistance}>
-                    {step.distance} • {step.duration}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+      )}
     </SafeAreaView>
   );
 };
