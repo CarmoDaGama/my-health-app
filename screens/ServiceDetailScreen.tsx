@@ -43,8 +43,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   };
 
   const handleDirections = () => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${service.coordinates.latitude},${service.coordinates.longitude}`;
-    Linking.openURL(url);
+    navigation.navigate('MapDirections', { service });
   };
 
   const handleBack = () => {
@@ -246,8 +245,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           )}
 
           <TouchableOpacity style={styles.contactItem} onPress={handleDirections}>
-            <Ionicons name="location" size={20} color={Colors.primary} />
-            <Text style={styles.contactText}>Ver no mapa</Text>
+            <Ionicons name="navigate" size={20} color={Colors.primary} />
+            <Text style={styles.contactText}>Obter direções</Text>
           </TouchableOpacity>
         </View>
 

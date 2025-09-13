@@ -7,6 +7,7 @@ import { WelcomeScreen } from '../screens/WelcomeScreen';
 import HomeScreen from '../screens/HomeScreen';
 import { MapScreen } from '../screens/MapScreen';
 import { ServiceDetailScreen } from '../screens/ServiceDetailScreen';
+import { MapDirectionsScreen } from '../screens/MapDirectionsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { Colors } from '../constants';
 import i18n from '../utils/i18n';
@@ -65,6 +66,14 @@ export const AppNavigator: React.FC = () => {
           component={ServiceDetailScreen}
           options={{
             title: i18n.t('screens.details'),
+          }}
+        />
+        
+        <Stack.Screen
+          name="MapDirections"
+          component={MapDirectionsScreen}
+          options={{
+            headerShown: false,
           }}
         />
         
