@@ -1,4 +1,5 @@
 import { API_CONFIG, ROUTE_PROFILES, OSRM_PROFILES } from '../constants/api';
+import { routeCache } from './cache';
 
 export interface RoutePoint {
   latitude: number;
@@ -83,14 +84,30 @@ export class RoutingService {
     end: RoutePoint,
     profile: keyof typeof ROUTE_PROFILES = 'DRIVING'
   ): Promise<RouteResponse> {
+    // Criar chave de cache baseada nas coordenadas e perfil
+    const cacheKey = `route_${start.latitude.toFixed(4)}_${start.longitude.toFixed(4)}_${end.latitude.toFixed(4)}_${end.longitude.toFixed(4)}_${profile}`;
+    
+    // Verificar se a rota está em cache
+    const cachedRoute = routeCache.get<RouteResponse>(cacheKey);
+    if (cachedRoute) {
+      console.log('Rota recuperada do cache');
+      return cachedRoute;
+    }
+
     // Tentar primeiro com OSRM (gratuito, sem chave)
     try {
-      return await this.getOSRMRoute(start, end, profile);
+      const route = await this.getOSRMRoute(start, end, profile);
+      // Cache a rota por 2 horas
+      routeCache.set(cacheKey, route, { ttl: 1000 * 60 * 60 * 2 });
+      return route;
     } catch (osrmError) {
       console.warn('OSRM falhou, tentando fallback:', osrmError);
       
       // Fallback para rota manual melhorada
-      return this.createEnhancedFallbackRoute(start, end, profile);
+      const fallbackRoute = this.createEnhancedFallbackRoute(start, end, profile);
+      // Cache o fallback por menos tempo (30 minutos)
+      routeCache.set(cacheKey, fallbackRoute, { ttl: 1000 * 60 * 30 });
+      return fallbackRoute;
     }
   }
 
@@ -252,5 +269,18 @@ export class RoutingService {
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  }
+
+  // Gerenciamento de cache
+  static clearRouteCache(): void {
+    routeCache.clear();
+  }
+
+  static cleanupExpiredRoutes(): void {
+    routeCache.cleanup();
+  }
+
+  static getRouteCacheStats() {
+    return routeCache.getStats();
   }
 }

@@ -19,6 +19,8 @@ import { HomeScreenNavigationProp } from '../types/navigation';
 import { HealthServiceAPI } from '../services/api';
 import { useLocation } from '../hooks/useLocation';
 import { MapView } from '../components/specific/MapView';
+import { LoadingSpinner, ErrorDisplay, SkeletonListItem } from '../components';
+import { useAsyncError } from '../hooks/useAsyncError';
 import { Colors, spacing, borderRadius, fontSize } from '../constants';
 import i18n from '../utils/i18n';
 
@@ -50,6 +52,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const fullScreenOpacity = useRef(new Animated.Value(0)).current;
   
   const { location, loading: locationLoading, error: locationError } = useLocation();
+  const { error: asyncError, isLoading: asyncLoading, executeAsync, clearError } = useAsyncError();
 
   useEffect(() => {
     loadServices();
@@ -74,17 +77,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, [filteredServices]);
 
   const loadServices = async () => {
-    try {
-      setLoading(true);
+    const result = await executeAsync(async () => {
       const data = HealthServiceAPI.getAllServices();
       setServices(data);
-    } catch (error) {
-      Alert.alert(
-        i18n.t('error.title'),
-        i18n.t('error.loadingServices')
-      );
-    } finally {
-      setLoading(false);
+      return data;
+    }, 'LOAD_SERVICES');
+    
+    if (!result) {
+      // Fallback para dados offline se houver erro
+      setServices([]);
     }
   };
 
@@ -403,6 +404,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   const renderTabContent = () => {
+    // Mostrar loading durante carregamento
+    if (asyncLoading || loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <SkeletonListItem key={index} showImage={false} lines={3} />
+          ))}
+        </View>
+      );
+    }
+
+    // Mostrar erro se houver
+    if (asyncError) {
+      return (
+        <ErrorDisplay 
+          error={asyncError}
+          onRetry={() => loadServices()}
+          onDismiss={clearError}
+          style={styles.errorContainer}
+        />
+      );
+    }
+
     const data = getTabData();
     
     if (data.length === 0) {
@@ -617,7 +641,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               onServicePress={handleServicePress}
             />
             
-            {/* Map Optimization Indicator */}
+            {/* Loading Indicators */}
+            {locationLoading && (
+              <View style={styles.mapOptimizingContainer}>
+                <View style={styles.mapOptimizingContent}>
+                  <LoadingSpinner size="small" color={Colors.primary} />
+                  <Text style={styles.mapOptimizingText}>
+                    Obtendo sua localização...
+                  </Text>
+                </View>
+              </View>
+            )}
+            
             {mapOptimizing && (
               <View style={styles.mapOptimizingContainer}>
                 <View style={styles.mapOptimizingContent}>
@@ -627,6 +662,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   </Text>
                 </View>
               </View>
+            )}
+
+            {/* Location Error Display */}
+            {locationError && (
+              <ErrorDisplay
+                error={locationError}
+                onDismiss={() => {/* location hook doesn't have clearError */}}
+                compact
+                style={styles.locationErrorContainer}
+              />
             )}
           </View>
 
@@ -1048,6 +1093,20 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     fontWeight: '500',
     marginLeft: spacing.sm,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+  },
+  errorContainer: {
+    margin: 0,
+  },
+  locationErrorContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    right: 16,
+    zIndex: 10,
   },
 });
 
