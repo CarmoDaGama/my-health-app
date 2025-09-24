@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import { WelcomeScreenNavigationProp } from '../types/navigation';
 import { Colors, spacing } from '../constants';
+import { useAuth } from '../hooks/useAuth';
 import i18n from '../utils/i18n';
 
 interface Props {
@@ -9,8 +10,14 @@ interface Props {
 }
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
-  const handleGetStarted = () => {
-    navigation.replace('Home');
+  const { continueAsGuest } = useAuth();
+
+  const handleLogin = () => {
+    navigation.navigate('Login');
+  };
+
+  const handleContinueAsGuest = () => {
+    continueAsGuest();
   };
 
   return (
@@ -38,9 +45,15 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
-          <Text style={styles.buttonText}>Pular</Text>
-        </TouchableOpacity>
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
+            <Text style={styles.primaryButtonText}>Entrar</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.secondaryButton} onPress={handleContinueAsGuest}>
+            <Text style={styles.secondaryButtonText}>Continuar como Convidado</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -122,17 +135,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  button: {
+  buttonsContainer: {
+    gap: spacing.md,
+    marginHorizontal: spacing.xl,
+  },
+  primaryButton: {
     backgroundColor: Colors.primary,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     borderRadius: 8,
     alignItems: 'center',
-    marginHorizontal: spacing.xl,
   },
-  buttonText: {
+  primaryButtonText: {
     color: Colors.text.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: Colors.primary,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

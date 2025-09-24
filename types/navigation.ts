@@ -17,6 +17,12 @@ export type RootStackParamList = {
     service: HealthService;
   };
   Profile: undefined;
+  
+  // Authentication screens
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+  UserProfile: undefined;
 };
 
 export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -26,6 +32,12 @@ export type MapDirectionsScreenNavigationProp = StackNavigationProp<RootStackPar
 export type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 export type WelcomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
 export type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
+
+// Authentication screen navigation props
+export type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+export type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
+export type ForgotPasswordScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ForgotPassword'>;
+export type UserProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'UserProfile'>;
 
 export type MapScreenRouteProp = RouteProp<RootStackParamList, 'Map'>;
 export type ServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'ServiceDetail'>;

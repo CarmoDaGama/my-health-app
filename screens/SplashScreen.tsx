@@ -3,6 +3,7 @@ import { View, StyleSheet, Image, Text } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { Colors, spacing } from '../constants';
+import { useAuth } from '../hooks/useAuth';
 
 type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 
@@ -11,13 +12,40 @@ interface Props {
 }
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Welcome');
-    }, 2500); // Show splash for 2.5 seconds
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
-    return () => clearTimeout(timer);
-  }, [navigation]);
+  useEffect(() => {
+    console.log('🎬 SplashScreen montado');
+    console.log('📊 Estado inicial:', { isAuthenticated, isGuest, isLoading });
+
+    // Navegar após um tempo mínimo e depois que o auth terminar de carregar
+    const checkAndNavigate = () => {
+      console.log('🔍 Verificando navegação...', { isAuthenticated, isGuest, isLoading });
+      
+      if (!isLoading) {
+        console.log('✅ isLoading é false, decidindo navegação...');
+        
+        if (isAuthenticated || isGuest) {
+          console.log('🏠 Navegando para Home');
+          navigation.replace('Home');
+        } else {
+          console.log('👋 Navegando para Welcome');
+          navigation.replace('Welcome');
+        }
+      } else {
+        console.log('⏳ Ainda carregando, aguardando...');
+        setTimeout(checkAndNavigate, 100);
+      }
+    };
+
+    // Aguardar pelo menos 1.5 segundos para mostrar o splash
+    const timer = setTimeout(checkAndNavigate, 1500);
+
+    return () => {
+      console.log('🧹 SplashScreen desmontado');
+      clearTimeout(timer);
+    };
+  }, [navigation, isAuthenticated, isGuest, isLoading]);
 
   return (
     <View style={styles.container}>

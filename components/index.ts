@@ -5,5 +5,7 @@ export { default as LoadingSpinner } from './common/LoadingSpinner';
 export { default as Skeleton, SkeletonListItem } from './common/Skeleton';
 export { default as ValidatedInput } from './common/ValidatedInput';
 export { default as PhoneInput } from './common/PhoneInput';
+export { UserAvatar } from './common/UserAvatar';
+export { ProtectedRoute } from './common/ProtectedRoute';
 export { ServiceListItem } from './specific/ServiceListItem';
 export { MapView } from './specific/MapView';

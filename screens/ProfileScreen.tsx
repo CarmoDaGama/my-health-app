@@ -1,102 +1,212 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, Image, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  Alert 
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { ProfileScreenNavigationProp } from '../types/navigation';
-import { Colors, spacing } from '../constants';
+import { useAuth, useUser } from '../hooks/useAuth';
+import { useTranslation } from '../hooks/useTranslation';
+import { UserAvatar } from '../components';
+import { Colors } from '../constants/colors';
+import { spacing } from '../constants/dimensions';
 
-interface Props {
-  navigation: ProfileScreenNavigationProp;
-}
+export const ProfileScreen: React.FC = () => {
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const { isAuthenticated, logout } = useAuth();
+  const { user } = useUser();
+  const { t } = useTranslation();
 
-export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-  const handleSave = () => {
-    // Implementation for saving profile
-    console.log('Saving profile...');
+  const handleEditProfile = () => {
+    if (isAuthenticated && user) {
+      navigation.navigate('UserProfile');
+    } else {
+      navigation.navigate('Login');
+    }
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {/* Profile Header */}
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/100' }}
-              style={styles.avatar}
-            />
-            <View style={styles.editIconContainer}>
-              <Text style={styles.editIcon}>✓</Text>
-            </View>
+  const handleLoginPress = () => {
+    navigation.navigate('Login');
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      t('profile.logout') || 'Sair',
+      t('profile.logoutConfirmation') || 'Tem certeza que deseja sair da sua conta?',
+      [
+        {
+          text: t('common.cancel') || 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: t('profile.logout') || 'Sair',
+          style: 'destructive',
+          onPress: () => logout(),
+        },
+      ]
+    );
+  };
+
+  if (!isAuthenticated || !user) {
+    // Guest user view
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.guestHeader}>
+          <View style={styles.guestAvatarContainer}>
+            <Text style={styles.guestAvatarText}>?</Text>
           </View>
+          <Text style={styles.guestTitle}>
+            {t('profile.guestUser') || 'Usuário Convidado'}
+          </Text>
+          <Text style={styles.guestSubtitle}>
+            {t('profile.guestMessage') || 'Faça login para acessar seus dados pessoais e preferências'}
+          </Text>
         </View>
 
-        {/* Form Fields */}
-        <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Digite seu nome"
-              placeholderTextColor={Colors.text.secondary}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="exemplo@email.com"
-              placeholderTextColor={Colors.text.secondary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Digite sua senha"
-              placeholderTextColor={Colors.text.secondary}
-              secureTextEntry
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirmar Password</Text>
-            <TextInput
-              style={styles.input}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirme sua senha"
-              placeholderTextColor={Colors.text.secondary}
-              secureTextEntry
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Contrato</Text>
-            <View style={styles.contractContainer}>
-              <Text style={styles.contractText}>
-                Li e aceito os termos de uso e política de privacidade
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Salvar</Text>
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
+            <Text style={styles.loginButtonText}>
+              {t('auth.login') || 'Fazer Login'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.registerButton} 
+            onPress={() => navigation.navigate('Register')}
+          >
+            <Text style={styles.registerButtonText}>
+              {t('auth.register') || 'Criar Conta'}
+            </Text>
           </TouchableOpacity>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {t('profile.appInfo') || 'Sobre o App'}
+          </Text>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>
+              {t('profile.version') || 'Versão'}
+            </Text>
+            <Text style={styles.infoValue}>1.0.0</Text>
+          </View>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>
+              {t('profile.developer') || 'Desenvolvedor'}
+            </Text>
+            <Text style={styles.infoValue}>Health App Team</Text>
+          </View>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // Authenticated user view
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.header}>
+        <UserAvatar 
+          name={user.name} 
+          avatar={user.avatar} 
+          size="large" 
+          style={styles.avatar}
+        />
+        <Text style={styles.userName}>{user.name}</Text>
+        <Text style={styles.userEmail}>{user.email}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          {t('profile.account') || 'Conta'}
+        </Text>
+        
+        <TouchableOpacity style={styles.menuItem} onPress={handleEditProfile}>
+          <Text style={styles.menuItemText}>
+            {t('profile.editProfile') || 'Editar Perfil'}
+          </Text>
+          <Text style={styles.menuItemArrow}>→</Text>
+        </TouchableOpacity>
+        
+        <View style={styles.menuItem}>
+          <Text style={styles.menuItemText}>
+            {t('profile.language') || 'Idioma'}
+          </Text>
+          <Text style={styles.menuItemValue}>
+            {user.preferences.language === 'pt' ? 'Português' : 'English'}
+          </Text>
+        </View>
+        
+        <View style={styles.menuItem}>
+          <Text style={styles.menuItemText}>
+            {t('profile.notifications') || 'Notificações'}
+          </Text>
+          <Text style={styles.menuItemValue}>
+            {user.preferences.notifications.enabled ? 
+              t('common.enabled') || 'Ativado' : 
+              t('common.disabled') || 'Desativado'
+            }
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          {t('profile.favorites') || 'Favoritos'}
+        </Text>
+        
+        <View style={styles.menuItem}>
+          <Text style={styles.menuItemText}>
+            {t('profile.favoriteServices') || 'Serviços Favoritos'}
+          </Text>
+          <Text style={styles.menuItemValue}>
+            {user.preferences.favorites.services.length}
+          </Text>
+        </View>
+        
+        <View style={styles.menuItem}>
+          <Text style={styles.menuItemText}>
+            {t('profile.favoriteLocations') || 'Locais Favoritos'}
+          </Text>
+          <Text style={styles.menuItemValue}>
+            {user.preferences.favorites.locations.length}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          {t('profile.appInfo') || 'Sobre o App'}
+        </Text>
+        
+        <View style={styles.infoItem}>
+          <Text style={styles.infoLabel}>
+            {t('profile.version') || 'Versão'}
+          </Text>
+          <Text style={styles.infoValue}>1.0.0</Text>
+        </View>
+        
+        <View style={styles.infoItem}>
+          <Text style={styles.infoLabel}>
+            {t('profile.memberSince') || 'Membro desde'}
+          </Text>
+          <Text style={styles.infoValue}>
+            {new Date(user.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>
+            {t('profile.logout') || 'Sair da Conta'}
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -107,83 +217,156 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  content: {
-    padding: spacing.xl,
+  scrollContent: {
+    padding: spacing.lg,
   },
-  header: {
+  
+  // Guest user styles
+  guestHeader: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    paddingVertical: spacing.xxl,
   },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.surface,
-  },
-  editIconContainer: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: Colors.primary,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  guestAvatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.text.secondary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.background,
+    marginBottom: spacing.md,
   },
-  editIcon: {
-    color: Colors.text.onPrimary,
-    fontSize: 16,
+  guestAvatarText: {
+    fontSize: 32,
     fontWeight: 'bold',
+    color: Colors.surface,
   },
-  formContainer: {
-    gap: spacing.lg,
-  },
-  inputGroup: {
-    gap: spacing.sm,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
+  guestTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: Colors.text.primary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
+  guestSubtitle: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+  },
+  
+  // Authenticated user styles
+  header: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  avatar: {
+    marginBottom: spacing.md,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  userEmail: {
     fontSize: 16,
+    color: Colors.text.secondary,
+  },
+  
+  // Section styles
+  section: {
     backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  
+  // Menu items
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    marginBottom: spacing.sm,
+  },
+  menuItemText: {
+    fontSize: 16,
     color: Colors.text.primary,
   },
-  contractContainer: {
-    padding: spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  contractText: {
+  menuItemValue: {
     fontSize: 14,
     color: Colors.text.secondary,
-    lineHeight: 20,
   },
-  saveButton: {
+  menuItemArrow: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+  },
+  
+  // Info items
+  infoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: Colors.text.primary,
+    fontWeight: '500',
+  },
+  
+  // Buttons
+  loginButton: {
     backgroundColor: Colors.primary,
     paddingVertical: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  loginButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.onPrimary,
+  },
+  registerButton: {
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  registerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  
+  // Actions
+  actions: {
     marginTop: spacing.lg,
   },
-  saveButtonText: {
-    color: Colors.text.onPrimary,
+  logoutButton: {
+    backgroundColor: Colors.error,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: Colors.text.onPrimary,
   },
 });
