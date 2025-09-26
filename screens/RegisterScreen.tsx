@@ -8,16 +8,20 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  TextInput,
-  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RegisterScreenNavigationProp } from '../types/navigation';
-import { RegisterData } from '../types';
+import { RegisterData, UserType } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
+import { Button } from '../components';
+import ValidatedInput from '../components/common/ValidatedInput';
+import PhoneInput from '../components/common/PhoneInput';
+import UserTypeSelector from '../components/auth/UserTypeSelector';
+import ProfessionalForm from '../components/auth/ProfessionalForm';
+import InstitutionForm from '../components/auth/InstitutionForm';
 
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
@@ -29,26 +33,37 @@ export default function RegisterScreen() {
     email: '',
     password: '',
     phone: '',
+    userType: UserType.NORMAL_USER,
     acceptTerms: false,
+    professionalInfo: {},
+    institutionInfo: { address: {} },
   });
 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const handleInputChange = (field: keyof RegisterData | 'confirmPassword', value: string | boolean) => {
+  const handleFieldChange = (field: string, value: any) => {
     if (field === 'confirmPassword') {
-      setConfirmPassword(value as string);
+      setConfirmPassword(value);
+      return;
+    }
+
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...((prev as any)[parent] || {}),
+          [child]: value
+        }
+      }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
     
-    // Limpar erro do campo quando o usuário começar a digitar
+    // Clear error when user starts typing
     if (formErrors[field]) {
-      setFormErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -64,362 +79,260 @@ export default function RegisterScreen() {
   };
 
   const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {};
+    
+    // Basic validations
+    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
+    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
+    if (!isValidEmail(formData.email)) newErrors.email = 'Email inválido';
+    if (!formData.password) newErrors.password = 'Senha é obrigatória';
+    if (formData.password.length < 6) newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    if (formData.password !== confirmPassword) {
+      newErrors.confirmPassword = 'As senhas não conferem';
+    }
+    if (!formData.acceptTerms) newErrors.acceptTerms = 'Você deve aceitar os termos';
 
-    if (!formData.name.trim()) {
-      errors.name = t('validation.nameRequired') || 'Nome é obrigatório';
-    } else if (formData.name.trim().length < 2) {
-      errors.name = t('validation.nameMinLength') || 'Nome deve ter pelo menos 2 caracteres';
+    // Validations specific to user type
+    if (formData.userType === UserType.PROFESSIONAL) {
+      if (!formData.professionalInfo?.specialty) {
+        newErrors.specialty = 'Especialidade é obrigatória';
+      }
+      if (!formData.professionalInfo?.license) {
+        newErrors.license = 'Número da licença é obrigatório';
+      }
     }
 
-    if (!formData.email.trim()) {
-      errors.email = t('validation.emailRequired') || 'Email é obrigatório';
-    } else if (!isValidEmail(formData.email)) {
-      errors.email = t('validation.emailInvalid') || 'Email inválido';
+    if (formData.userType === UserType.INSTITUTION) {
+      if (!formData.institutionInfo?.type) {
+        newErrors.type = 'Tipo de instituição é obrigatório';
+      }
+      if (!formData.institutionInfo?.address?.street) {
+        newErrors['address.street'] = 'Endereço é obrigatório';
+      }
+      if (!formData.institutionInfo?.address?.city) {
+        newErrors['address.city'] = 'Cidade é obrigatória';
+      }
+      if (!formData.institutionInfo?.contactPhone) {
+        newErrors.contactPhone = 'Telefone da instituição é obrigatório';
+      }
     }
 
-    if (formData.phone && !isValidAngolanPhone(formData.phone)) {
-      errors.phone = t('validation.phoneInvalid') || 'Número de telefone inválido (use formato angolano)';
-    }
-
-    if (!formData.password) {
-      errors.password = t('validation.passwordRequired') || 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      errors.password = t('validation.passwordMinLength') || 'Senha deve ter pelo menos 6 caracteres';
-    }
-
-    if (!confirmPassword) {
-      errors.confirmPassword = t('validation.confirmPasswordRequired') || 'Confirmação de senha é obrigatória';
-    } else if (formData.password !== confirmPassword) {
-      errors.confirmPassword = t('validation.passwordMismatch') || 'As senhas não coincidem';
-    }
-
-    if (!formData.acceptTerms) {
-      errors.acceptTerms = t('validation.acceptTermsRequired') || 'É necessário aceitar os termos de uso';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    setFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = async () => {
-    if (!validateForm()) {
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
     try {
       await register(formData);
-      // Navigation será automática através do AuthContext
-    } catch (error) {
       Alert.alert(
-        t('auth.registerError') || 'Erro no Registro',
-        error instanceof Error ? error.message : t('auth.registerGenericError') || 'Erro desconhecido',
-        [{ text: t('common.ok') || 'OK' }]
+        'Sucesso!', 
+        'Conta criada com sucesso!',
+        [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
       );
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
     }
   };
 
-  const navigateToLogin = () => {
-    navigation.navigate('Login');
+  const renderTypeSpecificForm = () => {
+    switch (formData.userType) {
+      case UserType.PROFESSIONAL:
+        return (
+          <ProfessionalForm
+            data={formData.professionalInfo}
+            onChange={(field, value) => handleFieldChange(`professionalInfo.${field}`, value)}
+            errors={formErrors}
+          />
+        );
+      case UserType.INSTITUTION:
+        return (
+          <InstitutionForm
+            data={formData.institutionInfo}
+            onChange={handleFieldChange}
+            errors={formErrors}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>{t('auth.creatingAccount') || 'Criando conta...'}</Text>
-      </View>
-    );
-  }
-
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('auth.createAccount') || 'Criar Conta'}</Text>
-          <Text style={styles.subtitle}>{t('auth.registerSubtitle') || 'Preencha os dados para se registrar'}</Text>
-        </View>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Criar Conta</Text>
+        <Text style={styles.subtitle}>
+          Preencha os dados para criar sua conta
+        </Text>
 
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
+        <UserTypeSelector
+          selectedType={formData.userType}
+          onSelect={(type) => handleFieldChange('userType', type)}
+          disabled={isLoading}
+        />
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t('auth.name') || 'Nome completo'}</Text>
-            <TextInput
-              style={[styles.textInput, formErrors.name && styles.inputError]}
-              value={formData.name}
-              onChangeText={(text: string) => handleInputChange('name', text)}
-              placeholder={t('auth.namePlaceholder') || 'Digite seu nome completo'}
-              placeholderTextColor={Colors.text.secondary}
-            />
-            {formErrors.name && (
-              <Text style={styles.errorFieldText}>{formErrors.name}</Text>
-            )}
-          </View>
+        <ValidatedInput
+          label="Nome Completo"
+          value={formData.name}
+          onChangeText={(value) => handleFieldChange('name', value)}
+          error={formErrors.name}
+          placeholder="Seu nome completo"
+          required
+        />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t('auth.email') || 'Email'}</Text>
-            <TextInput
-              style={[styles.textInput, formErrors.email && styles.inputError]}
-              value={formData.email}
-              onChangeText={(text: string) => handleInputChange('email', text)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholder={t('auth.emailPlaceholder') || 'Digite seu email'}
-              placeholderTextColor={Colors.text.secondary}
-            />
-            {formErrors.email && (
-              <Text style={styles.errorFieldText}>{formErrors.email}</Text>
-            )}
-          </View>
+        <ValidatedInput
+          label="Email"
+          value={formData.email}
+          onChangeText={(value) => handleFieldChange('email', value)}
+          error={formErrors.email}
+          placeholder="seu@email.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          required
+        />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t('auth.phone') || 'Telefone (opcional)'}</Text>
-            <TextInput
-              style={[styles.textInput, formErrors.phone && styles.inputError]}
-              value={formData.phone || ''}
-              onChangeText={(text: string) => handleInputChange('phone', text)}
-              keyboardType="phone-pad"
-              placeholder={t('auth.phonePlaceholder') || 'Ex: +244 9XX XXX XXX'}
-              placeholderTextColor={Colors.text.secondary}
-            />
-            {formErrors.phone && (
-              <Text style={styles.errorFieldText}>{formErrors.phone}</Text>
-            )}
-          </View>
+        <PhoneInput
+          label="Telefone"
+          value={formData.phone || ''}
+          onChangeText={(value) => handleFieldChange('phone', value)}
+        />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t('auth.password') || 'Senha'}</Text>
-            <TextInput
-              style={[styles.textInput, formErrors.password && styles.inputError]}
-              value={formData.password}
-              onChangeText={(text: string) => handleInputChange('password', text)}
-              secureTextEntry
-              placeholder={t('auth.passwordPlaceholder') || 'Digite sua senha'}
-              placeholderTextColor={Colors.text.secondary}
-            />
-            {formErrors.password && (
-              <Text style={styles.errorFieldText}>{formErrors.password}</Text>
-            )}
-          </View>
+        <ValidatedInput
+          label="Senha"
+          value={formData.password}
+          onChangeText={(value) => handleFieldChange('password', value)}
+          error={formErrors.password}
+          placeholder="Sua senha"
+          secureTextEntry
+          required
+        />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t('auth.confirmPassword') || 'Confirmar senha'}</Text>
-            <TextInput
-              style={[styles.textInput, formErrors.confirmPassword && styles.inputError]}
-              value={confirmPassword}
-              onChangeText={(text: string) => handleInputChange('confirmPassword', text)}
-              secureTextEntry
-              placeholder={t('auth.confirmPasswordPlaceholder') || 'Confirme sua senha'}
-              placeholderTextColor={Colors.text.secondary}
-            />
-            {formErrors.confirmPassword && (
-              <Text style={styles.errorFieldText}>{formErrors.confirmPassword}</Text>
-            )}
-          </View>
+        <ValidatedInput
+          label="Confirmar Senha"
+          value={confirmPassword}
+          onChangeText={(value) => handleFieldChange('confirmPassword', value)}
+          error={formErrors.confirmPassword}
+          placeholder="Confirme sua senha"
+          secureTextEntry
+          required
+        />
 
-          <TouchableOpacity 
-            style={styles.checkboxContainer}
-            onPress={() => handleInputChange('acceptTerms', !formData.acceptTerms)}
+        {renderTypeSpecificForm()}
+
+        <View style={styles.termsContainer}>
+          <TouchableOpacity
+            style={styles.checkbox}
+            onPress={() => handleFieldChange('acceptTerms', !formData.acceptTerms)}
           >
-            <View style={[styles.checkbox, formData.acceptTerms && styles.checkboxChecked]}>
-              {formData.acceptTerms && <Text style={styles.checkboxTick}>✓</Text>}
+            <View style={[styles.checkboxBox, formData.acceptTerms && styles.checkboxChecked]}>
+              {formData.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
             </View>
-            <Text style={styles.checkboxLabel}>
-              {t('auth.acceptTerms') || 'Aceito os '}
-              <Text style={styles.linkText}>
-                {t('auth.termsOfService') || 'termos de uso'}
-              </Text>
-              {t('auth.and') || ' e a '}
-              <Text style={styles.linkText}>
-                {t('auth.privacyPolicy') || 'política de privacidade'}
-              </Text>
+            <Text style={styles.termsText}>
+              Aceito os <Text style={styles.link}>Termos de Uso</Text> e{' '}
+              <Text style={styles.link}>Política de Privacidade</Text>
             </Text>
           </TouchableOpacity>
           {formErrors.acceptTerms && (
-            <Text style={[styles.errorFieldText, { marginLeft: 0 }]}>{formErrors.acceptTerms}</Text>
+            <Text style={styles.errorText}>{formErrors.acceptTerms}</Text>
           )}
-
-          <TouchableOpacity
-            style={[styles.registerButton, isLoading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={isLoading}
-          >
-            <Text style={styles.registerButtonText}>
-              {t('auth.register') || 'Registrar-se'}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>
-              {t('auth.alreadyHaveAccount') || 'Já tem conta?'} 
-            </Text>
-            <TouchableOpacity onPress={navigateToLogin}>
-              <Text style={styles.loginLink}>
-                {t('auth.login') || 'Entrar'}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        <Button
+          title="Criar Conta"
+          onPress={handleSubmit}
+          loading={isLoading}
+          disabled={isLoading}
+        />
+
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Text style={styles.backButtonText}>
+            Já tem uma conta? <Text style={styles.link}>Entrar</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#FFFFFF',
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: spacing.lg,
-    paddingTop: spacing.xl,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    fontSize: 16,
-    color: Colors.text.secondary,
-  },
-  header: {
-    marginBottom: spacing.xl,
-    alignItems: 'center',
+  content: {
+    padding: 20,
+    paddingTop: 40,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.text.primary,
-    marginBottom: spacing.sm,
     textAlign: 'center',
+    marginBottom: 8,
+    color: '#1F2937',
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.text.secondary,
     textAlign: 'center',
-    lineHeight: 22,
+    marginBottom: 32,
+    color: '#6B7280',
   },
-  errorContainer: {
-    backgroundColor: Colors.error,
-    padding: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    color: Colors.surface,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    marginBottom: spacing.md,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.text.primary,
-    marginBottom: spacing.sm,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 16,
-    color: Colors.text.primary,
-    backgroundColor: Colors.surface,
-  },
-  inputError: {
-    borderColor: Colors.error,
-  },
-  errorFieldText: {
-    fontSize: 12,
-    color: Colors.error,
-    marginTop: spacing.xs,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: spacing.md,
+  termsContainer: {
+    marginVertical: 16,
   },
   checkbox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  checkboxBox: {
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: '#D1D5DB',
     borderRadius: 4,
-    marginRight: spacing.sm,
+    marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
   checkboxChecked: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
   },
-  checkboxTick: {
-    color: Colors.surface,
+  checkmark: {
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: 'bold',
   },
-  checkboxLabel: {
+  termsText: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: '#6B7280',
     flex: 1,
     lineHeight: 20,
   },
-  linkText: {
-    color: Colors.primary,
+  link: {
+    color: '#3B82F6',
     fontWeight: '500',
   },
-  registerButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    marginTop: spacing.md,
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: 4,
   },
-  buttonDisabled: {
-    backgroundColor: Colors.text.secondary,
+  submitButton: {
+    marginTop: 16,
   },
-  registerButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.onPrimary,
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  backButton: {
+    marginTop: 16,
     alignItems: 'center',
   },
-  loginText: {
+  backButtonText: {
     fontSize: 14,
-    color: Colors.text.secondary,
-  },
-  loginLink: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: '600',
-    marginLeft: 4,
+    color: '#6B7280',
   },
 });

@@ -1,6 +1,10 @@
-import { useState, useEffect, useContext, createContext, ReactNode } from 'react';
+import { useState, useEffect, useContext, createContext, ReactNode, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   User, 
+  AnyUser,
+  GuestUser,
+  UserType,
   AuthState, 
   AuthCredentials, 
   RegisterData, 
@@ -10,8 +14,12 @@ import {
 } from '../types';
 import { AuthService } from '../services/auth';
 
+const USER_DATA_KEY = '@HealthApp:userData';
+
 // Contexto de autenticação
-interface AuthContextType extends AuthState {
+interface AuthContextType extends Omit<AuthState, 'user'> {
+  user: AnyUser | null;
+  userType: UserType;
   login: (credentials: AuthCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
@@ -41,53 +49,68 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     error: null,
   });
 
+  // Computed values
+  const isAuthenticated = useMemo(() => 
+    authState.user !== null && authState.user.userType !== UserType.GUEST, 
+    [authState.user]
+  );
+
+  const isGuest = useMemo(() => 
+    authState.user === null || authState.user.userType === UserType.GUEST, 
+    [authState.user]
+  );
+
+  const userType = useMemo(() => 
+    authState.user?.userType || UserType.GUEST, 
+    [authState.user]
+  );
+
   // Verificar autenticação inicial
   useEffect(() => {
-    checkInitialAuth();
+    loadStoredUser();
   }, []);
 
-  const checkInitialAuth = async () => {
+  const loadStoredUser = async () => {
     try {
-      console.log('🔄 Iniciando verificação de autenticação...');
-      
-      // Garantir que o splash seja mostrado por pelo menos 2 segundos
-      const [authResult] = await Promise.all([
-        // Verificar autenticação (que já inclui user e token)
-        AuthService.isAuthenticated(),
-        // Timeout mínimo para mostrar splash
-        new Promise(resolve => setTimeout(resolve, 2000))
-      ]);
-
-      console.log('🔐 Resultado da autenticação:', authResult);
-
-      const [user, token] = await Promise.all([
-        AuthService.getCurrentUser(),
-        AuthService.getToken(),
-      ]);
-
-      console.log('👤 Usuário obtido:', user ? 'Sim' : 'Não');
-      console.log('🎫 Token obtido:', token ? 'Sim' : 'Não');
-
-      setAuthState(prev => ({
-        ...prev,
-        isAuthenticated: authResult,
-        user,
-        token,
-        isLoading: false,
-      }));
-
-      console.log('✅ Estado de autenticação atualizado - isLoading: false');
-    } catch (error) {
-      console.error('❌ Erro ao verificar autenticação:', error);
-      // Ainda aguardar o timeout mínimo mesmo com erro
-      setTimeout(() => {
+      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+      if (userData) {
+        const user = JSON.parse(userData);
         setAuthState(prev => ({
           ...prev,
+          user,
           isLoading: false,
-          error: 'Erro ao verificar autenticação',
         }));
-        console.log('⚠️ Estado de erro definido - isLoading: false');
-      }, 2000);
+      } else {
+        // Usuário convidado por padrão
+        setAuthState(prev => ({
+          ...prev,
+          user: { userType: UserType.GUEST, id: 'guest' },
+          isLoading: false,
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
+      setAuthState(prev => ({
+        ...prev,
+        user: { userType: UserType.GUEST, id: 'guest' },
+        isLoading: false,
+        error: 'Erro ao carregar dados',
+      }));
+    }
+  };
+
+  const validateUserTypeData = (userData: RegisterData) => {
+    switch (userData.userType) {
+      case UserType.PROFESSIONAL:
+        if (!userData.professionalInfo?.specialty || !userData.professionalInfo?.license) {
+          throw new Error('Especialidade e número da licença são obrigatórios para profissionais');
+        }
+        break;
+      case UserType.INSTITUTION:
+        if (!userData.institutionInfo?.type || !userData.institutionInfo?.address) {
+          throw new Error('Tipo e endereço são obrigatórios para instituições');
+        }
+        break;
     }
   };
 
@@ -121,17 +144,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
       
+      // Validar dados específicos do tipo de usuário
+      validateUserTypeData(data);
+      
       const response = await AuthService.register(data);
       
       setAuthState(prev => ({
         ...prev,
-        isAuthenticated: true,
         user: response.user,
         token: response.token,
         refreshToken: response.refreshToken,
         isLoading: false,
         error: null,
       }));
+
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro no registro';
       setAuthState(prev => ({
@@ -251,11 +278,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const continueAsGuest = () => {
+    const guestUser: GuestUser = { userType: UserType.GUEST, id: 'guest' };
     setAuthState(prev => ({
       ...prev,
-      isAuthenticated: false,
-      isGuest: true,
-      user: null,
+      user: guestUser,
       token: null,
       refreshToken: null,
       isLoading: false,
@@ -265,6 +291,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const contextValue: AuthContextType = {
     ...authState,
+    isAuthenticated,
+    isGuest,
+    userType,
     login,
     register,
     logout,
@@ -319,7 +348,7 @@ export const usePermissions = () => {
   };
   
   const canViewMedicalData = (): boolean => {
-    return !!user && user.preferences.privacy.shareLocation;
+    return !!user && user.userType !== UserType.GUEST && 'preferences' in user && user.preferences.privacy.shareLocation;
   };
   
   return {

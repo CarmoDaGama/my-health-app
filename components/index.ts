@@ -9,3 +9,8 @@ export { UserAvatar } from './common/UserAvatar';
 export { ProtectedRoute } from './common/ProtectedRoute';
 export { ServiceListItem } from './specific/ServiceListItem';
 export { MapView } from './specific/MapView';
+
+// Auth components
+export { default as UserTypeSelector } from './auth/UserTypeSelector';
+export { default as ProfessionalForm } from './auth/ProfessionalForm';
+export { default as InstitutionForm } from './auth/InstitutionForm';

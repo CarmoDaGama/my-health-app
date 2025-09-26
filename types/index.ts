@@ -44,13 +44,37 @@ export interface Region {
   longitudeDelta: number;
 }
 
-// User Authentication Types
-export interface User {
+// User Types Enum
+export enum UserType {
+  GUEST = 'guest',
+  NORMAL_USER = 'normal_user',
+  PROFESSIONAL = 'professional',
+  INSTITUTION = 'institution'
+}
+
+// Base User Interface
+export interface BaseUser {
   id: string;
   email: string;
   name: string;
   avatar?: string;
   phone?: string;
+  userType: UserType;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Guest User Interface
+export interface GuestUser {
+  userType: UserType.GUEST;
+  id: 'guest';
+}
+
+// Normal User Interface
+export interface NormalUser extends BaseUser {
+  userType: UserType.NORMAL_USER;
+  favoriteInstitutions: string[];
+  searchHistory: string[];
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;
@@ -60,10 +84,65 @@ export interface User {
     relationship: string;
   };
   preferences: UserPreferences;
-  createdAt: string;
-  updatedAt: string;
 }
 
+// Professional Interface
+export interface Professional extends BaseUser {
+  userType: UserType.PROFESSIONAL;
+  professionalInfo: {
+    specialty: string;
+    license: string;
+    experience: number;
+    bio?: string;
+    certifications: string[];
+    workingHours: {
+      [key: string]: { start: string; end: string; available: boolean };
+    };
+    consultationFee?: number;
+    acceptsInsurance: boolean;
+  };
+  institutionId?: string;
+  favoriteInstitutions: string[];
+  preferences: UserPreferences;
+}
+
+// Institution Interface
+export interface Institution extends BaseUser {
+  userType: UserType.INSTITUTION;
+  institutionInfo: {
+    type: 'hospital' | 'clinic' | 'laboratory' | 'pharmacy' | 'other';
+    address: {
+      street: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      coordinates?: { lat: number; lng: number };
+    };
+    services: string[];
+    workingHours: {
+      [key: string]: { start: string; end: string; available: boolean };
+    };
+    contactInfo: {
+      phone: string;
+      email: string;
+      website?: string;
+    };
+    description: string;
+    acceptsInsurance: boolean;
+    emergencyService: boolean;
+    verified: boolean;
+    rating: number;
+    totalReviews: number;
+  };
+  professionals: string[];
+  preferences: UserPreferences;
+}
+
+// User Type Unions
+export type User = NormalUser | Professional | Institution;
+export type AnyUser = GuestUser | User;
+
+// User Preferences Interface
 export interface UserPreferences {
   language: 'pt' | 'en';
   notifications: {
@@ -73,7 +152,7 @@ export interface UserPreferences {
     emergencyAlerts: boolean;
   };
   favorites: {
-    services: string[]; // Array of service IDs
+    services: string[];
     locations: Coordinates[];
   };
   privacy: {
@@ -82,6 +161,7 @@ export interface UserPreferences {
   };
 }
 
+// Authentication Types
 export interface AuthCredentials {
   email: string;
   password: string;
@@ -90,13 +170,16 @@ export interface AuthCredentials {
 export interface RegisterData extends AuthCredentials {
   name: string;
   phone?: string;
+  userType: UserType;
   acceptTerms: boolean;
+  professionalInfo?: any;
+  institutionInfo?: any;
 }
 
 export interface AuthState {
   isAuthenticated: boolean;
   isGuest: boolean;
-  user: User | null;
+  user: AnyUser | null;
   token: string | null;
   refreshToken: string | null;
   isLoading: boolean;
