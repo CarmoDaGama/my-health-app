@@ -87,7 +87,7 @@ const AppNavigatorContent: React.FC = () => {
           />
         </>
       ) : (
-        // Main App Stack - shown when user is authenticated
+        // Main App Stack - shown when user is authenticated or guest
         <>
           <Stack.Screen
             name="Home"
@@ -135,6 +135,31 @@ const AppNavigatorContent: React.FC = () => {
             component={UserProfileScreen}
             options={{
               title: i18n.t('profile.myProfile') || 'Meu Perfil',
+            }}
+          />
+          
+          {/* Auth screens available for guest users */}
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{
+              title: i18n.t('auth.login') || 'Login',
+            }}
+          />
+          
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{
+              title: i18n.t('auth.register') || 'Registrar',
+            }}
+          />
+          
+          <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+            options={{
+              title: i18n.t('auth.forgotPassword') || 'Recuperar Senha',
             }}
           />
         </>

@@ -1,12 +1,39 @@
 import { HealthService, Coordinates } from '../types';
 import healthServicesData from '../data/healthServices.json';
 import { serviceCache } from './cache';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const REGISTERED_SERVICES_KEY = '@health_app:registered_services';
 
 export class HealthServiceAPI {
   private static services: HealthService[] = healthServicesData.healthServices as HealthService[];
 
-  // Obter todos os serviços (com cache)
-  static getAllServices(): HealthService[] {
+  // Obter serviços registrados do AsyncStorage
+  private static async getRegisteredServices(): Promise<HealthService[]> {
+    try {
+      const servicesJson = await AsyncStorage.getItem(REGISTERED_SERVICES_KEY);
+      const registeredServices = servicesJson ? JSON.parse(servicesJson) : [];
+      console.log('📱 Serviços registrados carregados:', registeredServices.length);
+      if (registeredServices.length > 0) {
+        console.log('🏥 Nomes dos serviços registrados:', registeredServices.map((s: any) => s.name).join(', '));
+      }
+      return registeredServices;
+    } catch (error) {
+      console.error('Erro ao obter serviços registrados:', error);
+      return [];
+    }
+  }
+
+  // Combinar serviços estáticos com serviços registrados
+  private static async getAllCombinedServices(): Promise<HealthService[]> {
+    const registeredServices = await this.getRegisteredServices();
+    const combined = [...this.services, ...registeredServices];
+    console.log(`🔗 Combinando serviços: ${this.services.length} estáticos + ${registeredServices.length} registrados = ${combined.length} total`);
+    return combined;
+  }
+
+  // Obter todos os serviços (com cache) incluindo registrados
+  static async getAllServices(): Promise<HealthService[]> {
     const cacheKey = 'all_services';
     const cachedServices = serviceCache.get<HealthService[]>(cacheKey);
     
@@ -14,15 +41,17 @@ export class HealthServiceAPI {
       return cachedServices;
     }
     
-    // Cache os serviços por 30 minutos
-    serviceCache.set(cacheKey, this.services, { ttl: 1000 * 60 * 30 });
-    return this.services;
+    const allServices = await this.getAllCombinedServices();
+    
+    // Cache os serviços por 10 minutos (menor tempo por incluir serviços dinâmicos)
+    serviceCache.set(cacheKey, allServices, { ttl: 1000 * 60 * 10 });
+    return allServices;
   }
 
   // Buscar serviços por texto (com cache)
-  static searchServices(query: string): HealthService[] {
+  static async searchServices(query: string): Promise<HealthService[]> {
     if (!query.trim()) {
-      return this.getAllServices();
+      return await this.getAllServices();
     }
 
     const searchTerm = query.toLowerCase().trim();
@@ -33,7 +62,8 @@ export class HealthServiceAPI {
       return cachedResults;
     }
 
-    const results = this.services.filter(service => 
+    const allServices = await this.getAllCombinedServices();
+    const results = allServices.filter(service => 
       service.name.toLowerCase().includes(searchTerm) ||
       service.type.toLowerCase().includes(searchTerm) ||
       service.address.toLowerCase().includes(searchTerm) ||
@@ -46,7 +76,7 @@ export class HealthServiceAPI {
   }
 
   // Buscar serviços por tipo (com cache)
-  static getServicesByType(type: string): HealthService[] {
+  static async getServicesByType(type: string): Promise<HealthService[]> {
     const cacheKey = `type_${type}`;
     const cachedResults = serviceCache.get<HealthService[]>(cacheKey);
     
@@ -54,16 +84,18 @@ export class HealthServiceAPI {
       return cachedResults;
     }
     
-    const results = this.services.filter(service => service.type === type);
+    const allServices = await this.getAllCombinedServices();
+    const results = allServices.filter(service => service.type === type);
     
-    // Cache os resultados por tipo por 60 minutos
-    serviceCache.set(cacheKey, results, { ttl: 1000 * 60 * 60 });
+    // Cache os resultados por tipo por 30 minutos
+    serviceCache.set(cacheKey, results, { ttl: 1000 * 60 * 30 });
     return results;
   }
 
   // Obter serviço por ID
-  static getServiceById(id: string): HealthService | undefined {
-    return this.services.find(service => service.id === id);
+  static async getServiceById(id: string): Promise<HealthService | undefined> {
+    const allServices = await this.getAllCombinedServices();
+    return allServices.find(service => service.id === id);
   }
 
   // Calcular distância entre dois pontos (fórmula de Haversine)
@@ -83,10 +115,10 @@ export class HealthServiceAPI {
   }
 
   // Obter serviços próximos (ordenados por distância) com cache
-  static getNearbyServices(
+  static async getNearbyServices(
     userLocation: Coordinates,
     radiusKm: number = 10
-  ): HealthService[] {
+  ): Promise<HealthService[]> {
     // Criar chave de cache baseada na localização (arredondada para evitar cache excessivo)
     const roundedLat = Math.round(userLocation.latitude * 1000) / 1000;
     const roundedLng = Math.round(userLocation.longitude * 1000) / 1000;
@@ -97,7 +129,8 @@ export class HealthServiceAPI {
       return cachedResults;
     }
 
-    const results = this.services
+    const allServices = await this.getAllCombinedServices();
+    const results = allServices
       .map(service => ({
         ...service,
         distance: this.calculateDistance(userLocation, service.coordinates)

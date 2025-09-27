@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Alert, ActivityIndicator } from 'react-native';
 import ValidatedInput from '../common/ValidatedInput';
+import { LocationPicker } from '../common/LocationPicker';
+import { GeocodingService } from '../../services/geocoding';
+import { LocationService } from '../../services/location';
+import { Coordinates } from '../../types';
 
 interface InstitutionFormProps {
   data: any;
@@ -17,8 +21,41 @@ const INSTITUTION_TYPES = [
   { label: 'Outro', value: 'other' },
 ];
 
+const AVAILABLE_SERVICES = [
+  'Emergência',
+  'Cirurgia',
+  'Pediatria',
+  'Cardiologia',
+  'Consultas',
+  'Exames',
+  'Vacinação',
+  'Check-up',
+  'Laboratório',
+  'Radiologia',
+  'Fisioterapia',
+  'Nutrição',
+  'Psicologia',
+  'Ginecologia',
+  'Urologia',
+  'Dermatologia',
+  'Oftalmologia',
+  'Ortopedia',
+  'Neurologia',
+  'Oncologia',
+  'Farmácia',
+  'Internação',
+  'UTI',
+  'Maternidade'
+];
+
 export default function InstitutionForm({ data, onChange, errors }: InstitutionFormProps) {
   const [showTypePicker, setShowTypePicker] = useState(false);
+  const [showServicesPicker, setShowServicesPicker] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<string[]>(data.services || []);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(data.coordinates || null);
 
   const handleNestedChange = (field: string, value: any) => {
     if (field.startsWith('address.')) {
@@ -35,6 +72,75 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
   const handleTypeSelect = (value: string) => {
     onChange('type', value);
     setShowTypePicker(false);
+  };
+
+  const handleServiceToggle = (service: string) => {
+    const updatedServices = selectedServices.includes(service)
+      ? selectedServices.filter((s: string) => s !== service)
+      : [...selectedServices, service];
+    
+    setSelectedServices(updatedServices);
+    onChange('services', updatedServices);
+  };
+
+  const handleAddressChange = async (field: string, value: string) => {
+    handleNestedChange(field, value);
+    
+    // Geocoding automático quando temos um endereço completo
+    if (field === 'address.street' && value.length > 5) {
+      const currentAddress = data.address || {};
+      const fullAddress = `${value}, ${currentAddress.city || ''}, ${currentAddress.state || ''}, Angola`.trim();
+      
+      if (fullAddress.length > 10) {
+        setIsGeocodingAddress(true);
+        try {
+          const result = await GeocodingService.getCoordinatesFromAddress(fullAddress);
+          if (result) {
+            setCoordinates(result.coordinates);
+            onChange('coordinates', result.coordinates);
+            console.log('✅ Coordenadas obtidas automaticamente:', result.coordinates);
+          }
+        } catch (error) {
+          console.log('⚠️ Geocoding automático falhou, usuário pode usar GPS ou mapa');
+        } finally {
+          setIsGeocodingAddress(false);
+        }
+      }
+    }
+  };
+
+  const handleUseGPS = async () => {
+    setIsGettingLocation(true);
+    try {
+      const location = await LocationService.getCurrentLocation();
+      if (location) {
+        setCoordinates(location.coordinates);
+        onChange('coordinates', location.coordinates);
+        
+        Alert.alert(
+          'Localização Obtida!',
+          `A localização da instituição foi capturada com precisão de ${location.accuracy.toFixed(0)} metros.`,
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Erro ao Obter Localização',
+        'Não foi possível obter a localização via GPS. Use a seleção manual no mapa.'
+      );
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
+
+  const handleLocationSelect = (coords: Coordinates, address?: string) => {
+    setCoordinates(coords);
+    onChange('coordinates', coords);
+    console.log('✅ Localização da instituição selecionada manualmente:', coords);
+  };
+
+  const formatCoordinates = (coords: Coordinates): string => {
+    return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
   };
 
   const selectedTypeLabel = INSTITUTION_TYPES.find(type => type.value === data.type)?.label || 'Selecione o tipo';
@@ -87,16 +193,98 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
         </View>
       </Modal>
       
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Serviços Disponíveis *</Text>
+        <TouchableOpacity
+          style={styles.servicesButton}
+          onPress={() => setShowServicesPicker(true)}
+        >
+          <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
+            {selectedServices.length > 0 
+              ? `${selectedServices.length} serviço(s) selecionado(s)`
+              : 'Selecione os serviços oferecidos'
+            }
+          </Text>
+        </TouchableOpacity>
+        {errors.services && <Text style={styles.errorText}>{errors.services}</Text>}
+        
+        {selectedServices.length > 0 && (
+          <View style={styles.selectedServices}>
+            {selectedServices.map((service: string, index: number) => (
+              <View key={index} style={styles.serviceTag}>
+                <Text style={styles.serviceTagText}>{service}</Text>
+                <TouchableOpacity
+                  onPress={() => handleServiceToggle(service)}
+                  style={styles.removeServiceButton}
+                >
+                  <Text style={styles.removeServiceText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+      
+      <Modal
+        visible={showServicesPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowServicesPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Selecione os Serviços</Text>
+            <FlatList
+              data={AVAILABLE_SERVICES}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.serviceOption,
+                    selectedServices.includes(item) && styles.selectedServiceOption
+                  ]}
+                  onPress={() => handleServiceToggle(item)}
+                >
+                  <Text style={[
+                    styles.serviceOptionText,
+                    selectedServices.includes(item) && styles.selectedServiceOptionText
+                  ]}>
+                    {item}
+                  </Text>
+                  {selectedServices.includes(item) && (
+                    <Text style={styles.checkmark}>✓</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowServicesPicker(false)}
+            >
+              <Text style={styles.modalCloseText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
       <Text style={styles.sectionTitle}>Endereço</Text>
       
-      <ValidatedInput
-        label="Rua"
-        value={data.address?.street || ''}
-        onChangeText={(value) => handleNestedChange('address.street', value)}
-        error={errors['address.street']}
-        placeholder="Rua, número"
-        required
-      />
+      <View style={styles.inputGroup}>
+        <ValidatedInput
+          label="Rua"
+          value={data.address?.street || ''}
+          onChangeText={(value) => handleAddressChange('address.street', value)}
+          error={errors['address.street']}
+          placeholder="Rua, número"
+          required
+        />
+        {isGeocodingAddress && (
+          <View style={styles.geocodingIndicator}>
+            <ActivityIndicator size="small" color="#3B82F6" />
+            <Text style={styles.geocodingText}>Obtendo coordenadas...</Text>
+          </View>
+        )}
+      </View>
       
       <ValidatedInput
         label="Cidade"
@@ -115,25 +303,79 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
         placeholder="Província"
         required
       />
+
+      {/* Seção de Coordenadas */}
+      <View style={styles.coordinatesSection}>
+        <Text style={styles.label}>Localização Exata da Instituição</Text>
+        <Text style={styles.coordinatesHelp}>
+          Para melhor precisão no mapa, capture a localização exata da instituição:
+        </Text>
+        
+        {coordinates ? (
+          <View style={styles.coordinatesDisplay}>
+            <Text style={styles.coordinatesTitle}>📍 Coordenadas Capturadas:</Text>
+            <Text style={styles.coordinatesText}>
+              {formatCoordinates(coordinates)}
+            </Text>
+            <TouchableOpacity
+              style={styles.updateLocationButton}
+              onPress={() => setShowLocationPicker(true)}
+            >
+              <Text style={styles.updateLocationButtonText}>
+                📍 Ajustar no Mapa
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.locationOptions}>
+            <TouchableOpacity
+              style={styles.locationOption}
+              onPress={handleUseGPS}
+              disabled={isGettingLocation}
+            >
+              {isGettingLocation ? (
+                <ActivityIndicator size="small" color="#3B82F6" />
+              ) : (
+                <Text style={styles.locationOptionText}>
+                  🎯 Usar GPS
+                </Text>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.locationOption}
+              onPress={() => setShowLocationPicker(true)}
+            >
+              <Text style={styles.locationOptionText}>
+                🗺️ Selecionar no Mapa
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        {errors.coordinates && (
+          <Text style={styles.errorText}>{errors.coordinates}</Text>
+        )}
+      </View>
       
       <ValidatedInput
-        label="Telefone da Instituição"
-        value={data.contactPhone || ''}
-        onChangeText={(value) => onChange('contactPhone', value)}
-        error={errors.contactPhone}
-        placeholder="+244 XXX XXX XXX"
-        keyboardType="phone-pad"
-        required
-      />
-      
-      <ValidatedInput
-        label="Descrição"
+        label="Descrição da Instituição"
         value={data.description || ''}
         onChangeText={(value) => onChange('description', value)}
         error={errors.description}
-        placeholder="Descreva os serviços oferecidos..."
+        placeholder="Descreva a instituição e seus serviços..."
         multiline
         numberOfLines={3}
+        required
+      />
+
+      {/* Modal do LocationPicker */}
+      <LocationPicker
+        visible={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationSelect={handleLocationSelect}
+        initialCoordinates={coordinates || undefined}
+        title="Selecionar Localização da Instituição"
       />
     </View>
   );
@@ -186,6 +428,52 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     marginTop: 4,
   },
+  servicesButton: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    padding: 16,
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  servicesButtonText: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  selectedServices: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  serviceTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    margin: 2,
+  },
+  serviceTagText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  removeServiceButton: {
+    marginLeft: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeServiceText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -196,7 +484,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     margin: 20,
-    maxHeight: 400,
+    maxHeight: 500,
     width: '90%',
   },
   modalTitle: {
@@ -212,9 +500,33 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
+  serviceOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  selectedServiceOption: {
+    backgroundColor: '#EBF4FF',
+  },
   modalOptionText: {
     fontSize: 16,
     color: '#374151',
+  },
+  serviceOptionText: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  selectedServiceOptionText: {
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  checkmark: {
+    color: '#10B981',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   modalCloseButton: {
     padding: 16,
@@ -229,5 +541,82 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6B7280',
     textAlign: 'center',
+  },
+  geocodingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#EBF4FF',
+    borderRadius: 6,
+  },
+  geocodingText: {
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#3B82F6',
+  },
+  coordinatesSection: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  coordinatesHelp: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 12,
+    lineHeight: 16,
+  },
+  coordinatesDisplay: {
+    backgroundColor: '#EBF4FF',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  coordinatesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E40AF',
+    marginBottom: 4,
+  },
+  coordinatesText: {
+    fontSize: 12,
+    color: '#3B82F6',
+    fontFamily: 'monospace',
+    marginBottom: 8,
+  },
+  updateLocationButton: {
+    backgroundColor: '#3B82F6',
+    padding: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  updateLocationButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  locationOptions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  locationOption: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    minHeight: 50,
+    justifyContent: 'center',
+  },
+  locationOptionText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
   },
 });

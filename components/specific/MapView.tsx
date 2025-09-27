@@ -25,6 +25,9 @@ export const MapView: React.FC<MapViewProps> = ({
 
   // Otimização: limitar número de serviços e ordenar por proximidade se houver localização do usuário
   const optimizedServices = useMemo(() => {
+    if (!services || !Array.isArray(services)) {
+      return [];
+    }
     let processedServices = [...services];
 
     // Se há localização do usuário, ordenar por distância

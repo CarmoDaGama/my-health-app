@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   ScrollView,
   FlatList,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { HealthService, Region } from '../types';
@@ -58,6 +59,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     loadServices();
   }, []);
 
+  // Recarregar dados quando a tela for focada (útil quando voltando de registro)
+  useFocusEffect(
+    useCallback(() => {
+      loadServices();
+    }, [])
+  );
+
   // Atualizar região quando localização ou serviços mudarem
   useEffect(() => {
     updateMapRegion();
@@ -77,19 +85,42 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, [filteredServices]);
 
   const loadServices = async () => {
+    console.log('🔄 Carregando serviços...');
     const result = await executeAsync(async () => {
-      const data = HealthServiceAPI.getAllServices();
+      const data = await HealthServiceAPI.getAllServices();
+      console.log(`📊 Serviços carregados: ${data?.length || 0}`);
+      console.log('🏥 Tipos de serviços:', data?.map(s => s.type).join(', '));
       setServices(data);
       return data;
     }, 'LOAD_SERVICES');
     
     if (!result) {
+      console.log('❌ Falha ao carregar serviços');
       // Fallback para dados offline se houver erro
       setServices([]);
     }
   };
 
+  // Método para forçar recarregamento dos dados
+  const refreshServices = async () => {
+    console.log('🔄 Forçando recarregamento dos serviços...');
+    // Limpar cache primeiro
+    try {
+      const { serviceCache } = require('../services/cache');
+      serviceCache.clear();
+    } catch (error) {
+      console.error('Erro ao limpar cache:', error);
+    }
+    
+    await loadServices();
+  };
+
   const filterServices = () => {
+    if (!services || !Array.isArray(services)) {
+      setFilteredServices([]);
+      return;
+    }
+
     if (!searchQuery.trim()) {
       setFilteredServices(services);
       return;
@@ -118,7 +149,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   // Função para encontrar o centro com maior densidade de serviços
   const findOptimalMapCenter = (): { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } => {
-    if (services.length === 0) {
+    if (!services || !Array.isArray(services) || services.length === 0) {
       // Fallback para Luanda se não há serviços
       return {
         latitude: -8.8379,
@@ -288,16 +319,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     console.log('🗺️ Calculando região otimizada do mapa...');
-    console.log(`📊 Total de serviços: ${services.length}`);
+    console.log(`📊 Total de serviços: ${services?.length || 0}`);
     
     const optimalRegion = findOptimalMapCenter();
     
-    const relevantServicesCount = services.filter(service => 
+    const relevantServicesCount = services && Array.isArray(services) ? services.filter(service => 
       service.type === 'professional' || 
       service.type === 'hospital' || 
       service.type === 'clinic' || 
       service.type === 'emergency'
-    ).length;
+    ).length : 0;
     
     console.log('📍 Nova região:', {
       lat: optimalRegion.latitude.toFixed(4),
@@ -369,6 +400,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const getTabData = () => {
     let filteredData: HealthService[] = [];
+    
+    if (!services || !Array.isArray(services)) {
+      return [];
+    }
     
     switch (activeTab) {
       case 'profissionais':
@@ -463,12 +498,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={() => (
           <View style={styles.listHeaderContainer}>
-            <Text style={styles.listHeaderTitle}>
-              {getTabTitle()}
-            </Text>
-            <Text style={styles.listHeaderSubtitle}>
-              {data.length} {data.length === 1 ? 'serviço encontrado' : 'serviços encontrados'}
-            </Text>
+            <View style={styles.listHeaderTop}>
+              <View>
+                <Text style={styles.listHeaderTitle}>
+                  {getTabTitle()}
+                </Text>
+                <Text style={styles.listHeaderSubtitle}>
+                  {data.length} {data.length === 1 ? 'serviço encontrado' : 'serviços encontrados'}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.refreshButton} 
+                onPress={refreshServices}
+              >
+                <Ionicons name="refresh" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         renderItem={({ item }) => (
@@ -1029,6 +1074,11 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
     marginBottom: spacing.md,
   },
+  listHeaderTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   listHeaderTitle: {
     fontSize: fontSize.xl,
     fontWeight: '700',
@@ -1040,6 +1090,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: Colors.text.secondary,
     textAlign: 'center',
+  },
+  refreshButton: {
+    padding: spacing.sm,
+    borderRadius: 20,
+    backgroundColor: Colors.primary + '20',
   },
   serviceSpecialty: {
     fontSize: fontSize.md,

@@ -112,9 +112,6 @@ export default function RegisterScreen() {
       if (!formData.institutionInfo?.address?.city) {
         newErrors['address.city'] = 'Cidade é obrigatória';
       }
-      if (!formData.institutionInfo?.contactPhone) {
-        newErrors.contactPhone = 'Telefone da instituição é obrigatório';
-      }
     }
 
     setFormErrors(newErrors);

@@ -6,13 +6,19 @@ import {
   AuthResponse, 
   ResetPasswordData, 
   ChangePasswordData,
-  UserPreferences 
+  UserPreferences,
+  UserType,
+  NormalUser,
+  Professional,
+  Institution
 } from '../types';
 
 // Storage keys
 const AUTH_TOKEN_KEY = '@health_app:auth_token';
 const REFRESH_TOKEN_KEY = '@health_app:refresh_token';
 const USER_DATA_KEY = '@health_app:user_data';
+const REGISTERED_USERS_KEY = '@health_app:registered_users';
+const REGISTERED_SERVICES_KEY = '@health_app:registered_services';
 
 export class AuthService {
   private static baseURL = 'https://api.health-app.ao'; // Placeholder para API real
@@ -25,9 +31,26 @@ export class AuthService {
       // Validar dados de entrada
       this.validateRegisterData(data);
       
-      // Simular chamada de API (substituir por API real em produção)
+      // Verificar se o email já está em uso
+      const existingUser = await this.findRegisteredUserByEmail(data.email);
+      if (existingUser) {
+        throw new Error('Este email já está em uso');
+      }
+      
+      // Criar novo usuário
+      const newUser = this.createMockUser(data);
+      
+      // Salvar usuário na base de dados local
+      await this.saveRegisteredUser(newUser, data.password);
+      
+      // Se for profissional ou instituição, adicionar aos serviços de saúde
+      if (data.userType === UserType.PROFESSIONAL || data.userType === UserType.INSTITUTION) {
+        await this.addToHealthServices(newUser, data);
+      }
+      
+      // Simular chamada de API
       const mockResponse = await this.simulateApiCall<AuthResponse>({
-        user: this.createMockUser(data),
+        user: newUser,
         token: this.generateMockToken(),
         refreshToken: this.generateMockToken(),
       });
@@ -50,9 +73,16 @@ export class AuthService {
       // Validar credenciais
       this.validateCredentials(credentials);
       
+      // Verificar se o usuário existe na base de dados local
+      const registeredUser = await this.findRegisteredUser(credentials.email, credentials.password);
+      
+      if (!registeredUser) {
+        throw new Error('Email ou senha incorretos');
+      }
+      
       // Simular chamada de API
       const mockResponse = await this.simulateApiCall<AuthResponse>({
-        user: this.createMockUserFromLogin(credentials.email),
+        user: registeredUser,
         token: this.generateMockToken(),
         refreshToken: this.generateMockToken(),
       });
@@ -63,7 +93,7 @@ export class AuthService {
       return mockResponse;
     } catch (error) {
       console.error('Erro no login:', error);
-      throw new Error('Email ou senha incorretos');
+      throw new Error(error instanceof Error ? error.message : 'Email ou senha incorretos');
     }
   }
   
@@ -130,11 +160,11 @@ export class AuthService {
         throw new Error('Usuário não autenticado');
       }
       
-      const updatedUser: User = {
+      const updatedUser: any = {
         ...currentUser,
         ...userData,
         id: currentUser.id, // Manter ID original
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       };
       
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
@@ -155,13 +185,13 @@ export class AuthService {
         throw new Error('Usuário não autenticado');
       }
       
-      const updatedUser: User = {
+      const updatedUser: any = {
         ...currentUser,
         preferences: {
           ...currentUser.preferences,
           ...preferences,
         },
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       };
       
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(updatedUser));
@@ -275,40 +305,14 @@ export class AuthService {
       email: data.email,
       name: data.name,
       phone: data.phone,
+      userType: data.userType,
       preferences: defaultPreferences,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any;
   }
   
-  private static createMockUserFromLogin(email: string): User {
-    const defaultPreferences: UserPreferences = {
-      language: 'pt',
-      notifications: {
-        enabled: true,
-        serviceReminders: true,
-        healthTips: true,
-        emergencyAlerts: true,
-      },
-      favorites: {
-        services: [],
-        locations: [],
-      },
-      privacy: {
-        shareLocation: true,
-        publicProfile: false,
-      },
-    };
-    
-    return {
-      id: this.generateId(),
-      email,
-      name: 'Usuário Teste',
-      preferences: defaultPreferences,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-  }
+
   
   private static generateId(): string {
     return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -321,5 +325,144 @@ export class AuthService {
   private static async simulateApiCall<T>(data: T, delay = 500): Promise<T> {
     await new Promise(resolve => setTimeout(resolve, delay));
     return data;
+  }
+
+  // Métodos para gerenciar usuários registrados
+  private static async saveRegisteredUser(user: User, password: string): Promise<void> {
+    try {
+      const registeredUsersJson = await AsyncStorage.getItem(REGISTERED_USERS_KEY);
+      const registeredUsers = registeredUsersJson ? JSON.parse(registeredUsersJson) : [];
+      
+      registeredUsers.push({
+        ...user,
+        password: password // Em produção, a senha deveria ser hasheada
+      });
+      
+      await AsyncStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(registeredUsers));
+    } catch (error) {
+      console.error('Erro ao salvar usuário registrado:', error);
+    }
+  }
+
+  private static async findRegisteredUser(email: string, password: string): Promise<User | null> {
+    try {
+      const registeredUsersJson = await AsyncStorage.getItem(REGISTERED_USERS_KEY);
+      const registeredUsers = registeredUsersJson ? JSON.parse(registeredUsersJson) : [];
+      
+      const user = registeredUsers.find(
+        (user: any) => user.email === email && user.password === password
+      );
+      
+      if (user) {
+        // Remover a senha antes de retornar
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar usuário registrado:', error);
+      return null;
+    }
+  }
+
+  private static async findRegisteredUserByEmail(email: string): Promise<User | null> {
+    try {
+      const registeredUsersJson = await AsyncStorage.getItem(REGISTERED_USERS_KEY);
+      const registeredUsers = registeredUsersJson ? JSON.parse(registeredUsersJson) : [];
+      
+      const user = registeredUsers.find((user: any) => user.email === email);
+      
+      if (user) {
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por email:', error);
+      return null;
+    }
+  }
+
+  private static async addToHealthServices(user: User, data: RegisterData): Promise<void> {
+    try {
+      console.log('💾 Adicionando usuário aos serviços de saúde:', user.name, data.userType);
+      const servicesJson = await AsyncStorage.getItem(REGISTERED_SERVICES_KEY);
+      const services = servicesJson ? JSON.parse(servicesJson) : [];
+      console.log('📊 Serviços existentes:', services.length);
+      
+      let newService;
+      
+      if (data.userType === UserType.PROFESSIONAL) {
+        newService = {
+          id: user.id,
+          name: `Dr(a). ${user.name}`,
+          type: 'professional',
+          address: data.professionalInfo?.address || 'Endereço não informado',
+          city: 'Luanda', // Default
+          state: 'Luanda', // Default
+          country: 'Angola',
+          coordinates: {
+            latitude: -8.8379 + (Math.random() - 0.5) * 0.1,
+            longitude: 13.2894 + (Math.random() - 0.5) * 0.1
+          },
+          phone: user.phone || 'Não informado',
+          description: data.professionalInfo?.description || `Especialista em ${data.professionalInfo?.specialty}`,
+          rating: 5.0,
+          services: data.professionalInfo?.services || [data.professionalInfo?.specialty],
+          specialty: data.professionalInfo?.specialty,
+          license: data.professionalInfo?.license,
+          experience: data.professionalInfo?.experience || 0
+        };
+      } else if (data.userType === UserType.INSTITUTION) {
+        newService = {
+          id: user.id,
+          name: user.name,
+          type: data.institutionInfo?.type || 'clinic',
+          address: `${data.institutionInfo?.address?.street}, ${data.institutionInfo?.address?.city}`,
+          city: data.institutionInfo?.address?.city || 'Luanda',
+          state: data.institutionInfo?.address?.state || 'Luanda',
+          country: 'Angola',
+          coordinates: {
+            latitude: -8.8379 + (Math.random() - 0.5) * 0.1,
+            longitude: 13.2894 + (Math.random() - 0.5) * 0.1
+          },
+          phone: user.phone || 'Não informado',
+          description: data.institutionInfo?.description || 'Instituição de saúde',
+          rating: 5.0,
+          services: data.institutionInfo?.services || ['Consultas'],
+          institutionType: data.institutionInfo?.type
+        };
+      }
+      
+      if (newService) {
+        console.log('✅ Novo serviço criado:', newService.name, newService.type);
+        services.push(newService);
+        await AsyncStorage.setItem(REGISTERED_SERVICES_KEY, JSON.stringify(services));
+        console.log('💾 Serviço salvo! Total de serviços registrados:', services.length);
+        
+        // Limpar cache para forçar recarregamento dos serviços
+        console.log('🧹 Limpando cache de serviços...');
+        this.clearServicesCache();
+      } else {
+        console.log('❌ Erro: newService é null');
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar aos serviços de saúde:', error);
+    }
+  }
+
+  // Método para limpar cache de serviços
+  private static clearServicesCache(): void {
+    try {
+      // Importar dinamicamente para evitar dependência circular
+      const { serviceCache } = require('./cache');
+      serviceCache.remove('all_services');
+      // Limpar outros caches relacionados
+      serviceCache.clear(); // Limpar todo o cache para garantir
+    } catch (error) {
+      console.error('Erro ao limpar cache:', error);
+    }
   }
 }
