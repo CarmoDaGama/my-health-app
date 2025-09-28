@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Alert, Activ
 import ValidatedInput from '../common/ValidatedInput';
 import { LocationPicker } from '../common/LocationPicker';
 import { GeocodingService } from '../../services/geocoding';
-import { LocationService } from '../../services/location';
+import { LocationServiceExpo as LocationService } from '../../services/location-expo';
 import { Coordinates } from '../../types';
 
 interface ProfessionalFormProps {

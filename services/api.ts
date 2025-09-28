@@ -38,14 +38,63 @@ export class HealthServiceAPI {
     const cachedServices = serviceCache.get<HealthService[]>(cacheKey);
     
     if (cachedServices) {
+      console.log('📋 Usando serviços do cache:', cachedServices.length);
       return cachedServices;
     }
     
+    console.log('🔄 Carregando serviços do storage...');
     const allServices = await this.getAllCombinedServices();
     
     // Cache os serviços por 10 minutos (menor tempo por incluir serviços dinâmicos)
     serviceCache.set(cacheKey, allServices, { ttl: 1000 * 60 * 10 });
     return allServices;
+  }
+
+  // Forçar recarregamento dos serviços (limpar cache e recarregar)
+  static async refreshServices(): Promise<HealthService[]> {
+    console.log('🔄 Forçando recarregamento de serviços...');
+    const cacheKey = 'all_services';
+    
+    // Limpar cache
+    serviceCache.remove(cacheKey);
+    console.log('✅ Cache removido');
+    
+    // Recarregar serviços
+    const allServices = await this.getAllCombinedServices();
+    
+    // Recriar cache
+    serviceCache.set(cacheKey, allServices, { ttl: 1000 * 60 * 10 });
+    console.log('✅ Serviços recarregados:', allServices.length);
+    
+    return allServices;
+  }
+
+  // Método de debug para listar todos os serviços
+  static async debugListAllServices(): Promise<void> {
+    console.log('🔍 === DEBUG: LISTANDO TODOS OS SERVIÇOS ===');
+    
+    // Serviços estáticos
+    console.log('📋 Serviços estáticos:', this.services.length);
+    this.services.forEach((service, index) => {
+      console.log(`   ${index + 1}. ${service.name} (${service.type})`);
+    });
+    
+    // Serviços registrados
+    const registeredServices = await this.getRegisteredServices();
+    console.log('📱 Serviços registrados:', registeredServices.length);
+    registeredServices.forEach((service: any, index: number) => {
+      console.log(`   ${index + 1}. ${service.name} (${service.type}) - ${service.address}`);
+    });
+    
+    // Total combinado
+    const allServices = await this.getAllCombinedServices();
+    console.log('🔗 Total combinado:', allServices.length);
+    
+    // Cache status
+    const cachedServices = serviceCache.get<HealthService[]>('all_services');
+    console.log('💾 Em cache:', cachedServices ? cachedServices.length : 'nenhum');
+    
+    console.log('🔍 === FIM DEBUG ===');
   }
 
   // Buscar serviços por texto (com cache)

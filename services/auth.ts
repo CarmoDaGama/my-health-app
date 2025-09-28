@@ -60,8 +60,14 @@ export class AuthService {
       
       return mockResponse;
     } catch (error) {
-      console.error('Erro no registro:', error);
-      throw new Error(error instanceof Error ? error.message : 'Erro ao registrar usuário');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao registrar usuário';
+      console.error('🚨 ERRO NO REGISTRO - Detalhes:', {
+        email: data.email,
+        userType: data.userType,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw new Error(errorMessage);
     }
   }
   
@@ -246,15 +252,41 @@ export class AuthService {
     }
     
     if (!this.isValidEmail(data.email)) {
-      throw new Error('Email inválido');
+      throw new Error('Email inválido - verifique o formato (exemplo@dominio.com)');
     }
     
     if (data.password.length < 6) {
       throw new Error('Senha deve ter pelo menos 6 caracteres');
     }
     
+    if (data.phone && !this.isValidAngolanPhone(data.phone)) {
+      throw new Error('Número de telefone inválido - use o formato angolano (+244 9XX XXX XXX)');
+    }
+    
     if (!data.acceptTerms) {
-      throw new Error('É necessário aceitar os termos de uso');
+      throw new Error('É necessário aceitar os termos de uso para continuar');
+    }
+    
+    // Validações específicas por tipo de usuário
+    if (data.userType === UserType.PROFESSIONAL) {
+      if (!data.professionalInfo?.specialty) {
+        throw new Error('Especialidade é obrigatória para profissionais de saúde');
+      }
+      if (!data.professionalInfo?.license) {
+        throw new Error('Número da licença profissional é obrigatório');
+      }
+    }
+    
+    if (data.userType === UserType.INSTITUTION) {
+      if (!data.institutionInfo?.type) {
+        throw new Error('Tipo de instituição é obrigatório');
+      }
+      if (!data.institutionInfo?.address?.street) {
+        throw new Error('Endereço da instituição é obrigatório');
+      }
+      if (!data.institutionInfo?.address?.city) {
+        throw new Error('Cidade da instituição é obrigatória');
+      }
     }
   }
   
@@ -271,6 +303,12 @@ export class AuthService {
   private static isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  private static isValidAngolanPhone(phone: string): boolean {
+    // Formato angolano: +244 9xx xxx xxx ou 9xx xxx xxx
+    const phoneRegex = /^(\+244\s?)?9[0-9]{8}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ''));
   }
   
   private static async saveAuthData(authResponse: AuthResponse): Promise<void> {
@@ -403,7 +441,7 @@ export class AuthService {
           city: 'Luanda', // Default
           state: 'Luanda', // Default
           country: 'Angola',
-          coordinates: {
+          coordinates: data.professionalInfo?.coordinates || {
             latitude: -8.8379 + (Math.random() - 0.5) * 0.1,
             longitude: 13.2894 + (Math.random() - 0.5) * 0.1
           },
@@ -424,7 +462,7 @@ export class AuthService {
           city: data.institutionInfo?.address?.city || 'Luanda',
           state: data.institutionInfo?.address?.state || 'Luanda',
           country: 'Angola',
-          coordinates: {
+          coordinates: data.institutionInfo?.coordinates || {
             latitude: -8.8379 + (Math.random() - 0.5) * 0.1,
             longitude: 13.2894 + (Math.random() - 0.5) * 0.1
           },
@@ -442,9 +480,12 @@ export class AuthService {
         await AsyncStorage.setItem(REGISTERED_SERVICES_KEY, JSON.stringify(services));
         console.log('💾 Serviço salvo! Total de serviços registrados:', services.length);
         
-        // Limpar cache para forçar recarregamento dos serviços
-        console.log('🧹 Limpando cache de serviços...');
-        this.clearServicesCache();
+        // Forçar recarregamento dos serviços
+        console.log('🔄 Forçando recarregamento dos serviços...');
+        await this.forceRefreshServices();
+        
+        // Debug: listar todos os serviços após registro
+        await this.debugAllServices();
       } else {
         console.log('❌ Erro: newService é null');
       }
@@ -453,16 +494,57 @@ export class AuthService {
     }
   }
 
-  // Método para limpar cache de serviços
-  private static clearServicesCache(): void {
+  // Método para forçar recarregamento dos serviços
+  private static async forceRefreshServices(): Promise<void> {
+    try {
+      console.log('🔄 Forçando refresh dos serviços via HealthServiceAPI...');
+      // Importar dinamicamente para evitar dependência circular
+      const { HealthServiceAPI } = require('./api');
+      await HealthServiceAPI.refreshServices();
+      console.log('✅ Serviços recarregados com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao recarregar serviços:', error);
+      // Fallback para o método antigo
+      this.clearServicesCache();
+    }
+  }
+
+  // Método para debug - listar todos os serviços
+  private static async debugAllServices(): Promise<void> {
     try {
       // Importar dinamicamente para evitar dependência circular
-      const { serviceCache } = require('./cache');
-      serviceCache.remove('all_services');
-      // Limpar outros caches relacionados
-      serviceCache.clear(); // Limpar todo o cache para garantir
+      const { HealthServiceAPI } = require('./api');
+      await HealthServiceAPI.debugListAllServices();
     } catch (error) {
-      console.error('Erro ao limpar cache:', error);
+      console.error('❌ Erro ao executar debug dos serviços:', error);
+    }
+  }
+
+  // Método para limpar cache de serviços (fallback)
+  private static clearServicesCache(): void {
+    try {
+      console.log('🧹 Iniciando limpeza de cache...');
+      // Importar dinamicamente para evitar dependência circular
+      const { serviceCache } = require('./cache');
+      
+      // Verificar cache antes da limpeza
+      const cachedServices = serviceCache.get('all_services');
+      console.log('📋 Serviços em cache antes da limpeza:', cachedServices ? cachedServices.length : 'nenhum');
+      
+      // Limpar cache específico
+      serviceCache.remove('all_services');
+      console.log('✅ Cache "all_services" removido');
+      
+      // Limpar outros caches relacionados
+      serviceCache.clear();
+      console.log('✅ Todo o cache limpo');
+      
+      // Verificar se foi realmente limpo
+      const afterClear = serviceCache.get('all_services');
+      console.log('📋 Serviços em cache após limpeza:', afterClear ? 'AINDA TEM CACHE' : 'cache limpo com sucesso');
+      
+    } catch (error) {
+      console.error('❌ Erro ao limpar cache:', error);
     }
   }
 }

@@ -62,6 +62,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Recarregar dados quando a tela for focada (útil quando voltando de registro)
   useFocusEffect(
     useCallback(() => {
+      console.log('👁️ HomeScreen focada - recarregando serviços...');
       loadServices();
     }, [])
   );

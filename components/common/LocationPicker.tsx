@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Coordinates } from '../../types';
-import { LocationService, LocationResult, ReverseGeocodeResult } from '../../services/location';
+import { LocationServiceExpo as LocationService, LocationResult } from '../../services/location-expo';
 import { Colors } from '../../constants/colors';
 
 // Mapear cores para compatibilidade
@@ -460,7 +460,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleUseCurrentLocation = async () => {
     console.log('🎯 Obtendo localização atual...');
-    
     try {
       const locationResult = await LocationService.getCurrentLocation();
       if (locationResult) {
@@ -468,14 +467,12 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           coordinates: locationResult.coordinates,
           address: locationResult.address,
         };
-        
         setSelectedMarker(marker);
         setMapRegion({
           latitude: locationResult.coordinates.latitude,
           longitude: locationResult.coordinates.longitude,
           zoom: 16,
         });
-
         // Centralizar mapa na nova localização usando GPS
         if (webViewRef.current && isMapReady) {
           const message = JSON.stringify({
@@ -486,7 +483,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           });
           webViewRef.current.postMessage(message);
         }
-        
         Alert.alert(
           'Localização Obtida!',
           `Sua localização foi capturada com precisão de ${locationResult.accuracy.toFixed(0)} metros.`,

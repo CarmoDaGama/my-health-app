@@ -43,22 +43,54 @@ export default function RegisterScreen() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const handleFieldChange = (field: string, value: any) => {
+    console.log('🔄 handleFieldChange:', field, '=', value);
+    
     if (field === 'confirmPassword') {
       setConfirmPassword(value);
       return;
     }
 
     if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...((prev as any)[parent] || {}),
-          [child]: value
-        }
-      }));
+      const fieldParts = field.split('.');
+      
+      if (fieldParts.length === 2) {
+        // Simple nested field like institutionInfo.type
+        const [parent, child] = fieldParts;
+        setFormData(prev => {
+          const newData = {
+            ...prev,
+            [parent]: {
+              ...((prev as any)[parent] || {}),
+              [child]: value
+            }
+          };
+          console.log('📝 Updated nested field:', newData);
+          return newData;
+        });
+      } else if (fieldParts.length === 3) {
+        // Double nested field like institutionInfo.address.street
+        const [parent, grandParent, child] = fieldParts;
+        setFormData(prev => {
+          const newData = {
+            ...prev,
+            [parent]: {
+              ...((prev as any)[parent] || {}),
+              [grandParent]: {
+                ...((prev as any)[parent]?.[grandParent] || {}),
+                [child]: value
+              }
+            }
+          };
+          console.log('📝 Updated double nested field:', newData);
+          return newData;
+        });
+      }
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData(prev => {
+        const newData = { ...prev, [field]: value };
+        console.log('📝 Updated simple field:', newData);
+        return newData;
+      });
     }
     
     // Clear error when user starts typing
@@ -129,7 +161,39 @@ export default function RegisterScreen() {
         [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
       );
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      console.error('🚨 ERRO NO FRONTEND - Registro falhou:', {
+        error: errorMessage,
+        formData: {
+          email: formData.email,
+          userType: formData.userType,
+          hasRequiredFields: !!(formData.name && formData.email && formData.password)
+        }
+      });
+      
+      // Determine specific error message for user
+      let userMessage = 'Não foi possível criar a conta. Tente novamente.';
+      let alertTitle = 'Erro no Registro';
+      
+      if (errorMessage.includes('email já está em uso')) {
+        alertTitle = 'Email já Cadastrado';
+        userMessage = 'Este email já possui uma conta registrada. Tente fazer login ou use outro email.';
+      } else if (errorMessage.includes('Email inválido')) {
+        alertTitle = 'Email Inválido';
+        userMessage = 'Por favor, verifique se o email está no formato correto.';
+      } else if (errorMessage.includes('Senha')) {
+        alertTitle = 'Problema com a Senha';
+        userMessage = errorMessage;
+      } else if (errorMessage.includes('telefone')) {
+        alertTitle = 'Telefone Inválido';
+        userMessage = 'Por favor, verifique se o número de telefone está correto.';
+      } else if (errorMessage.includes('obrigatório')) {
+        alertTitle = 'Campos Obrigatórios';
+        userMessage = 'Por favor, preencha todos os campos obrigatórios.';
+      }
+      
+      Alert.alert(alertTitle, userMessage);
     }
   };
 
@@ -147,7 +211,7 @@ export default function RegisterScreen() {
         return (
           <InstitutionForm
             data={formData.institutionInfo}
-            onChange={handleFieldChange}
+            onChange={(field, value) => handleFieldChange(`institutionInfo.${field}`, value)}
             errors={formErrors}
           />
         );

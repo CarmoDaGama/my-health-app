@@ -130,7 +130,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         error: null,
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro no login';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no login';
+      console.error('🚨 ERRO NO HOOK useAuth - Login falhou:', {
+        error: errorMessage,
+        credentials: {
+          email: credentials.email,
+          hasPassword: !!credentials.password
+        }
+      });
+      
       setAuthState(prev => ({
         ...prev,
         isLoading: false,
@@ -160,7 +168,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro no registro';
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no registro';
+      console.error('🚨 ERRO NO HOOK useAuth - Registro falhou:', {
+        error: errorMessage,
+        userData: {
+          email: data.email,
+          userType: data.userType,
+          hasName: !!data.name,
+          hasPhone: !!data.phone
+        }
+      });
+      
       setAuthState(prev => ({
         ...prev,
         isLoading: false,

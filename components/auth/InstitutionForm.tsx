@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, FlatList, Alert, Activ
 import ValidatedInput from '../common/ValidatedInput';
 import { LocationPicker } from '../common/LocationPicker';
 import { GeocodingService } from '../../services/geocoding';
-import { LocationService } from '../../services/location';
+import { LocationServiceExpo as LocationService } from '../../services/location-expo';
 import { Coordinates } from '../../types';
 
 interface InstitutionFormProps {
@@ -58,15 +58,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
   const [coordinates, setCoordinates] = useState<Coordinates | null>(data.coordinates || null);
 
   const handleNestedChange = (field: string, value: any) => {
-    if (field.startsWith('address.')) {
-      const addressField = field.replace('address.', '');
-      onChange('address', {
-        ...data.address,
-        [addressField]: value
-      });
-    } else {
-      onChange(field, value);
-    }
+    onChange(field, value);
   };
 
   const handleTypeSelect = (value: string) => {
