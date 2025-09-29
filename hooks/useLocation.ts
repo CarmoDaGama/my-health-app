@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import * as Location from 'expo-location';
 import { Coordinates } from '../types';
+import { LocationService, LocationResult } from '../services/location';
 
 interface LocationState {
   location: Coordinates | null;
   loading: boolean;
   error: string | null;
+  accuracy: number | null;
+  address: string | null;
+  timestamp: number | null;
 }
 
 export const useLocation = () => {
@@ -13,6 +16,9 @@ export const useLocation = () => {
     location: null,
     loading: true,
     error: null,
+    accuracy: null,
+    address: null,
+    timestamp: null,
   });
 
   useEffect(() => {
@@ -23,36 +29,62 @@ export const useLocation = () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
-      // Solicitar permissão
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      // Usar o novo serviço de localização com fallbacks
+      const locationResult = await LocationService.getLocationWithFallback();
       
-      if (status !== 'granted') {
+      if (locationResult) {
+        setState({
+          location: locationResult.coordinates,
+          loading: false,
+          error: null,
+          accuracy: locationResult.accuracy,
+          address: locationResult.address || null,
+          timestamp: locationResult.timestamp,
+        });
+      } else {
         setState(prev => ({
           ...prev,
           loading: false,
-          error: 'Permission to access location was denied',
+          error: 'Não foi possível obter localização',
         }));
-        return;
       }
-
-      // Obter localização atual
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      setState({
-        location: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-        loading: false,
-        error: null,
-      });
-    } catch (error) {
+    } catch (error: any) {
       setState(prev => ({
         ...prev,
         loading: false,
-        error: 'Failed to get location',
+        error: error.message || 'Falha ao obter localização',
+      }));
+    }
+  };
+
+  const getCurrentLocationPrecise = async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      // Usar método direto para maior precisão (sem fallbacks)
+      const locationResult = await LocationService.getCurrentLocation();
+      
+      if (locationResult) {
+        setState({
+          location: locationResult.coordinates,
+          loading: false,
+          error: null,
+          accuracy: locationResult.accuracy,
+          address: locationResult.address || null,
+          timestamp: locationResult.timestamp,
+        });
+      } else {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Permissão negada ou GPS não disponível',
+        }));
+      }
+    } catch (error: any) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: error.message || 'Falha ao obter localização precisa',
       }));
     }
   };
@@ -60,5 +92,7 @@ export const useLocation = () => {
   return {
     ...state,
     refetch: getCurrentLocation,
+    getCurrentLocationPrecise,
+    isLocationInAngola: state.location ? LocationService.isLocationInAngola(state.location) : null,
   };
 };

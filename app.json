@@ -15,7 +15,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Este aplicativo precisa de acesso à localização para encontrar serviços de saúde próximos a você."
+        "NSLocationWhenInUseUsageDescription": "Este aplicativo precisa de acesso à localização para encontrar serviços de saúde próximos a você e ajudar no registro de profissionais e instituições.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Este aplicativo precisa de acesso à localização para encontrar serviços de saúde próximos e fornecer navegação em tempo real."
       }
     },
     "android": {
@@ -26,7 +27,8 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
       ]
     },
     "web": {
@@ -36,7 +38,10 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Permitir que $(PRODUCT_NAME) use sua localização para encontrar serviços de saúde próximos e fornecer navegação.",
+          "locationWhenInUsePermission": "Permitir que $(PRODUCT_NAME) use sua localização para encontrar serviços de saúde próximos.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
         }
       ],
       "expo-localization",
