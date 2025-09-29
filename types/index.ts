@@ -142,6 +142,27 @@ export interface Institution extends BaseUser {
 export type User = NormalUser | Professional | Institution;
 export type AnyUser = GuestUser | User;
 
+// Type Guards
+export function isGuestUser(user: AnyUser): user is GuestUser {
+  return user.userType === UserType.GUEST;
+}
+
+export function isNormalUser(user: AnyUser): user is NormalUser {
+  return user.userType === UserType.NORMAL_USER;
+}
+
+export function isProfessional(user: AnyUser): user is Professional {
+  return user.userType === UserType.PROFESSIONAL;
+}
+
+export function isInstitution(user: AnyUser): user is Institution {
+  return user.userType === UserType.INSTITUTION;
+}
+
+export function isLoggedInUser(user: AnyUser): user is User {
+  return !isGuestUser(user);
+}
+
 // User Preferences Interface
 export interface UserPreferences {
   language: 'pt' | 'en';
