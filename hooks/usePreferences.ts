@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserPreferences } from '../types';
-import { useAuth } from './useAuth';
+import { useAuth } from './useAuth-firebase';
 import { useTranslation } from './useTranslation';
 
 export const usePreferences = () => {

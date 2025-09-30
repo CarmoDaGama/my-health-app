@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
+  updatePreferences: (preferences: Partial<UserProfile['preferences']>) => Promise<{ success: boolean; error?: string }>;
   continueAsGuest: () => void;
 }
 
@@ -157,6 +158,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updatePreferences = async (preferences: Partial<UserProfile['preferences']>) => {
+    if (!user) {
+      return { success: false, error: 'Usuário não autenticado' };
+    }
+
+    try {
+      const updates = { preferences: { ...user.preferences, ...preferences } };
+      const response = await AuthServiceFirebase.updateProfile(user.id, updates);
+      
+      if (response.success) {
+        // Update local state
+        setUser(current => current ? { ...current, ...updates } : null);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Update preferences error:', error);
+      return { success: false, error: 'Erro ao atualizar preferências' };
+    }
+  };
+
   const continueAsGuest = () => {
     setIsGuestMode(true);
     setUser({
@@ -186,6 +208,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     forgotPassword,
     updateProfile,
+    updatePreferences,
     continueAsGuest
   };
 
@@ -207,4 +230,16 @@ export function useAuthFirebase(): AuthContextType {
 // Backward compatibility hook
 export function useAuth() {
   return useAuthFirebase();
+}
+
+// Hook específico para dados do usuário
+export function useUser() {
+  const { user, updateProfile, updatePreferences } = useAuthFirebase();
+  
+  return {
+    user,
+    updateProfile,
+    updatePreferences,
+    isLoggedIn: !!user,
+  };
 }
