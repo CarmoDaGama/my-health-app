@@ -18,11 +18,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAuth = true,
   onLoginPress,
 }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const { t } = useTranslation();
 
   // Show loading while checking authentication
-  if (isLoading) {
+  if (loading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={Colors.primary} />

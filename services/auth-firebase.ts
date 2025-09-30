@@ -79,7 +79,7 @@ export class AuthServiceFirebase {
       });
       
       // Save additional user data to Firestore
-      const userData = {
+      const userData: any = {
         name: data.name,
         email: data.email,
         phone: data.phone,
@@ -95,6 +95,13 @@ export class AuthServiceFirebase {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
+
+      // Add specific data based on user type
+      if (data.userType === UserType.PROFESSIONAL && data.professionalInfo) {
+        userData.professionalInfo = data.professionalInfo;
+      } else if (data.userType === UserType.INSTITUTION && data.institutionInfo) {
+        userData.institutionInfo = data.institutionInfo;
+      }
       
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
       

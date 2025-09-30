@@ -12,18 +12,18 @@ interface Props {
 }
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
-  const { isAuthenticated, isGuest, isLoading } = useAuth();
+  const { isAuthenticated, isGuest, loading } = useAuth();
 
   useEffect(() => {
     console.log('🎬 SplashScreen montado');
-    console.log('📊 Estado inicial:', { isAuthenticated, isGuest, isLoading });
+    console.log('📊 Estado inicial:', { isAuthenticated, isGuest, loading });
 
     // Navegar após um tempo mínimo e depois que o auth terminar de carregar
     const checkAndNavigate = () => {
-      console.log('🔍 Verificando navegação...', { isAuthenticated, isGuest, isLoading });
+      console.log('🔍 Verificando navegação...', { isAuthenticated, isGuest, loading });
       
-      if (!isLoading) {
-        console.log('✅ isLoading é false, decidindo navegação...');
+      if (!loading) {
+        console.log('✅ loading é false, decidindo navegação...');
         
         if (isAuthenticated || isGuest) {
           console.log('🏠 Navegando para Home');
@@ -45,7 +45,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
       console.log('🧹 SplashScreen desmontado');
       clearTimeout(timer);
     };
-  }, [navigation, isAuthenticated, isGuest, isLoading]);
+  }, [navigation, isAuthenticated, isGuest, loading]);
 
   return (
     <View style={styles.container}>

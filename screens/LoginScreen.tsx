@@ -21,7 +21,7 @@ import { spacing } from '../constants/dimensions';
 
 export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const { login, isLoading, error } = useAuth();
+  const { login, loading } = useAuth();
   const { t } = useTranslation();
 
   const [formData, setFormData] = useState<AuthCredentials>({
@@ -68,16 +68,16 @@ export default function LoginScreen() {
       return;
     }
 
-    try {
-      await login(formData);
-      // Navigation será automática através do AuthContext
-    } catch (error) {
+    const result = await login(formData);
+    
+    if (!result.success) {
       Alert.alert(
         t('auth.loginError') || 'Erro no Login',
-        error instanceof Error ? error.message : t('auth.loginGenericError') || 'Erro desconhecido',
+        result.error || t('auth.loginGenericError') || 'Erro desconhecido',
         [{ text: t('common.ok') || 'OK' }]
       );
     }
+    // Navigation será automática através do AuthContext se sucesso
   };
 
   const navigateToRegister = () => {
@@ -88,7 +88,7 @@ export default function LoginScreen() {
     navigation.navigate('ForgotPassword');
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -159,9 +159,9 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
+            style={[styles.loginButton, loading && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={loading}
           >
             <Text style={styles.loginButtonText}>
               {t('auth.login') || 'Entrar'}

@@ -21,11 +21,11 @@ import i18n from '../utils/i18n';
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigatorContent: React.FC = () => {
-  const { isAuthenticated, isGuest, isLoading } = useAuth();
+  const { isAuthenticated, isGuest, loading } = useAuth();
 
-  console.log('🚀 AppNavigatorContent renderizado:', { isAuthenticated, isGuest, isLoading });
+  console.log('🚀 AppNavigatorContent renderizado:', { isAuthenticated, isGuest, loading });
 
-  if (isLoading) {
+  if (loading) {
     // Show splash screen while checking authentication
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>

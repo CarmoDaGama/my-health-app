@@ -25,7 +25,7 @@ import InstitutionForm from '../components/auth/InstitutionForm';
 
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
-  const { register, isLoading, error } = useAuth();
+  const { register, loading } = useAuth();
   const { t } = useTranslation();
 
   const [formData, setFormData] = useState<RegisterData>({
@@ -153,17 +153,27 @@ export default function RegisterScreen() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    try {
-      await register(formData);
+    console.log('📝 Enviando dados de registro:', {
+      userType: formData.userType,
+      hasName: !!formData.name,
+      hasEmail: !!formData.email,
+      hasPassword: !!formData.password,
+      hasProfessionalInfo: formData.userType === UserType.PROFESSIONAL ? !!formData.professionalInfo : 'N/A',
+      hasInstitutionInfo: formData.userType === UserType.INSTITUTION ? !!formData.institutionInfo : 'N/A'
+    });
+
+    const result = await register(formData);
+    
+    if (result.success) {
       Alert.alert(
         'Sucesso!', 
         'Conta criada com sucesso!',
         [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
       );
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    } else {
+      const errorMessage = result.error || 'Erro desconhecido';
       
-      console.error('🚨 ERRO NO FRONTEND - Registro falhou:', {
+      console.error('🚨 ERRO NO REGISTRO - Falha na criação:', {
         error: errorMessage,
         formData: {
           email: formData.email,
@@ -231,7 +241,7 @@ export default function RegisterScreen() {
         <UserTypeSelector
           selectedType={formData.userType}
           onSelect={(type) => handleFieldChange('userType', type)}
-          disabled={isLoading}
+          disabled={loading}
         />
 
         <ValidatedInput
@@ -303,8 +313,8 @@ export default function RegisterScreen() {
         <Button
           title="Criar Conta"
           onPress={handleSubmit}
-          loading={isLoading}
-          disabled={isLoading}
+          loading={loading}
+          disabled={loading}
         />
 
         <TouchableOpacity
