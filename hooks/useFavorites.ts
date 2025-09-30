@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Coordinates } from '../types';
-import { FavoritesService } from '../services/favorites';
+import React, { useState, useEffect } from 'react';
+import { HealthService, Coordinates } from '../types';
+import { FavoritesServiceFirebase } from '../services/favorites-firebase';
 import { useAuth } from './useAuth';
 
 export const useFavorites = () => {
@@ -22,9 +22,9 @@ export const useFavorites = () => {
   const loadFavorites = async () => {
     try {
       setIsLoading(true);
-      const [services, locations] = await Promise.all([
-        FavoritesService.getFavoriteServices(),
-        FavoritesService.getFavoriteLocations(),
+            const [favoriteServices, favoriteLocations] = await Promise.all([
+        FavoritesServiceFirebase.getFavoriteServices(),
+        FavoritesServiceFirebase.getFavoriteLocations(),
       ]);
       setFavoriteServices(services);
       setFavoriteLocations(locations);
@@ -37,7 +37,8 @@ export const useFavorites = () => {
 
   const addFavoriteService = async (serviceId: string): Promise<void> => {
     try {
-      await FavoritesService.addFavoriteService(serviceId);
+      await FavoritesServiceFirebase.addFavoriteService(serviceId);
+      setIsFavorite(true);
       setFavoriteServices(prev => [...prev, serviceId]);
     } catch (error) {
       console.error('Erro ao adicionar serviço favorito:', error);
@@ -47,7 +48,8 @@ export const useFavorites = () => {
 
   const removeFavoriteService = async (serviceId: string): Promise<void> => {
     try {
-      await FavoritesService.removeFavoriteService(serviceId);
+      await FavoritesServiceFirebase.removeFavoriteService(serviceId);
+      setIsFavorite(false);
       setFavoriteServices(prev => prev.filter(id => id !== serviceId));
     } catch (error) {
       console.error('Erro ao remover serviço favorito:', error);
@@ -57,7 +59,7 @@ export const useFavorites = () => {
 
   const toggleFavoriteService = async (serviceId: string): Promise<boolean> => {
     try {
-      const newStatus = await FavoritesService.toggleFavoriteService(serviceId);
+      const newStatus = await FavoritesServiceFirebase.toggleFavoriteService(serviceId);
       if (newStatus) {
         setFavoriteServices(prev => [...prev, serviceId]);
       } else {
@@ -76,7 +78,7 @@ export const useFavorites = () => {
 
   const addFavoriteLocation = async (coordinates: Coordinates, name?: string): Promise<void> => {
     try {
-      await FavoritesService.addFavoriteLocation(coordinates, name);
+      await FavoritesServiceFirebase.addFavoriteLocation(coordinates, name);
       await loadFavorites(); // Recarregar para obter a lista atualizada
     } catch (error) {
       console.error('Erro ao adicionar localização favorita:', error);
@@ -86,7 +88,7 @@ export const useFavorites = () => {
 
   const removeFavoriteLocation = async (index: number): Promise<void> => {
     try {
-      await FavoritesService.removeFavoriteLocation(index);
+      await FavoritesServiceFirebase.removeFavoriteLocation(index);
       setFavoriteLocations(prev => prev.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Erro ao remover localização favorita:', error);

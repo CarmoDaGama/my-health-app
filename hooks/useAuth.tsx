@@ -12,7 +12,7 @@ import {
   ChangePasswordData,
   UserPreferences
 } from '../types';
-import { AuthService } from '../services/auth';
+import { AuthServiceFirebase } from '../services/auth-firebase';
 
 const USER_DATA_KEY = '@HealthApp:userData';
 
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await AuthService.login(credentials);
+      const response = await AuthServiceFirebase.login(credentials);
       
       setAuthState(prev => ({
         ...prev,
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Validar dados específicos do tipo de usuário
       validateUserTypeData(data);
       
-      const response = await AuthService.register(data);
+      const response = await AuthServiceFirebase.register(data);
       
       setAuthState(prev => ({
         ...prev,
@@ -192,7 +192,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       
-      await AuthService.logout();
+      await AuthServiceFirebase.logout();
       
       setAuthState({
         isAuthenticated: false,
@@ -220,7 +220,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updateProfile = async (userData: Partial<User>) => {
     try {
-      const updatedUser = await AuthService.updateProfile(userData);
+      const updatedUser = await AuthServiceFirebase.updateProfile(userData);
       
       setAuthState(prev => ({
         ...prev,
@@ -239,7 +239,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updatePreferences = async (preferences: Partial<UserPreferences>) => {
     try {
-      const updatedUser = await AuthService.updatePreferences(preferences);
+      const updatedUser = await AuthServiceFirebase.updatePreferences(preferences);
       
       setAuthState(prev => ({
         ...prev,
@@ -258,7 +258,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const requestPasswordReset = async (data: ResetPasswordData) => {
     try {
-      await AuthService.requestPasswordReset(data);
+      await AuthServiceFirebase.requestPasswordReset(data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao solicitar reset';
       setAuthState(prev => ({
@@ -271,7 +271,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const changePassword = async (data: ChangePasswordData) => {
     try {
-      await AuthService.changePassword(data);
+      await AuthServiceFirebase.changePassword(data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao alterar senha';
       setAuthState(prev => ({
@@ -284,7 +284,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const refreshUser = async () => {
     try {
-      const user = await AuthService.getCurrentUser();
+      const user = await AuthServiceFirebase.getCurrentUser();
       setAuthState(prev => ({
         ...prev,
         user,

@@ -2,18 +2,21 @@ import { useEffect, useState, createContext, useContext, ReactNode } from 'react
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { AuthServiceFirebase } from '../services/auth-firebase';
-import { AuthCredentials, RegisterData, UserProfile } from '../types';
+import { AuthCredentials, RegisterData, UserProfile, UserType } from '../types';
 
 interface AuthContextType {
   user: UserProfile | null;
   firebaseUser: User | null;
   loading: boolean;
+  isLoading: boolean; // Alias para compatibilidade
   isAuthenticated: boolean;
+  isGuest: boolean;
   login: (credentials: AuthCredentials) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
+  continueAsGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,9 +29,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuestMode, setIsGuestMode] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('🔥 Auth state changed:', firebaseUser ? 'User logged in' : 'No user');
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser) {
@@ -49,13 +54,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
         } else {
           // User exists in Firebase Auth but not in Firestore
-          console.warn('User data not found in Firestore');
+          console.warn('⚠️ Usuário Firebase sem dados no Firestore');
           setUser(null);
         }
       } else {
+        console.log('🚪 Usuário não autenticado');
         setUser(null);
       }
       
+      console.log('✅ Auth loading completed, setting loading = false');
       setLoading(false);
     });
 
@@ -108,6 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (response.success) {
         setUser(null);
         setFirebaseUser(null);
+        setIsGuestMode(false);
       }
       
       return response;
@@ -149,16 +157,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const continueAsGuest = () => {
+    setIsGuestMode(true);
+    setUser({
+      id: 'guest',
+      email: '',
+      name: 'Convidado',
+      phone: '',
+      userType: UserType.GUEST,
+      preferences: {
+        language: 'pt',
+        notifications: false,
+        favorites: { services: [], locations: [] }
+      }
+    });
+    setLoading(false);
+  };
+
   const value: AuthContextType = {
     user,
     firebaseUser,
     loading,
-    isAuthenticated: !!user,
+    isLoading: loading, // Alias para compatibilidade
+    isAuthenticated: !!user && !isGuestMode,
+    isGuest: isGuestMode || (user?.userType === UserType.GUEST),
     login,
     register,
     logout,
     forgotPassword,
-    updateProfile
+    updateProfile,
+    continueAsGuest
   };
 
   return (

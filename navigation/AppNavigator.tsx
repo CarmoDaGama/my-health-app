@@ -13,7 +13,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
-import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth-firebase';
 import { ProtectedRoute } from '../components';
 import { Colors } from '../constants';
 import i18n from '../utils/i18n';
@@ -179,10 +179,8 @@ const AppNavigatorContent: React.FC = () => {
 
 export const AppNavigator: React.FC = () => {
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <AppNavigatorContent />
-      </NavigationContainer>
-    </AuthProvider>
+    <NavigationContainer>
+      <AppNavigatorContent />
+    </NavigationContainer>
   );
 };

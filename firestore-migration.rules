@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // REGRAS TEMPORÁRIAS PARA MIGRAÇÃO - REVERTER APÓS MIGRAÇÃO
+    // Permitir escrita total por 30 minutos para migração de dados
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2025, 9, 30, 20, 0, 0);
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth-firebase';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Colors } from '../../constants/colors';
 import { spacing } from '../../constants/dimensions';

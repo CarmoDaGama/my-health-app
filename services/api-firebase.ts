@@ -28,9 +28,11 @@ export class HealthServiceAPIFirebase {
     lastDoc?: DocumentSnapshot
   ): Promise<{ services: HealthService[]; lastDoc?: DocumentSnapshot }> {
     try {
+      console.log('🔍 Buscando serviços na coleção healthServices...');
+      
+      // Tentar sem ordenação primeiro para ver se os dados existem
       let q = query(
         collection(db, 'healthServices'),
-        orderBy('createdAt', 'desc'),
         limit(pageSize)
       );
 
@@ -38,12 +40,16 @@ export class HealthServiceAPIFirebase {
         q = query(q, startAfter(lastDoc));
       }
 
+      console.log('📡 Executando query no Firestore...');
       const querySnapshot = await getDocs(q);
+      console.log(`📋 Query retornou ${querySnapshot.size} documentos`);
+      
       const services: HealthService[] = [];
       let newLastDoc: DocumentSnapshot | undefined;
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log(`📄 Processando documento: ${doc.id}`);
         services.push({
           id: doc.id,
           ...data,
@@ -55,9 +61,10 @@ export class HealthServiceAPIFirebase {
         newLastDoc = doc;
       });
 
+      console.log(`✅ Processados ${services.length} serviços com sucesso`);
       return { services, lastDoc: newLastDoc };
     } catch (error) {
-      console.error('Error fetching services:', error);
+      console.error('❌ Error fetching services:', error);
       throw new Error('Erro ao buscar serviços de saúde');
     }
   }
@@ -361,5 +368,30 @@ export class HealthServiceAPIFirebase {
 
   private static deg2rad(deg: number): number {
     return deg * (Math.PI / 180);
+  }
+
+  // Instance methods for compatibility
+  async getAllServices(): Promise<HealthService[]> {
+    try {
+      console.log('🔥 Iniciando busca de serviços no Firebase...');
+      const result = await HealthServiceAPIFirebase.getAllServices(100);
+      console.log(`✅ Firebase retornou ${result.services.length} serviços`);
+      return result.services;
+    } catch (error) {
+      console.error('❌ Erro no getAllServices:', error);
+      throw error;
+    }
+  }
+
+  async getServiceById(serviceId: string): Promise<HealthService | null> {
+    return HealthServiceAPIFirebase.getServiceById(serviceId);
+  }
+
+  async searchServices(searchQuery: string, filters?: ServiceFilters): Promise<HealthService[]> {
+    return HealthServiceAPIFirebase.searchServices(searchQuery, filters);
+  }
+
+  async getNearbyServices(lat: number, lng: number, radiusKm: number = 10): Promise<HealthService[]> {
+    return HealthServiceAPIFirebase.getNearbyServices(lat, lng, radiusKm);
   }
 }

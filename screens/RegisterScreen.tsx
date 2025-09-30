@@ -12,7 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { RegisterScreenNavigationProp } from '../types/navigation';
 import { RegisterData, UserType } from '../types';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';

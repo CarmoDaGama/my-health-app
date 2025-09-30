@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { HealthService, Region } from '../types';
 import { HomeScreenNavigationProp } from '../types/navigation';
-import { HealthServiceAPI } from '../services/api';
+import { HealthServiceAPIFirebase } from '../services/api-firebase';
 import { useLocation } from '../hooks/useLocation';
 import { MapView } from '../components/specific/MapView';
 import { LoadingSpinner, ErrorDisplay, SkeletonListItem } from '../components';
@@ -88,7 +88,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const loadServices = async () => {
     console.log('🔄 Carregando serviços...');
     const result = await executeAsync(async () => {
-      const data = await HealthServiceAPI.getAllServices();
+      const healthAPI = new HealthServiceAPIFirebase();
+      const data = await healthAPI.getAllServices();
       console.log(`📊 Serviços carregados: ${data?.length || 0}`);
       console.log('🏥 Tipos de serviços:', data?.map(s => s.type).join(', '));
       setServices(data);

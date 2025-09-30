@@ -3,7 +3,7 @@ import { View, StyleSheet, Image, Text } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { Colors, spacing } from '../constants';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth-firebase';
 
 type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 

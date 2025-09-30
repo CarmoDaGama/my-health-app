@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ProfileScreenNavigationProp } from '../types/navigation';
-import { useAuth, useUser } from '../hooks/useAuth';
+import { useAuth, useUser } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
 import { UserAvatar } from '../components';
 import { Colors } from '../constants/colors';

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import { WelcomeScreenNavigationProp } from '../types/navigation';
 import { Colors, spacing } from '../constants';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth-firebase';
 import i18n from '../utils/i18n';
 
 interface Props {
