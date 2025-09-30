@@ -16,8 +16,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Este aplicativo precisa de acesso à localização para encontrar serviços de saúde próximos a você e ajudar no registro de profissionais e instituições.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Este aplicativo precisa de acesso à localização para encontrar serviços de saúde próximos e fornecer navegação em tempo real."
-      }
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Este aplicativo precisa de acesso à localização para encontrar serviços de saúde próximos e fornecer navegação em tempo real.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.carmodagama.healthlocatorapp"
     },
     "android": {
       "adaptiveIcon": {
