@@ -28,8 +28,11 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
-      ]
+        "ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.carmodagama.healthlocatorapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,6 +49,11 @@
       ],
       "expo-localization",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7ed61a68-9c1b-4c51-b190-dd383bc50f9a"
+      }
+    }
   }
 }
