@@ -111,12 +111,6 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>{t('auth.loginSubtitle') || 'Acesse sua conta para continuar'}</Text>
         </View>
 
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
         <View style={styles.form}>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t('auth.email') || 'Email'}</Text>
