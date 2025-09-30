@@ -2,14 +2,49 @@ import { HealthService, Coordinates } from '../types';
 import healthServicesData from '../data/healthServices.json';
 import { serviceCache } from './cache';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from './firebase';
 
 const REGISTERED_SERVICES_KEY = '@health_app:registered_services';
 
 export class HealthServiceAPI {
   private static services: HealthService[] = healthServicesData.healthServices as HealthService[];
 
-  // Obter serviços registrados do AsyncStorage
-  private static async getRegisteredServices(): Promise<HealthService[]> {
+  // Obter serviços registrados do Firestore
+  private static async getFirestoreServices(): Promise<HealthService[]> {
+    try {
+      console.log('🔥 Buscando serviços do Firestore...');
+      const servicesQuery = query(
+        collection(db, 'healthServices'),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(servicesQuery);
+      const firestoreServices: HealthService[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        firestoreServices.push({
+          id: doc.id,
+          ...data
+        } as HealthService);
+      });
+      
+      console.log('✅ Serviços do Firestore carregados:', firestoreServices.length);
+      if (firestoreServices.length > 0) {
+        console.log('🏥 Nomes dos serviços do Firestore:', firestoreServices.map(s => s.name).join(', '));
+      }
+      
+      return firestoreServices;
+    } catch (error) {
+      console.error('❌ Erro ao buscar serviços do Firestore:', error);
+      // Fallback para AsyncStorage se Firestore falhar
+      return await this.getRegisteredServicesFromStorage();
+    }
+  }
+
+  // Obter serviços registrados do AsyncStorage (renomeado para ser mais específico)
+  private static async getRegisteredServicesFromStorage(): Promise<HealthService[]> {
     try {
       const servicesJson = await AsyncStorage.getItem(REGISTERED_SERVICES_KEY);
       const registeredServices = servicesJson ? JSON.parse(servicesJson) : [];
@@ -26,7 +61,8 @@ export class HealthServiceAPI {
 
   // Combinar serviços estáticos com serviços registrados
   private static async getAllCombinedServices(): Promise<HealthService[]> {
-    const registeredServices = await this.getRegisteredServices();
+    // Priorizar Firestore, usar AsyncStorage como fallback
+    const registeredServices = await this.getFirestoreServices();
     const combined = [...this.services, ...registeredServices];
     console.log(`🔗 Combinando serviços: ${this.services.length} estáticos + ${registeredServices.length} registrados = ${combined.length} total`);
     return combined;
@@ -80,7 +116,7 @@ export class HealthServiceAPI {
     });
     
     // Serviços registrados
-    const registeredServices = await this.getRegisteredServices();
+    const registeredServices = await this.getFirestoreServices();
     console.log('📱 Serviços registrados:', registeredServices.length);
     registeredServices.forEach((service: any, index: number) => {
       console.log(`   ${index + 1}. ${service.name} (${service.type}) - ${service.address}`);

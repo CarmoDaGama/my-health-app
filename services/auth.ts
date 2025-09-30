@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase';
 import { 
   User, 
   AuthCredentials, 
@@ -50,6 +52,7 @@ export class AuthService {
       
       // Simular chamada de API
       const mockResponse = await this.simulateApiCall<AuthResponse>({
+        success: true,
         user: newUser,
         token: this.generateMockToken(),
         refreshToken: this.generateMockToken(),
@@ -88,6 +91,7 @@ export class AuthService {
       
       // Simular chamada de API
       const mockResponse = await this.simulateApiCall<AuthResponse>({
+        success: true,
         user: registeredUser,
         token: this.generateMockToken(),
         refreshToken: this.generateMockToken(),
@@ -313,8 +317,8 @@ export class AuthService {
   
   private static async saveAuthData(authResponse: AuthResponse): Promise<void> {
     await AsyncStorage.multiSet([
-      [AUTH_TOKEN_KEY, authResponse.token],
-      [REFRESH_TOKEN_KEY, authResponse.refreshToken],
+      [AUTH_TOKEN_KEY, authResponse.token || ''],
+      [REFRESH_TOKEN_KEY, authResponse.refreshToken || ''],
       [USER_DATA_KEY, JSON.stringify(authResponse.user)],
     ]);
   }
@@ -423,23 +427,21 @@ export class AuthService {
     }
   }
 
-  private static async addToHealthServices(user: User, data: RegisterData): Promise<void> {
+  public static async addToHealthServices(user: any, data: RegisterData): Promise<void> {
     try {
       console.log('💾 Adicionando usuário aos serviços de saúde:', user.name, data.userType);
-      const servicesJson = await AsyncStorage.getItem(REGISTERED_SERVICES_KEY);
-      const services = servicesJson ? JSON.parse(servicesJson) : [];
-      console.log('📊 Serviços existentes:', services.length);
       
       let newService;
       
       if (data.userType === UserType.PROFESSIONAL) {
         newService = {
           id: user.id,
+          userId: user.id, // Referência para o usuário
           name: `Dr(a). ${user.name}`,
           type: 'professional',
           address: data.professionalInfo?.address || 'Endereço não informado',
-          city: 'Luanda', // Default
-          state: 'Luanda', // Default
+          city: data.professionalInfo?.city || 'Luanda',
+          state: data.professionalInfo?.state || 'Luanda',
           country: 'Angola',
           coordinates: data.professionalInfo?.coordinates || {
             latitude: -8.8379 + (Math.random() - 0.5) * 0.1,
@@ -448,14 +450,19 @@ export class AuthService {
           phone: user.phone || 'Não informado',
           description: data.professionalInfo?.description || `Especialista em ${data.professionalInfo?.specialty}`,
           rating: 5.0,
+          reviews: 0,
           services: data.professionalInfo?.services || [data.professionalInfo?.specialty],
           specialty: data.professionalInfo?.specialty,
           license: data.professionalInfo?.license,
-          experience: data.professionalInfo?.experience || 0
+          experience: data.professionalInfo?.experience || 0,
+          verified: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         };
       } else if (data.userType === UserType.INSTITUTION) {
         newService = {
           id: user.id,
+          userId: user.id, // Referência para o usuário
           name: user.name,
           type: data.institutionInfo?.type || 'clinic',
           address: `${data.institutionInfo?.address?.street}, ${data.institutionInfo?.address?.city}`,
@@ -469,28 +476,61 @@ export class AuthService {
           phone: user.phone || 'Não informado',
           description: data.institutionInfo?.description || 'Instituição de saúde',
           rating: 5.0,
+          reviews: 0,
           services: data.institutionInfo?.services || ['Consultas'],
-          institutionType: data.institutionInfo?.type
+          institutionType: data.institutionInfo?.type,
+          verified: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         };
       }
       
       if (newService) {
         console.log('✅ Novo serviço criado:', newService.name, newService.type);
-        services.push(newService);
-        await AsyncStorage.setItem(REGISTERED_SERVICES_KEY, JSON.stringify(services));
-        console.log('💾 Serviço salvo! Total de serviços registrados:', services.length);
         
-        // Forçar recarregamento dos serviços
+        // 1. Salvar no Firestore
+        try {
+          await setDoc(doc(db, 'healthServices', user.id), newService);
+          console.log('🔥 Serviço salvo no Firestore com sucesso!');
+        } catch (firestoreError) {
+          console.error('❌ Erro ao salvar no Firestore:', firestoreError);
+          throw firestoreError; // Re-throw para falhar o processo se Firestore não funcionar
+        }
+        
+        // 2. Salvar no AsyncStorage como backup local
+        try {
+          const servicesJson = await AsyncStorage.getItem(REGISTERED_SERVICES_KEY);
+          const services = servicesJson ? JSON.parse(servicesJson) : [];
+          
+          // Verificar se o serviço já existe localmente
+          const existingIndex = services.findIndex((s: any) => s.id === user.id);
+          if (existingIndex >= 0) {
+            services[existingIndex] = newService; // Atualizar existente
+            console.log('🔄 Serviço atualizado no AsyncStorage');
+          } else {
+            services.push(newService); // Adicionar novo
+            console.log('➕ Serviço adicionado ao AsyncStorage');
+          }
+          
+          await AsyncStorage.setItem(REGISTERED_SERVICES_KEY, JSON.stringify(services));
+          console.log('💾 Backup local salvo! Total de serviços registrados:', services.length);
+        } catch (storageError) {
+          console.warn('⚠️ Erro ao salvar backup local (não crítico):', storageError);
+        }
+        
+        // 3. Forçar recarregamento dos serviços
         console.log('🔄 Forçando recarregamento dos serviços...');
         await this.forceRefreshServices();
         
-        // Debug: listar todos os serviços após registro
+        // 4. Debug: listar todos os serviços após registro
         await this.debugAllServices();
       } else {
         console.log('❌ Erro: newService é null');
+        throw new Error('Falha ao criar objeto de serviço');
       }
     } catch (error) {
       console.error('Erro ao adicionar aos serviços de saúde:', error);
+      throw error; // Re-throw para que o erro seja tratado no nível superior
     }
   }
 

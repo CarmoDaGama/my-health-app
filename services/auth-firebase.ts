@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { AuthCredentials, RegisterData, AuthResponse, UserType } from '../types';
+import { AuthService } from './auth';
 
 export class AuthServiceFirebase {
   
@@ -49,7 +50,7 @@ export class AuthServiceFirebase {
           phone: userData.phone,
           userType: userData.userType,
           preferences: userData.preferences
-        },
+        } as any,
         token
       };
     } catch (error: any) {
@@ -108,16 +109,30 @@ export class AuthServiceFirebase {
       // Get token
       const token = await userCredential.user.getIdToken();
       
+      const newUser = {
+        id: userCredential.user.uid,
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        userType: data.userType,
+        preferences: userData.preferences
+      };
+      
+      // Adicionar aos serviços de saúde se for profissional ou instituição
+      if (data.userType === UserType.PROFESSIONAL || data.userType === UserType.INSTITUTION) {
+        try {
+          console.log('🏥 Adicionando usuário aos serviços de saúde...', data.userType);
+          await AuthService.addToHealthServices(newUser, data);
+          console.log('✅ Usuário adicionado aos serviços de saúde com sucesso!');
+        } catch (error) {
+          console.error('❌ Erro ao adicionar aos serviços de saúde:', error);
+          // Não falha o registro se houver erro na adição aos serviços
+        }
+      }
+      
       return {
         success: true,
-        user: {
-          id: userCredential.user.uid,
-          email: data.email,
-          name: data.name,
-          phone: data.phone,
-          userType: data.userType,
-          preferences: userData.preferences
-        },
+        user: newUser as any, // Usar any para contornar problemas de tipos
         token
       };
     } catch (error: any) {

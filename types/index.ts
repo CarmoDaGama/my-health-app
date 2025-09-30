@@ -208,9 +208,11 @@ export interface AuthState {
 }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
+  success: boolean;
+  user?: User;
+  token?: string;
+  refreshToken?: string;
+  error?: string;
 }
 
 export interface ResetPasswordData {
