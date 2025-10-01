@@ -55,6 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 privacy: { shareLocation: true, publicProfile: false }
               }
             } as any);
+            setIsGuestMode(false); // Reset guest mode when user is authenticated
           } else {
             // User exists in Firebase Auth but not in Firestore
             console.warn('⚠️ Usuário Firebase sem dados no Firestore');
@@ -92,6 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (response.success && response.user) {
         setUser(response.user);
+        setIsGuestMode(false); // Reset guest mode when user successfully logs in
         return { success: true };
       } else {
         return { success: false, error: response.error || 'Erro no login' };
@@ -111,6 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (response.success && response.user) {
         setUser(response.user);
+        setIsGuestMode(false); // Reset guest mode when user successfully registers
         return { success: true };
       } else {
         return { success: false, error: response.error || 'Erro no registro' };
@@ -226,6 +229,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updatePreferences,
     continueAsGuest
   };
+
+  // Debug logs
+  console.log('🔍 Auth Debug:', {
+    hasUser: !!user,
+    isGuestMode,
+    userType: (user as any)?.userType,
+    isAuthenticated: !!user && !isGuestMode,
+    isGuest: isGuestMode || (user as any)?.userType === UserType.GUEST
+  });
 
   return (
     <AuthContext.Provider value={value}>
