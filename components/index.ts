@@ -9,6 +9,9 @@ export { UserAvatar } from './common/UserAvatar';
 export { ProtectedRoute } from './common/ProtectedRoute';
 export { ServiceListItem } from './specific/ServiceListItem';
 export { MapView } from './specific/MapView';
+export { ReviewForm } from './specific/ReviewForm';
+export { ReviewsList } from './specific/ReviewsList';
+export { ReviewsPreview } from './specific/ReviewsPreview';
 
 // Auth components
 export { default as UserTypeSelector } from './auth/UserTypeSelector';

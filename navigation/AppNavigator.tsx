@@ -36,10 +36,11 @@ const AppNavigatorContent: React.FC = () => {
 
   // Show main app if authenticated OR in guest mode
   const showMainApp = isAuthenticated || isGuest;
+  const initialRoute = showMainApp ? "Home" : "Welcome";
 
   return (
     <Stack.Navigator
-      initialRouteName={showMainApp ? "Home" : "Welcome"}
+      initialRouteName={initialRoute}
       screenOptions={{
         headerStyle: {
           backgroundColor: Colors.primary,

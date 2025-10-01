@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,18 @@ import {
   StatusBar,
   Linking,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { HealthService } from '../types';
+import { HealthService, Review } from '../types';
 import { ServiceDetailScreenNavigationProp, ServiceDetailScreenRouteProp } from '../types/navigation';
 import { Button } from '../components/common/Button';
 import { Colors, spacing, borderRadius, fontSize } from '../constants';
+import { ReviewForm } from '../components/specific/ReviewForm';
+import { ReviewsList } from '../components/specific/ReviewsList';
+import { ReviewsPreview } from '../components/specific/ReviewsPreview';
+import { useReviews } from '../hooks/useReviews';
+import { useAuth } from '../hooks/useAuth-firebase';
 import i18n from '../utils/i18n';
 
 interface ServiceDetailScreenProps {
@@ -26,6 +32,13 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   route,
 }) => {
   const { service } = route.params;
+  const { isAuthenticated } = useAuth();
+  const { checkUserReview } = useReviews();
+  
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [userReview, setUserReview] = useState<Review | null>(null);
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
   const getServiceTypeLabel = (type: string) => {
     if (type === 'professional') return 'Profissional';
@@ -50,6 +63,53 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
     navigation.goBack();
   };
 
+  // Check if user has already reviewed this service
+  useEffect(() => {
+    const checkUserReviewStatus = async () => {
+      if (isAuthenticated && service.id) {
+        const existingReview = await checkUserReview(service.id);
+        setUserReview(existingReview);
+      }
+    };
+    
+    checkUserReviewStatus();
+  }, [isAuthenticated, service.id, checkUserReview]);
+
+  const handleAddReview = () => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Login Necessário',
+        'Você precisa estar logado para avaliar este serviço.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Fazer Login', onPress: () => navigation.navigate('Login') },
+        ]
+      );
+      return;
+    }
+    
+    setEditingReview(null);
+    setShowReviewForm(true);
+  };
+
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review);
+    setShowReviewForm(true);
+  };
+
+  const handleReviewSuccess = async () => {
+    // Refresh user review status
+    if (isAuthenticated && service.id) {
+      const updatedReview = await checkUserReview(service.id);
+      setUserReview(updatedReview);
+    }
+  };
+
+  const handleCloseReviewForm = () => {
+    setShowReviewForm(false);
+    setEditingReview(null);
+  };
+
   const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Não informado';
     
@@ -72,33 +132,64 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const renderProfessionalDetails = () => (
     <>
       {/* Avaliações */}
-      {service.rating && (
-        <View style={styles.section}>
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Avaliações</Text>
-          <View style={styles.ratingSection}>
+          {service.rating && (
             <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={24} color="#FFD700" />
+              <Ionicons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingText}>
                 {service.rating}/5.0
               </Text>
               <Text style={styles.reviewsText}>
-                ({service.reviews} avaliações)
+                ({service.reviews || 0})
               </Text>
             </View>
-            <View style={styles.ratingStars}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons
-                  key={star}
-                  name={star <= Math.floor(service.rating!) ? "star" : star <= service.rating! ? "star-half" : "star-outline"}
-                  size={20}
-                  color="#FFD700"
-                  style={styles.star}
-                />
-              ))}
-            </View>
-          </View>
+          )}
         </View>
-      )}
+        
+        {/* Review Actions */}
+        <View style={styles.reviewActions}>
+          {userReview ? (
+            <TouchableOpacity
+              style={[styles.reviewButton, styles.editReviewButton]}
+              onPress={() => handleEditReview(userReview)}
+            >
+              <Ionicons name="pencil" size={16} color="#2196F3" />
+              <Text style={[styles.reviewButtonText, { color: '#2196F3' }]}>
+                Editar Minha Avaliação
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={handleAddReview}
+            >
+              <Ionicons name="star" size={16} color="#FFF" />
+              <Text style={styles.reviewButtonText}>Avaliar Serviço</Text>
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity
+            style={[styles.reviewButton, styles.viewAllButton]}
+            onPress={() => setShowAllReviews(true)}
+          >
+            <Ionicons name="list" size={16} color="#666" />
+            <Text style={[styles.reviewButtonText, { color: '#666' }]}>
+              Ver Todas
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Reviews Preview */}
+        <View style={styles.reviewsPreview}>
+          <ReviewsPreview
+            serviceId={service.id}
+            onEditReview={handleEditReview}
+            maxReviews={3}
+          />
+        </View>
+      </View>
 
       {/* Especialidade */}
       {service.specialty && (
@@ -170,16 +261,65 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
         </View>
       )}
 
-      {/* Avaliação */}
-      {service.rating && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Avaliação</Text>
-          <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={20} color="#FFD700" />
-            <Text style={styles.ratingText}>{service.rating}/5.0</Text>
-          </View>
+      {/* Avaliações */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Avaliações</Text>
+          {service.rating && (
+            <View style={styles.ratingContainer}>
+              <Ionicons name="star" size={20} color="#FFD700" />
+              <Text style={styles.ratingText}>
+                {service.rating}/5.0
+              </Text>
+              <Text style={styles.reviewsText}>
+                ({service.reviews || 0})
+              </Text>
+            </View>
+          )}
         </View>
-      )}
+        
+        {/* Review Actions */}
+        <View style={styles.reviewActions}>
+          {userReview ? (
+            <TouchableOpacity
+              style={[styles.reviewButton, styles.editReviewButton]}
+              onPress={() => handleEditReview(userReview)}
+            >
+              <Ionicons name="pencil" size={16} color="#2196F3" />
+              <Text style={[styles.reviewButtonText, { color: '#2196F3' }]}>
+                Editar Minha Avaliação
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={handleAddReview}
+            >
+              <Ionicons name="star" size={16} color="#FFF" />
+              <Text style={styles.reviewButtonText}>Avaliar Serviço</Text>
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity
+            style={[styles.reviewButton, styles.viewAllButton]}
+            onPress={() => setShowAllReviews(true)}
+          >
+            <Ionicons name="list" size={16} color="#666" />
+            <Text style={[styles.reviewButtonText, { color: '#666' }]}>
+              Ver Todas
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Reviews Preview */}
+        <View style={styles.reviewsPreview}>
+          <ReviewsPreview
+            serviceId={service.id}
+            onEditReview={handleEditReview}
+            maxReviews={3}
+          />
+        </View>
+      </View>
     </>
   );
 
@@ -268,6 +408,43 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           />
         </View>
       </ScrollView>
+      
+      {/* Review Form Modal */}
+      <ReviewForm
+        serviceId={service.id}
+        serviceName={service.name}
+        visible={showReviewForm}
+        onClose={handleCloseReviewForm}
+        onSuccess={handleReviewSuccess}
+        existingReview={editingReview ? {
+          id: editingReview.id,
+          rating: editingReview.rating,
+          comment: editingReview.comment,
+        } : undefined}
+      />
+      
+      {/* All Reviews Modal */}
+      {showAllReviews && (
+        <View style={styles.fullScreenModal}>
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowAllReviews(false)}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Todas as Avaliações</Text>
+              <View style={styles.modalPlaceholder} />
+            </View>
+            <ReviewsList
+              serviceId={service.id}
+              onEditReview={handleEditReview}
+              showFilters={true}
+            />
+          </SafeAreaView>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -436,5 +613,80 @@ const styles = StyleSheet.create({
   },
   actionSpacing: {
     height: spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  reviewActions: {
+    flexDirection: 'row',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  reviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2196F3',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  editReviewButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  viewAllButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#DDD',
+  },
+  reviewButtonText: {
+    color: '#FFF',
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
+  },
+  reviewsPreview: {
+    backgroundColor: Colors.background,
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+  },
+  fullScreenModal: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFF',
+    zIndex: 1000,
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  modalCloseButton: {
+    padding: spacing.sm,
+  },
+  modalTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: Colors.text.primary,
+  },
+  modalPlaceholder: {
+    width: 40,
   },
 });

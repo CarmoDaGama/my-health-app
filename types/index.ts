@@ -142,6 +142,11 @@ export interface Institution extends BaseUser {
 export type User = NormalUser | Professional | Institution;
 export type AnyUser = GuestUser | User;
 
+// UserProfile alias for compatibility with auth systems
+export type UserProfile = User & {
+  preferences: UserPreferences;
+};
+
 // Type Guards
 export function isGuestUser(user: AnyUser): user is GuestUser {
   return user.userType === UserType.GUEST;
@@ -223,4 +228,52 @@ export interface ChangePasswordData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+// Review System Types
+export interface Review {
+  id: string;
+  serviceId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string | null;
+  rating: number; // 1-5
+  comment: string;
+  createdAt: Date;
+  updatedAt: Date;
+  verified: boolean;
+  helpful?: number; // number of users who found this helpful
+  reported?: boolean;
+}
+
+export interface ReviewInput {
+  serviceId: string;
+  rating: number;
+  comment: string;
+}
+
+export interface ReviewStats {
+  totalReviews: number;
+  averageRating: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
+export interface ReviewsResponse {
+  reviews: Review[];
+  stats: ReviewStats;
+  hasMore: boolean;
+  lastDocId?: string;
+}
+
+export interface ReviewFilters {
+  rating?: number;
+  sortBy?: 'newest' | 'oldest' | 'rating_high' | 'rating_low' | 'helpful';
+  limit?: number;
+  lastDocId?: string;
 }

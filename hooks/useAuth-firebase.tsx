@@ -38,24 +38,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser) {
-        // Get user data from Firestore
-        const userData = await AuthServiceFirebase.getUserData(firebaseUser.uid);
-        if (userData) {
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email!,
-            name: userData.name || firebaseUser.displayName || '',
-            phone: userData.phone || '',
-            userType: userData.userType || 'patient',
-            preferences: userData.preferences || {
-              language: 'pt',
-              notifications: true,
-              favorites: { services: [], locations: [] }
-            }
-          });
-        } else {
-          // User exists in Firebase Auth but not in Firestore
-          console.warn('⚠️ Usuário Firebase sem dados no Firestore');
+        try {
+          // Get user data from Firestore
+          const userData = await AuthServiceFirebase.getUserData(firebaseUser.uid);
+          if (userData) {
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email!,
+              name: userData.name || firebaseUser.displayName || '',
+              phone: userData.phone || '',
+              userType: userData.userType || UserType.NORMAL_USER,
+              preferences: userData.preferences || {
+                language: 'pt',
+                notifications: true,
+                favorites: { services: [], locations: [] },
+                privacy: { shareLocation: true, publicProfile: false }
+              }
+            } as any);
+          } else {
+            // User exists in Firebase Auth but not in Firestore
+            console.warn('⚠️ Usuário Firebase sem dados no Firestore');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao buscar dados do usuário:', error);
           setUser(null);
         }
       } else {
@@ -67,7 +73,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
     });
 
-    return unsubscribe;
+    // Safety timeout to ensure loading never stays true forever
+    const safetyTimeout = setTimeout(() => {
+      console.log('⏰ Safety timeout: forçando loading = false');
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
   }, []);
 
   const login = async (credentials: AuthCredentials) => {
@@ -148,7 +163,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (response.success) {
         // Update local state
-        setUser(current => current ? { ...current, ...updates } : null);
+        setUser(current => current ? { ...current, ...updates } as any : null);
       }
       
       return response;
@@ -192,7 +207,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         notifications: false,
         favorites: { services: [], locations: [] }
       }
-    });
+    } as any);
     setLoading(false);
   };
 
@@ -202,7 +217,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     isLoading: loading, // Alias para compatibilidade
     isAuthenticated: !!user && !isGuestMode,
-    isGuest: isGuestMode || (user?.userType === UserType.GUEST),
+    isGuest: isGuestMode || (user as any)?.userType === UserType.GUEST,
     login,
     register,
     logout,

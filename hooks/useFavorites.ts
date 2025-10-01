@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HealthService, Coordinates } from '../types';
 import { FavoritesServiceFirebase } from '../services/favorites-firebase';
-import { useAuth } from './useAuth';
+import { useAuth } from './useAuth-firebase';
 
 export const useFavorites = () => {
   const { isAuthenticated, user } = useAuth();
