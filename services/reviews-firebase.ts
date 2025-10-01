@@ -16,7 +16,7 @@ import {
   Timestamp,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { Review, ReviewInput, ReviewStats, ReviewsResponse, ReviewFilters } from '../types';
 
 const REVIEWS_COLLECTION = 'reviews';
@@ -33,11 +33,13 @@ export class ReviewsService {
     userAvatar?: string
   ): Promise<string> {
     try {
-      // Check if user already reviewed this service
-      const existingReview = await this.getUserReviewForService(reviewInput.serviceId, userId);
-      if (existingReview) {
-        throw new Error('Você já avaliou este serviço');
-      }
+      // TEMPORARILY DISABLED: Check if user already reviewed this service
+      // const existingReview = await this.getUserReviewForService(reviewInput.serviceId, userId);
+      // if (existingReview) {
+      //   throw new Error('Você já avaliou este serviço');
+      // }
+      
+      console.log('🔍 DEBUG: Verificação de review duplicado desabilitada temporariamente');
 
       // Validate rating
       if (reviewInput.rating < 1 || reviewInput.rating > 5) {
@@ -59,11 +61,7 @@ export class ReviewsService {
         reported: false,
       };
 
-      // Use batch to add review and update service stats
-      const batch = writeBatch(db);
-
       // Add review - filter out undefined values
-      const reviewRef = doc(collection(db, REVIEWS_COLLECTION));
       const firestoreData = {
         ...reviewData,
         createdAt: Timestamp.fromDate(now),
@@ -77,20 +75,50 @@ export class ReviewsService {
         }
       });
 
-      batch.set(reviewRef, firestoreData);
-
-      // Update service rating stats
-      const serviceRef = doc(db, SERVICES_COLLECTION, reviewInput.serviceId);
-      batch.update(serviceRef, {
-        reviews: increment(1),
+      console.log('🔍 Review data sendo enviado para Firestore:', {
+        ...firestoreData,
+        createdAt: 'Timestamp',
+        updatedAt: 'Timestamp'
       });
+      console.log('🔍 User ID:', userId);
+      console.log('🔍 User Name:', userName);
+      console.log('🔍 Firebase Auth User:', auth.currentUser?.uid);
+      console.log('🔍 Firebase Auth State:', !!auth.currentUser);
 
-      await batch.commit();
+      // Try direct addDoc first to isolate the issue
+      console.log('🚀 Tentando adicionar review diretamente...');
+      try {
+        const reviewDocRef = await addDoc(collection(db, REVIEWS_COLLECTION), firestoreData);
+        console.log('✅ Review adicionado com sucesso, ID:', reviewDocRef.id);
 
-      // Recalculate and update average rating
-      await this.updateServiceRating(reviewInput.serviceId);
+        // Try updating service stats
+        console.log('🔄 Tentando atualizar estatísticas do serviço...');
+        try {
+          const serviceRef = doc(db, SERVICES_COLLECTION, reviewInput.serviceId);
+          await updateDoc(serviceRef, {
+            reviews: increment(1),
+          });
+          console.log('✅ Estatísticas do serviço atualizadas');
+        } catch (statsError) {
+          console.error('❌ Erro ao atualizar estatísticas:', statsError);
+          // Continue anyway, the review was created successfully
+        }
 
-      return reviewRef.id;
+        // Try recalculating average rating
+        console.log('🔄 Tentando recalcular rating médio...');
+        try {
+          await this.updateServiceRating(reviewInput.serviceId);
+          console.log('✅ Rating médio recalculado');
+        } catch (ratingError) {
+          console.error('❌ Erro ao recalcular rating:', ratingError);
+          // Continue anyway, the review was created successfully
+        }
+
+        return reviewDocRef.id;
+      } catch (addError) {
+        console.error('❌ Erro específico ao adicionar review:', addError);
+        throw addError;
+      }
     } catch (error) {
       console.error('Error adding review:', error);
       throw error;

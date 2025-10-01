@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { HealthService, Coordinates, Region } from '../types';
 import { MapScreenNavigationProp, MapScreenRouteProp } from '../types/navigation';
 import { MapView } from '../components/specific/MapView';

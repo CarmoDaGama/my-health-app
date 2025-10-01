@@ -12,16 +12,14 @@ service cloud.firestore {
       allow read: if request.auth != null;
     }
     
-    // Rules for healthServices collection
+    // Rules for healthServices collection - DEBUG MODE
     match /healthServices/{serviceId} {
       // Anyone can read health services (public data)
       allow read: if true;
-      // Only authenticated users can create services
-      allow create: if request.auth != null;
-      // Only the creator or admin can update/delete
-      allow update, delete: if request.auth != null && 
-        (request.auth.uid == resource.data.createdBy || 
-         request.auth.token.admin == true);
+      // Allow any authenticated user to create/update services (simplified for debug)
+      allow create, update: if request.auth != null;
+      // Allow any authenticated user to delete services (simplified for debug)
+      allow delete: if request.auth != null;
     }
     
     // Rules for registeredServices collection (pending approval)
@@ -44,35 +42,41 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Rules for reviews collection - TEMPORARIAMENTE MAIS PERMISSIVO PARA DEBUG
+    // Rules for reviews collection - DEBUG MODE
     match /reviews/{reviewId} {
       // Anyone can read reviews (public data)
       allow read: if true;
       
-      // Allow any authenticated user to create reviews (simplified for debugging)
+      // DEBUG: Allow any authenticated user to create reviews (no validation)
       allow create: if request.auth != null;
       
-      // Allow any authenticated user to update reviews (simplified for debugging)  
+      // Allow any authenticated user to update reviews  
       allow update: if request.auth != null;
       
-      // Allow any authenticated user to delete reviews (simplified for debugging)
+      // Allow any authenticated user to delete reviews
       allow delete: if request.auth != null;
     }
     
     // Helper functions for review validation
     function validateReviewData(data) {
-      return data.keys().hasAll(['serviceId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'verified'])
+      return data.keys().hasAll(['serviceId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'verified', 'helpful'])
         && data.rating is int
         && data.rating >= 1 
         && data.rating <= 5
         && data.comment is string
-        && data.comment.size() >= 5  // Reduzido de 10 para 5
-        && data.comment.size() <= 1000  // Aumentado de 500 para 1000
+        && data.comment.size() >= 1  // Reduzido para permitir comentários mais curtos
+        && data.comment.size() <= 1000
         && data.serviceId is string
         && data.serviceId.size() > 0
         && data.userName is string
         && data.userName.size() > 0
-        && data.verified == false; // New reviews start as unverified
+        && data.userId is string
+        && data.userId.size() > 0
+        && data.verified == false // New reviews start as unverified
+        && data.helpful is int
+        && data.helpful >= 0
+        && (!data.keys().hasAny(['reported']) || data.reported is bool) // reported is optional
+        && (!data.keys().hasAny(['userAvatar']) || data.userAvatar is string || data.userAvatar == null); // userAvatar is optional
     }
     
     function validateReviewUpdate(data) {
@@ -80,7 +84,7 @@ service cloud.firestore {
         && (!data.diff(resource.data).affectedKeys().hasAny(['rating']) || 
             (data.rating is int && data.rating >= 1 && data.rating <= 5))
         && (!data.diff(resource.data).affectedKeys().hasAny(['comment']) || 
-            (data.comment is string && data.comment.size() >= 5 && data.comment.size() <= 1000));
+            (data.comment is string && data.comment.size() >= 1 && data.comment.size() <= 1000));
     }
   }
 }

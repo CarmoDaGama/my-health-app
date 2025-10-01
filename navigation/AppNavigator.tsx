@@ -165,15 +165,6 @@ const AppNavigatorContent: React.FC = () => {
           />
         </>
       )}
-      
-      {/* Splash screen always available */}
-      <Stack.Screen
-        name="Splash"
-        component={SplashScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
     </Stack.Navigator>
   );
 };
