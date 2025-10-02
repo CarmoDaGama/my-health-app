@@ -113,7 +113,7 @@ export const usePreferences = () => {
    */
   const resetPreferences = async (): Promise<void> => {
     const defaultPreferences: UserPreferences = {
-      language: 'pt',
+      language: 'en',
       notifications: {
         enabled: true,
         serviceReminders: true,
@@ -153,10 +153,10 @@ export const usePreferences = () => {
     updatePrivacySettings,
     
     // Getters convenientes
-    currentLanguage: preferences?.language || 'pt',
-    notificationsEnabled: preferences?.notifications.enabled || false,
-    locationSharingEnabled: preferences?.privacy.shareLocation || false,
-    publicProfileEnabled: preferences?.privacy.publicProfile || false,
+    currentLanguage: preferences?.language || 'en',
+    notificationsEnabled: preferences?.notifications?.enabled || false,
+    locationSharingEnabled: preferences?.privacy?.shareLocation || false,
+    publicProfileEnabled: preferences?.privacy?.publicProfile || false,
     
     // Verificações
     hasPreferences: !!preferences,

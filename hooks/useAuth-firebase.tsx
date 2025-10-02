@@ -42,18 +42,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Get user data from Firestore
           const userData = await AuthServiceFirebase.getUserData(firebaseUser.uid);
           if (userData) {
+            const defaultPreferences = {
+              language: 'en',
+              notifications: {
+                enabled: true,
+                serviceReminders: true,
+                healthTips: true,
+                emergencyAlerts: true,
+              },
+              favorites: { services: [], locations: [] },
+              privacy: { shareLocation: true, publicProfile: false }
+            };
+            
+            const mergedPreferences = {
+              ...defaultPreferences,
+              ...userData.preferences,
+              notifications: {
+                ...defaultPreferences.notifications,
+                ...userData.preferences?.notifications,
+              },
+              favorites: {
+                ...defaultPreferences.favorites,
+                ...userData.preferences?.favorites,
+              },
+              privacy: {
+                ...defaultPreferences.privacy,
+                ...userData.preferences?.privacy,
+              }
+            };
+            
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email!,
               name: userData.name || firebaseUser.displayName || '',
               phone: userData.phone || '',
               userType: userData.userType || UserType.NORMAL_USER,
-              preferences: userData.preferences || {
-                language: 'pt',
-                notifications: true,
-                favorites: { services: [], locations: [] },
-                privacy: { shareLocation: true, publicProfile: false }
-              }
+              preferences: mergedPreferences
             } as any);
             setIsGuestMode(false); // Reset guest mode when user is authenticated
           } else {
@@ -206,9 +230,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       phone: '',
       userType: UserType.GUEST,
       preferences: {
-        language: 'pt',
-        notifications: false,
-        favorites: { services: [], locations: [] }
+        language: 'en',
+        notifications: {
+          enabled: false,
+          serviceReminders: false,
+          healthTips: false,
+          emergencyAlerts: false,
+        },
+        favorites: { services: [], locations: [] },
+        privacy: { shareLocation: false, publicProfile: false }
       }
     } as any);
     setLoading(false);

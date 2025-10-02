@@ -86,11 +86,20 @@ export class AuthServiceFirebase {
         phone: data.phone,
         userType: data.userType,
         preferences: {
-          language: 'pt',
-          notifications: true,
+          language: 'en',
+          notifications: {
+            enabled: true,
+            serviceReminders: true,
+            healthTips: true,
+            emergencyAlerts: true,
+          },
           favorites: {
             services: [],
             locations: []
+          },
+          privacy: {
+            shareLocation: true,
+            publicProfile: false
           }
         },
         createdAt: serverTimestamp(),

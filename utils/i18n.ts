@@ -90,6 +90,8 @@ const translations = {
       addressPlaceholder: 'Enter your address',
       emailNote: 'Email cannot be changed',
       notProvided: 'Not provided',
+      changeLanguage: 'Change Language',
+      changeLanguageConfirmation: 'Change language to',
     },
     
     // Common
@@ -182,6 +184,7 @@ const translations = {
       invalidCoordinates: 'Coordinates are outside Angolan territory',
       invalidPhone: 'Invalid phone number format',
       phoneRequired: 'Phone number is required',
+      updatePreferences: 'Could not update preferences',
     },
 
     cache: {
@@ -279,6 +282,8 @@ const translations = {
       addressPlaceholder: 'Digite seu endereço',
       emailNote: 'Email não pode ser alterado',
       notProvided: 'Não informado',
+      changeLanguage: 'Alterar Idioma',
+      changeLanguageConfirmation: 'Alterar idioma para',
     },
     
     // Common
@@ -376,6 +381,7 @@ const translations = {
       invalidCoordinates: 'Coordenadas estão fora do território angolano',
       invalidPhone: 'Formato de telefone inválido',
       phoneRequired: 'Número de telefone é obrigatório',
+      updatePreferences: 'Não foi possível atualizar as preferências',
     },
     cache: {
       cleared: 'Cache limpo com sucesso',
@@ -392,10 +398,10 @@ const i18n = new I18n(translations);
 
 // Configuração de fallback
 i18n.enableFallback = true;
-i18n.defaultLocale = 'pt';
+i18n.defaultLocale = 'en';
 
 // Detectar idioma do dispositivo
-const deviceLanguage = getLocales()[0]?.languageCode || 'pt';
-i18n.locale = translations[deviceLanguage as keyof typeof translations] ? deviceLanguage : 'pt';
+const deviceLanguage = getLocales()[0]?.languageCode || 'en';
+i18n.locale = translations[deviceLanguage as keyof typeof translations] ? deviceLanguage : 'en';
 
 export default i18n;

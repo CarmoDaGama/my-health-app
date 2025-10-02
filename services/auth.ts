@@ -325,7 +325,7 @@ export class AuthService {
   
   private static createMockUser(data: RegisterData): User {
     const defaultPreferences: UserPreferences = {
-      language: 'pt',
+      language: 'en',
       notifications: {
         enabled: true,
         serviceReminders: true,

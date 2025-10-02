@@ -113,11 +113,20 @@ export async function createSampleCollections(): Promise<void> {
       phone: '+244 923 456 789',
       userType: 'patient',
       preferences: {
-        language: 'pt',
-        notifications: true,
+        language: 'en',
+        notifications: {
+          enabled: true,
+          serviceReminders: true,
+          healthTips: true,
+          emergencyAlerts: true,
+        },
         favorites: {
           services: [],
           locations: []
+        },
+        privacy: {
+          shareLocation: true,
+          publicProfile: false
         }
       },
       createdAt: serverTimestamp(),

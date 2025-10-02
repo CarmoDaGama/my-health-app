@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { ProfileScreenNavigationProp } from '../types/navigation';
 import { useAuth, useUser } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
+import { usePreferences } from '../hooks/usePreferences';
 import { UserAvatar } from '../components';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
@@ -20,6 +21,7 @@ export const ProfileScreen: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const { user } = useUser();
   const { t } = useTranslation();
+  const { setLanguage } = usePreferences();
 
   const handleEditProfile = () => {
     if (isAuthenticated && user) {
@@ -31,6 +33,38 @@ export const ProfileScreen: React.FC = () => {
 
   const handleLoginPress = () => {
     navigation.navigate('Login');
+  };
+
+  const handleLanguageChange = () => {
+    if (!user) return;
+    
+    const currentLanguage = user.preferences.language || 'en';
+    const newLanguage = currentLanguage === 'pt' ? 'en' : 'pt';
+    const newLanguageName = newLanguage === 'pt' ? 'Português' : 'English';
+    
+    Alert.alert(
+      t('profile.changeLanguage') || 'Change Language',
+      `${t('profile.changeLanguageConfirmation') || 'Change language to'} ${newLanguageName}?`,
+      [
+        {
+          text: t('common.cancel') || 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: t('common.confirm') || 'Confirm',
+          onPress: async () => {
+            try {
+              await setLanguage(newLanguage);
+            } catch (error) {
+              Alert.alert(
+                t('errors.title') || 'Error',
+                t('errors.updatePreferences') || 'Could not update language preferences'
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleLogout = () => {
@@ -133,14 +167,15 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.menuItemArrow}>→</Text>
         </TouchableOpacity>
         
-        <View style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={handleLanguageChange}>
           <Text style={styles.menuItemText}>
-            {t('profile.language') || 'Idioma'}
+            {t('profile.language') || 'Language'}
           </Text>
           <Text style={styles.menuItemValue}>
             {user.preferences.language === 'pt' ? 'Português' : 'English'}
           </Text>
-        </View>
+          <Text style={styles.menuItemArrow}>→</Text>
+        </TouchableOpacity>
         
         <View style={styles.menuItem}>
           <Text style={styles.menuItemText}>
