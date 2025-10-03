@@ -114,35 +114,35 @@ export default function RegisterScreen() {
     const newErrors: Record<string, string> = {};
     
     // Basic validations
-    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
-    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
-    if (!isValidEmail(formData.email)) newErrors.email = 'Email inválido';
-    if (!formData.password) newErrors.password = 'Senha é obrigatória';
-    if (formData.password.length < 6) newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    if (!formData.name.trim()) newErrors.name = t('validation.nameRequired');
+    if (!formData.email.trim()) newErrors.email = t('validation.emailRequired');
+    if (!isValidEmail(formData.email)) newErrors.email = t('validation.emailInvalid');
+    if (!formData.password) newErrors.password = t('validation.passwordRequired');
+    if (formData.password.length < 6) newErrors.password = t('validation.passwordMinLength');
     if (formData.password !== confirmPassword) {
-      newErrors.confirmPassword = 'As senhas não conferem';
+      newErrors.confirmPassword = t('validation.passwordMismatch');
     }
-    if (!formData.acceptTerms) newErrors.acceptTerms = 'Você deve aceitar os termos';
+    if (!formData.acceptTerms) newErrors.acceptTerms = t('validation.acceptTermsRequired');
 
     // Validations specific to user type
     if (formData.userType === UserType.PROFESSIONAL) {
       if (!formData.professionalInfo?.specialty) {
-        newErrors.specialty = 'Especialidade é obrigatória';
+        newErrors.specialty = t('validation.specialtyRequired') || 'Especialidade é obrigatória';
       }
       if (!formData.professionalInfo?.license) {
-        newErrors.license = 'Número da licença é obrigatório';
+        newErrors.license = t('validation.licenseRequired') || 'Número da licença é obrigatório';
       }
     }
 
     if (formData.userType === UserType.INSTITUTION) {
       if (!formData.institutionInfo?.type) {
-        newErrors.type = 'Tipo de instituição é obrigatório';
+        newErrors.type = t('validation.institutionTypeRequired') || 'Tipo de instituição é obrigatório';
       }
       if (!formData.institutionInfo?.address?.street) {
-        newErrors['address.street'] = 'Endereço é obrigatório';
+        newErrors['address.street'] = t('validation.addressRequired') || 'Endereço é obrigatório';
       }
       if (!formData.institutionInfo?.address?.city) {
-        newErrors['address.city'] = 'Cidade é obrigatória';
+        newErrors['address.city'] = t('validation.cityRequired') || 'Cidade é obrigatória';
       }
     }
 
@@ -166,12 +166,12 @@ export default function RegisterScreen() {
     
     if (result.success) {
       Alert.alert(
-        'Sucesso!', 
-        'Conta criada com sucesso!',
-        [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
+        t('auth.registrationSuccess'), 
+        t('auth.accountCreated'),
+        [{ text: t('common.ok'), onPress: () => navigation.navigate('Home') }]
       );
     } else {
-      const errorMessage = result.error || 'Erro desconhecido';
+      const errorMessage = result.error || t('auth.loginGenericError');
       
       console.error('🚨 ERRO NO REGISTRO - Falha na criação:', {
         error: errorMessage,
@@ -183,24 +183,24 @@ export default function RegisterScreen() {
       });
       
       // Determine specific error message for user
-      let userMessage = 'Não foi possível criar a conta. Tente novamente.';
-      let alertTitle = 'Erro no Registro';
+      let userMessage = t('auth.registrationFailed');
+      let alertTitle = t('auth.registerError');
       
       if (errorMessage.includes('email já está em uso')) {
-        alertTitle = 'Email já Cadastrado';
-        userMessage = 'Este email já possui uma conta registrada. Tente fazer login ou use outro email.';
+        alertTitle = t('auth.emailAlreadyRegistered');
+        userMessage = t('auth.emailAlreadyInUse');
       } else if (errorMessage.includes('Email inválido')) {
-        alertTitle = 'Email Inválido';
-        userMessage = 'Por favor, verifique se o email está no formato correto.';
+        alertTitle = t('auth.invalidEmail');
+        userMessage = t('auth.checkEmailFormat');
       } else if (errorMessage.includes('Senha')) {
-        alertTitle = 'Problema com a Senha';
+        alertTitle = t('auth.passwordProblem');
         userMessage = errorMessage;
       } else if (errorMessage.includes('telefone')) {
-        alertTitle = 'Telefone Inválido';
-        userMessage = 'Por favor, verifique se o número de telefone está correto.';
+        alertTitle = t('auth.invalidPhone');
+        userMessage = t('auth.checkPhoneNumber');
       } else if (errorMessage.includes('obrigatório')) {
-        alertTitle = 'Campos Obrigatórios';
-        userMessage = 'Por favor, preencha todos os campos obrigatórios.';
+        alertTitle = t('auth.requiredFields');
+        userMessage = t('auth.fillAllFields');
       }
       
       Alert.alert(alertTitle, userMessage);
@@ -233,9 +233,9 @@ export default function RegisterScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
-        <Text style={styles.title}>Criar Conta</Text>
+        <Text style={styles.title}>{t('auth.createAccount')}</Text>
         <Text style={styles.subtitle}>
-          Preencha os dados para criar sua conta
+          {t('auth.registerSubtitle')}
         </Text>
 
         <UserTypeSelector
@@ -245,47 +245,47 @@ export default function RegisterScreen() {
         />
 
         <ValidatedInput
-          label="Nome Completo"
+          label={t('auth.fullName')}
           value={formData.name}
           onChangeText={(value) => handleFieldChange('name', value)}
           error={formErrors.name}
-          placeholder="Seu nome completo"
+          placeholder={t('auth.fullNamePlaceholder')}
           required
         />
 
         <ValidatedInput
-          label="Email"
+          label={t('auth.emailAddress')}
           value={formData.email}
           onChangeText={(value) => handleFieldChange('email', value)}
           error={formErrors.email}
-          placeholder="seu@email.com"
+          placeholder={t('auth.emailAddressPlaceholder')}
           keyboardType="email-address"
           autoCapitalize="none"
           required
         />
 
         <PhoneInput
-          label="Telefone"
+          label={t('auth.phoneNumber')}
           value={formData.phone || ''}
           onChangeText={(value) => handleFieldChange('phone', value)}
         />
 
         <ValidatedInput
-          label="Senha"
+          label={t('auth.password')}
           value={formData.password}
           onChangeText={(value) => handleFieldChange('password', value)}
           error={formErrors.password}
-          placeholder="Sua senha"
+          placeholder={t('auth.passwordPlaceholder')}
           secureTextEntry
           required
         />
 
         <ValidatedInput
-          label="Confirmar Senha"
+          label={t('auth.confirmPasswordLabel')}
           value={confirmPassword}
           onChangeText={(value) => handleFieldChange('confirmPassword', value)}
           error={formErrors.confirmPassword}
-          placeholder="Confirme sua senha"
+          placeholder={t('auth.confirmPasswordPlaceholderText')}
           secureTextEntry
           required
         />
@@ -301,8 +301,8 @@ export default function RegisterScreen() {
               {formData.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={styles.termsText}>
-              Aceito os <Text style={styles.link}>Termos de Uso</Text> e{' '}
-              <Text style={styles.link}>Política de Privacidade</Text>
+              {t('auth.acceptTerms')} <Text style={styles.link}>{t('auth.termsOfUse')}</Text> {t('auth.and')}
+              <Text style={styles.link}>{t('auth.privacyPolicyLabel')}</Text>
             </Text>
           </TouchableOpacity>
           {formErrors.acceptTerms && (
@@ -311,7 +311,7 @@ export default function RegisterScreen() {
         </View>
 
         <Button
-          title="Criar Conta"
+          title={t('auth.createAccount')}
           onPress={handleSubmit}
           loading={loading}
           disabled={loading}
@@ -322,7 +322,7 @@ export default function RegisterScreen() {
           style={styles.backButton}
         >
           <Text style={styles.backButtonText}>
-            Já tem uma conta? <Text style={styles.link}>Entrar</Text>
+            {t('auth.alreadyHaveAccountLabel')} <Text style={styles.link}>{t('auth.signIn')}</Text>
           </Text>
         </TouchableOpacity>
       </View>

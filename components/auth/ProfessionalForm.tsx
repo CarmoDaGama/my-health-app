@@ -126,7 +126,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       <Text style={styles.title}>{t('forms.professionalInfo')}</Text>
       
       <ValidatedInput
-        label="Especialidade"
+        label={t('forms.specialty') || 'Especialidade'}
         value={data.specialty || ''}
         onChangeText={(value) => onChange('specialty', value)}
         error={errors.specialty}
@@ -135,7 +135,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       />
       
       <ValidatedInput
-        label="Número da Licença"
+        label={t('forms.licenseNumber') || 'Número da Licença'}
         value={data.license || ''}
         onChangeText={(value) => onChange('license', value)}
         error={errors.license}
@@ -180,7 +180,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         value={data.experience?.toString() || ''}
         onChangeText={(value) => onChange('experience', parseInt(value) || 0)}
         error={errors.experience}
-        placeholder="Ex: 5"
+        placeholder={t('forms.yearsPlaceholder') || 'Ex: 5'}
         keyboardType="numeric"
       />
       
@@ -208,7 +208,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         value={data.description || data.bio || ''}
         onChangeText={(value) => onChange('description', value)}
         error={errors.description}
-        placeholder="Descreva sua experiência e especializações..."
+        placeholder={t('forms.descriptionPlaceholder') || 'Descreva seus serviços...'}
         multiline
         numberOfLines={3}
         required
