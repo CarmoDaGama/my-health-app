@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { WebView } from 'react-native-webview';
 import { View, StyleSheet, Text } from 'react-native';
 import { HealthService, Coordinates, Region } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface MapViewProps {
   region: Region;
@@ -22,6 +23,7 @@ export const MapView: React.FC<MapViewProps> = ({
 }) => {
   const webViewRef = useRef<WebView>(null);
   const [isMapReady, setIsMapReady] = useState(false);
+  const { t } = useTranslation();
 
   // Otimização: limitar número de serviços e ordenar por proximidade se houver localização do usuário
   const optimizedServices = useMemo(() => {
@@ -249,7 +251,7 @@ export const MapView: React.FC<MapViewProps> = ({
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContent}>
             <View style={styles.loadingSpinner} />
-            <Text style={styles.loadingText}>Carregando mapa...</Text>
+            <Text style={styles.loadingText}>{t('map.loading')}</Text>
           </View>
         </View>
       )}

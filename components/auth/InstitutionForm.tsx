@@ -5,6 +5,7 @@ import { LocationPicker } from '../common/LocationPicker';
 import { GeocodingService } from '../../services/geocoding';
 import { LocationServiceExpo as LocationService } from '../../services/location-expo';
 import { Coordinates } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface InstitutionFormProps {
   data: any;
@@ -13,7 +14,7 @@ interface InstitutionFormProps {
 }
 
 const INSTITUTION_TYPES = [
-  { label: 'Selecione o tipo', value: '' },
+  { label: 'forms.selectType', value: '' },
   { label: 'Hospital', value: 'hospital' },
   { label: 'Clínica', value: 'clinic' },
   { label: 'Laboratório', value: 'laboratory' },
@@ -49,6 +50,7 @@ const AVAILABLE_SERVICES = [
 ];
 
 export default function InstitutionForm({ data, onChange, errors }: InstitutionFormProps) {
+  const { t } = useTranslation();
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [showServicesPicker, setShowServicesPicker] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>(data.services || []);
@@ -117,7 +119,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       }
     } catch (error) {
       Alert.alert(
-        'Erro ao Obter Localização',
+        t('map.locationError'),
         'Não foi possível obter a localização via GPS. Use a seleção manual no mapa.'
       );
     } finally {
@@ -135,7 +137,11 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
     return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
   };
 
-  const selectedTypeLabel = INSTITUTION_TYPES.find(type => type.value === data.type)?.label || 'Selecione o tipo';
+  const selectedTypeLabel = INSTITUTION_TYPES.find(type => type.value === data.type)?.label || 'forms.selectType';
+  const getTranslatedLabel = (label: string) => {
+    if (label === 'forms.selectType') return t('forms.selectType');
+    return label;
+  };
 
   return (
     <View style={styles.container}>
@@ -148,7 +154,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
           onPress={() => setShowTypePicker(true)}
         >
           <Text style={[styles.pickerText, !data.type && styles.placeholder]}>
-            {selectedTypeLabel}
+            {getTranslatedLabel(selectedTypeLabel)}
           </Text>
         </TouchableOpacity>
         {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
@@ -162,7 +168,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Selecione o Tipo</Text>
+            <Text style={styles.modalTitle}>{t('forms.selectTypeTitle')}</Text>
             <FlatList
               data={INSTITUTION_TYPES.filter(type => type.value !== '')}
               keyExtractor={(item) => item.value}
@@ -194,7 +200,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
           <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
             {selectedServices.length > 0 
               ? `${selectedServices.length} serviço(s) selecionado(s)`
-              : 'Selecione os serviços oferecidos'
+              : t('forms.selectServices')
             }
           </Text>
         </TouchableOpacity>
@@ -225,7 +231,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Selecione os Serviços</Text>
+            <Text style={styles.modalTitle}>{t('forms.selectServicesTitle')}</Text>
             <FlatList
               data={AVAILABLE_SERVICES}
               keyExtractor={(item) => item}

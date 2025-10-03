@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { AsyncError } from '../../hooks/useAsyncError';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ErrorDisplayProps {
   error: AsyncError | string | null;
@@ -18,6 +19,8 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   style,
   compact = false,
 }) => {
+  const { t } = useTranslation();
+  
   if (!error) return null;
 
   const errorMessage = typeof error === 'string' ? error : error.message;
@@ -35,7 +38,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
               style={[styles.button, styles.dismissButton]} 
               onPress={onDismiss}
             >
-              <Text style={styles.dismissButtonText}>Dispensar</Text>
+              <Text style={styles.dismissButtonText}>{t('actions.dismiss')}</Text>
             </TouchableOpacity>
           )}
           
@@ -44,7 +47,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
               style={[styles.button, styles.retryButton]} 
               onPress={onRetry}
             >
-              <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+              <Text style={styles.retryButtonText}>{t('actions.retry')}</Text>
             </TouchableOpacity>
           )}
         </View>

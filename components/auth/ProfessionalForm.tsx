@@ -5,6 +5,7 @@ import { LocationPicker } from '../common/LocationPicker';
 import { GeocodingService } from '../../services/geocoding';
 import { LocationServiceExpo as LocationService } from '../../services/location-expo';
 import { Coordinates } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ProfessionalFormProps {
   data: any;
@@ -37,6 +38,7 @@ const AVAILABLE_SERVICES = [
 ];
 
 export default function ProfessionalForm({ data, onChange, errors }: ProfessionalFormProps) {
+  const { t } = useTranslation();
   const [showServicesPicker, setShowServicesPicker] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>(data.services || []);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -150,7 +152,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
           <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
             {selectedServices.length > 0 
               ? `${selectedServices.length} serviço(s) selecionado(s)`
-              : 'Selecione os serviços que oferece'
+              : t('forms.selectServices')
             }
           </Text>
         </TouchableOpacity>
@@ -274,7 +276,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Selecione os Serviços</Text>
+            <Text style={styles.modalTitle}>{t('forms.selectServicesTitle')}</Text>
             <FlatList
               data={AVAILABLE_SERVICES}
               keyExtractor={(item) => item}

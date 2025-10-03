@@ -22,8 +22,8 @@ import { useLocation } from '../hooks/useLocation';
 import { MapView } from '../components/specific/MapView';
 import { LoadingSpinner, ErrorDisplay, SkeletonListItem } from '../components';
 import { useAsyncError } from '../hooks/useAsyncError';
+import { useTranslation } from '../hooks/useTranslation';
 import { Colors, spacing, borderRadius, fontSize } from '../constants';
-import i18n from '../utils/i18n';
 
 interface HomeScreenProps {
   navigation: HomeScreenNavigationProp;
@@ -54,6 +54,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   
   const { location, loading: locationLoading, error: locationError } = useLocation();
   const { error: asyncError, isLoading: asyncLoading, executeAsync, clearError } = useAsyncError();
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadServices();
@@ -612,7 +613,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <View style={styles.fullScreenSearchContainer}>
               <TextInput
                 style={styles.fullScreenSearchInput}
-                placeholder="Pesquisar serviços de saúde..."
+                placeholder={t('app.searchPlaceholder')}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 placeholderTextColor={Colors.text.secondary}
@@ -728,7 +729,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <View style={styles.searchInputContainer}>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Pesquisar serviços de saúde..."
+                  placeholder={t('app.searchPlaceholder')}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   placeholderTextColor={Colors.text.secondary}
@@ -748,7 +749,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   size={20} 
                   color={Colors.text.primary} 
                 />
-                <Text style={styles.categoriesToggleText}>Categorias</Text>
+                <Text style={styles.categoriesToggleText}>{t('categories.title')}</Text>
               </TouchableOpacity>
 
               {/* Categories Row - Animated */}
@@ -758,21 +759,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     <View style={styles.categoryIconContainer}>
                       <Ionicons name="people" size={16} color={Colors.text.onPrimary} />
                     </View>
-                    <Text style={styles.categoryText} numberOfLines={1}>Profissionais</Text>
+                    <Text style={styles.categoryText} numberOfLines={1}>{t('categories.professionals')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.categoryButton} onPress={handleInstitutionsPress}>
                     <View style={styles.categoryIconContainer}>
                       <Ionicons name="business" size={16} color={Colors.text.onPrimary} />
                     </View>
-                    <Text style={styles.categoryText} numberOfLines={1}>Instituições</Text>
+                    <Text style={styles.categoryText} numberOfLines={1}>{t('categories.institutions')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.categoryButton} onPress={handleMorePress}>
                     <View style={styles.categoryIconContainer}>
                       <Ionicons name="medical" size={16} color={Colors.text.onPrimary} />
                     </View>
-                    <Text style={styles.categoryText} numberOfLines={1}>Mais</Text>
+                    <Text style={styles.categoryText} numberOfLines={1}>{t('categories.more')}</Text>
                   </TouchableOpacity>
                 </View>
               </Animated.View>

@@ -13,6 +13,7 @@ import {
   FlatList,
   Keyboard,
 } from 'react-native';
+import { useTranslation } from '../../hooks/useTranslation';
 import { WebView } from 'react-native-webview';
 import { Coordinates } from '../../types';
 import { LocationServiceExpo as LocationService, LocationResult } from '../../services/location-expo';
@@ -52,6 +53,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   onClose,
   title = 'Selecionar Localização',
 }) => {
+  const { t } = useTranslation();
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
@@ -492,7 +494,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     } catch (error) {
       Alert.alert(
         'Erro de Localização',
-        'Não foi possível obter sua localização atual. Selecione manualmente no mapa.'
+        t('forms.locationNotAvailable')
       );
     }
   };
@@ -502,7 +504,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       onLocationSelect(selectedMarker.coordinates, selectedMarker.address);
       onClose();
     } else {
-      Alert.alert('Selecione uma Localização', 'Por favor, toque no mapa para selecionar uma localização.');
+      Alert.alert(t('forms.selectLocation'), t('forms.selectLocationMessage'));
     }
   };
 
@@ -676,7 +678,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               style={[styles.actionButton, styles.cancelButton]}
               onPress={onClose}
             >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
+              <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Review, ReviewFilters } from '../../types';
 import { useAuth } from '../../hooks/useAuth-firebase';
 import { useReviews } from '../../hooks/useReviews';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ReviewsListProps {
   serviceId: string;
@@ -38,6 +39,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
   onMarkHelpful,
   onReport,
 }) => {
+  const { t } = useTranslation();
   const isOwnReview = currentUserId === review.userId;
   const reviewDate = new Date(review.createdAt);
   const isUpdated = review.updatedAt.getTime() !== review.createdAt.getTime();
@@ -63,12 +65,12 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
 
   const handleDelete = () => {
     Alert.alert(
-      'Deletar Avaliação',
-      'Tem certeza que deseja deletar sua avaliação? Esta ação não pode ser desfeita.',
+      t('reviews.deleteTitle'),
+      t('reviews.deleteMessage'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Deletar',
+          text: t('reviews.deleteConfirm'),
           style: 'destructive',
           onPress: () => onDelete?.(review.id),
         },
@@ -126,7 +128,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
               {formatDate(reviewDate)}
               {isUpdated && ' (editado)'}
               {review.verified && (
-                <Text style={styles.verifiedBadge}> ✓ Verificado</Text>
+                <Text style={styles.verifiedBadge}> {t('reviews.verified')}</Text>
               )}
             </Text>
           </View>
@@ -204,6 +206,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
   maxHeight,
 }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const {
     reviews,
     stats,
@@ -274,7 +277,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
 
     return (
       <View style={styles.filtersContainer}>
-        <Text style={styles.filtersLabel}>Ordenar por:</Text>
+        <Text style={styles.filtersLabel}>{t('reviews.sortBy')}</Text>
         <View style={styles.filtersButtons}>
           {filters.map((filter) => (
             <TouchableOpacity
@@ -324,7 +327,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Ionicons name="chatbubble-outline" size={48} color="#CCC" />
-      <Text style={styles.emptyTitle}>Nenhuma avaliação ainda</Text>
+      <Text style={styles.emptyTitle}>{t('reviews.noReviews')}</Text>
       <Text style={styles.emptyText}>
         Seja o primeiro a avaliar este serviço e ajude outros usuários!
       </Text>
@@ -337,7 +340,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
     return (
       <View style={styles.loadingFooter}>
         <ActivityIndicator color="#2196F3" />
-        <Text style={styles.loadingText}>Carregando mais avaliações...</Text>
+        <Text style={styles.loadingText}>{t('reviews.loadingMore')}</Text>
       </View>
     );
   };
@@ -357,7 +360,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2196F3" />
-        <Text style={styles.loadingText}>Carregando avaliações...</Text>
+        <Text style={styles.loadingText}>{t('reviews.loading')}</Text>
       </View>
     );
   }
@@ -366,10 +369,10 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle-outline" size={48} color="#f44336" />
-        <Text style={styles.errorTitle}>Erro ao carregar avaliações</Text>
+        <Text style={styles.errorTitle}>{t('reviews.loadError')}</Text>
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+          <Text style={styles.retryButtonText}>{t('actions.retry')}</Text>
         </TouchableOpacity>
       </View>
     );

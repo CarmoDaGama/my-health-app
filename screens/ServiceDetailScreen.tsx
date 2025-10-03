@@ -20,7 +20,7 @@ import { ReviewsList } from '../components/specific/ReviewsList';
 import { ReviewsPreview } from '../components/specific/ReviewsPreview';
 import { useReviews } from '../hooks/useReviews';
 import { useAuth } from '../hooks/useAuth-firebase';
-import i18n from '../utils/i18n';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface ServiceDetailScreenProps {
   navigation: ServiceDetailScreenNavigationProp;
@@ -34,6 +34,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const { service } = route.params;
   const { isAuthenticated } = useAuth();
   const { checkUserReview } = useReviews();
+  const { t } = useTranslation();
   
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
@@ -41,8 +42,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const getServiceTypeLabel = (type: string) => {
-    if (type === 'professional') return 'Profissional';
-    return i18n.t(`services.${type}`);
+    if (type === 'professional') return t('serviceDetail.professionalDetails');
+    return t(`services.${type}`);
   };
 
   const handleCall = () => {
@@ -78,11 +79,11 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const handleAddReview = () => {
     if (!isAuthenticated) {
       Alert.alert(
-        'Login Necessário',
-        'Você precisa estar logado para avaliar este serviço.',
+        t('serviceDetail.loginRequired'),
+        t('serviceDetail.loginRequiredMessage'),
         [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Fazer Login', onPress: () => navigation.navigate('Login') },
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('auth.login'), onPress: () => navigation.navigate('Login') },
         ]
       );
       return;
@@ -157,7 +158,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             >
               <Ionicons name="pencil" size={16} color="#2196F3" />
               <Text style={[styles.reviewButtonText, { color: '#2196F3' }]}>
-                Editar Minha Avaliação
+                {t('serviceDetail.editMyReview')}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -166,7 +167,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               onPress={handleAddReview}
             >
               <Ionicons name="star" size={16} color="#FFF" />
-              <Text style={styles.reviewButtonText}>Avaliar Serviço</Text>
+              <Text style={styles.reviewButtonText}>{t('serviceDetail.rateService')}</Text>
             </TouchableOpacity>
           )}
           
@@ -176,7 +177,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           >
             <Ionicons name="list" size={16} color="#666" />
             <Text style={[styles.reviewButtonText, { color: '#666' }]}>
-              Ver Todas
+              {t('actions.viewAll')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -194,7 +195,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       {/* Especialidade */}
       {service.specialty && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Especialidade</Text>
+          <Text style={styles.sectionTitle}>{t('serviceDetail.specialty')}</Text>
           <Text style={styles.sectionContent}>{service.specialty}</Text>
         </View>
       )}
@@ -202,7 +203,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       {/* Clínica */}
       {service.clinic && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Clínica/Hospital</Text>
+          <Text style={styles.sectionTitle}>{t('details.services')}</Text>
           <Text style={styles.sectionContent}>{service.clinic}</Text>
         </View>
       )}
@@ -223,7 +224,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       {/* Horários */}
       {service.schedule && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Horários de Atendimento</Text>
+          <Text style={styles.sectionTitle}>{t('serviceDetail.businessHours')}</Text>
           <Text style={styles.scheduleText}>{formatSchedule(service.schedule)}</Text>
         </View>
       )}
@@ -287,7 +288,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             >
               <Ionicons name="pencil" size={16} color="#2196F3" />
               <Text style={[styles.reviewButtonText, { color: '#2196F3' }]}>
-                Editar Minha Avaliação
+                {t('serviceDetail.editMyReview')}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -296,7 +297,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               onPress={handleAddReview}
             >
               <Ionicons name="star" size={16} color="#FFF" />
-              <Text style={styles.reviewButtonText}>Avaliar Serviço</Text>
+              <Text style={styles.reviewButtonText}>{t('serviceDetail.rateService')}</Text>
             </TouchableOpacity>
           )}
           
@@ -306,7 +307,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           >
             <Ionicons name="list" size={16} color="#666" />
             <Text style={[styles.reviewButtonText, { color: '#666' }]}>
-              Ver Todas
+              {t('actions.viewAll')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -332,7 +333,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {service.type === 'professional' ? 'Detalhes do Profissional' : 'Detalhes da Instituição'}
+          {service.type === 'professional' ? t('serviceDetail.professionalDetails') : t('serviceDetail.institutionDetails')}
         </Text>
       </View>
 
@@ -351,7 +352,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Endereço</Text>
+            <Text style={styles.sectionTitle}>{t('details.address')}</Text>
             <Text style={styles.sectionContent}>
               {service.address}
               {'\n'}
@@ -361,7 +362,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Descrição</Text>
+            <Text style={styles.sectionTitle}>{t('details.description')}</Text>
             <Text style={styles.sectionContent}>{service.description}</Text>
           </View>
 

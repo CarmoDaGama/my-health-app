@@ -3,7 +3,7 @@ import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import { WelcomeScreenNavigationProp } from '../types/navigation';
 import { Colors, spacing } from '../constants';
 import { useAuth } from '../hooks/useAuth-firebase';
-import i18n from '../utils/i18n';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface Props {
   navigation: WelcomeScreenNavigationProp;
@@ -11,6 +11,7 @@ interface Props {
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
   const { continueAsGuest } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogin = () => {
     navigation.navigate('Login');
@@ -38,20 +39,19 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Boas-Vindas ao MediLocator</Text>
+          <Text style={styles.title}>{t('welcome.title')}</Text>
           <Text style={styles.subtitle}>
-            Encontre rapidamente os melhores serviços de saúde da sua região. 
-            Acesse informações detalhadas, localizações e avaliações.
+            {t('welcome.subtitle')}
           </Text>
         </View>
 
         <View style={styles.buttonsContainer}>
           <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-            <Text style={styles.primaryButtonText}>Entrar</Text>
+            <Text style={styles.primaryButtonText}>{t('welcome.login')}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.secondaryButton} onPress={handleContinueAsGuest}>
-            <Text style={styles.secondaryButtonText}>Continuar como Convidado</Text>
+            <Text style={styles.secondaryButtonText}>{t('welcome.continueAsGuest')}</Text>
           </TouchableOpacity>
         </View>
       </View>

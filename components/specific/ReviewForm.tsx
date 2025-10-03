@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { ReviewInput } from '../../types';
 import { useReviews } from '../../hooks/useReviews';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ReviewFormProps {
   serviceId: string;
@@ -37,6 +38,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   existingReview,
 }) => {
   const { addReview, updateReview, isLoading } = useReviews();
+  const { t } = useTranslation();
   
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [comment, setComment] = useState(existingReview?.comment || '');
@@ -57,17 +59,17 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
 
   const validateForm = (): boolean => {
     if (rating === 0) {
-      Alert.alert('Erro', 'Por favor, selecione uma avaliação de 1 a 5 estrelas.');
+      Alert.alert(t('errors.title'), t('reviews.ratingRequired'));
       return false;
     }
 
     if (comment.trim().length < 10) {
-      Alert.alert('Erro', 'O comentário deve ter pelo menos 10 caracteres.');
+      Alert.alert(t('errors.title'), t('reviews.commentTooShort'));
       return false;
     }
 
     if (comment.trim().length > 500) {
-      Alert.alert('Erro', 'O comentário não pode ter mais de 500 caracteres.');
+      Alert.alert(t('errors.title'), t('reviews.commentTooLong'));
       return false;
     }
 
@@ -116,8 +118,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     } catch (error) {
       console.error('Error submitting review:', error);
       Alert.alert(
-        'Erro',
-        'Ocorreu um erro ao enviar sua avaliação. Tente novamente.'
+        t('errors.title'),
+        t('reviews.submitError')
       );
     } finally {
       setIsSubmitting(false);
@@ -248,7 +250,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 styles.submitButtonText,
                 (rating === 0 || comment.trim().length < 10 || isSubmitting) && styles.submitButtonTextDisabled
               ]}>
-                {isSubmitting ? 'Enviando...' : isEditing ? 'Atualizar Avaliação' : 'Enviar Avaliação'}
+                {isSubmitting ? t('reviews.submitting') : isEditing ? t('reviews.updateReview') : t('reviews.submitReview')}
               </Text>
             </TouchableOpacity>
           </View>
