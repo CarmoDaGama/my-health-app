@@ -127,7 +127,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Profile"
             component={ProfileScreen}
             options={{
-              title: 'Perfil',
+              title: i18n.t('screens.profile') || 'Perfil',
             }}
           />
           

@@ -43,6 +43,34 @@ const AVAILABLE_SERVICES = [
 export default function InstitutionForm({ data, onChange, errors }: InstitutionFormProps) {
   const { t } = useTranslation();
   
+  // Helper function to get available services with translations
+  const getAvailableServices = () => [
+    t('medicalServices.emergency'),
+    t('medicalServices.surgery'),
+    t('medicalServices.pediatrics'),
+    t('medicalServices.cardiology'),
+    t('medicalServices.consultations'),
+    t('medicalServices.exams'),
+    t('medicalServices.vaccination'),
+    t('medicalServices.checkup'),
+    t('medicalServices.laboratory'),
+    t('medicalServices.radiology'),
+    t('medicalServices.physiotherapy'),
+    t('medicalServices.nutrition'),
+    t('medicalServices.psychology'),
+    t('medicalServices.gynecology'),
+    t('medicalServices.urology'),
+    t('medicalServices.dermatology'),
+    t('medicalServices.ophthalmology'),
+    t('medicalServices.orthopedics'),
+    t('medicalServices.neurology'),
+    t('medicalServices.oncology'),
+    t('medicalServices.pharmacy'),
+    t('medicalServices.hospitalization'),
+    t('medicalServices.icu'),
+    t('medicalServices.maternity'),
+  ];
+  
   // Helper function to get translated institution types
   const getInstitutionTypes = () => [
     { label: t('forms.selectType'), value: '' },
@@ -114,15 +142,15 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
         onChange('coordinates', location.coordinates);
         
         Alert.alert(
-          'Localização Obtida!',
+          t('common.success') || 'Localização Obtida!',
           `A localização da instituição foi capturada com precisão de ${location.accuracy.toFixed(0)} metros.`,
-          [{ text: 'OK' }]
+          [{ text: t('common.ok') || 'OK' }]
         );
       }
     } catch (error) {
       Alert.alert(
-        t('map.locationError'),
-        'Não foi possível obter a localização via GPS. Use a seleção manual no mapa.'
+        t('app.locationError'),
+        t('app.locationGpsError')
       );
     } finally {
       setIsGettingLocation(false);
@@ -147,10 +175,10 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Informações da Instituição</Text>
+      <Text style={styles.title}>{t('forms.institutionInfo')}</Text>
       
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Tipo de Instituição *</Text>
+        <Text style={styles.label}>{t('forms.institutionType')} *</Text>
         <TouchableOpacity
           style={styles.pickerContainer}
           onPress={() => setShowTypePicker(true)}
@@ -187,14 +215,14 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
               style={styles.modalCloseButton}
               onPress={() => setShowTypePicker(false)}
             >
-              <Text style={styles.modalCloseText}>Cancelar</Text>
+              <Text style={styles.modalCloseText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Serviços Disponíveis *</Text>
+        <Text style={styles.label}>{t('forms.availableServices')} *</Text>
         <TouchableOpacity
           style={styles.servicesButton}
           onPress={() => setShowServicesPicker(true)}
@@ -235,8 +263,8 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('forms.selectServicesTitle')}</Text>
             <FlatList
-              data={AVAILABLE_SERVICES}
-              keyExtractor={(item) => item}
+              data={getAvailableServices()}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
@@ -308,7 +336,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       <View style={styles.coordinatesSection}>
         <Text style={styles.label}>Localização Exata da Instituição</Text>
         <Text style={styles.coordinatesHelp}>
-          Para melhor precisão no mapa, capture a localização exata da instituição:
+          {t('app.locationPrecisionInstitution')}
         </Text>
         
         {coordinates ? (
@@ -322,7 +350,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
               onPress={() => setShowLocationPicker(true)}
             >
               <Text style={styles.updateLocationButtonText}>
-                📍 Ajustar no Mapa
+                {t('app.adjustOnMap')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -347,7 +375,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
               onPress={() => setShowLocationPicker(true)}
             >
               <Text style={styles.locationOptionText}>
-                🗺️ Selecionar no Mapa
+                {t('app.selectOnMap')}
               </Text>
             </TouchableOpacity>
           </View>

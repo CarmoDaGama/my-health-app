@@ -87,7 +87,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
       'Denunciar Avaliação',
       'Você deseja denunciar esta avaliação por conteúdo inadequado?',
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
           text: 'Denunciar',
           style: 'destructive',

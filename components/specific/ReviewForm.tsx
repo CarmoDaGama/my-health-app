@@ -102,11 +102,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
 
       if (success) {
         Alert.alert(
-          'Sucesso',
-          isEditing ? 'Avaliação atualizada com sucesso!' : 'Avaliação enviada com sucesso!',
+          t('common.success') || 'Sucesso',
+          isEditing ? t('reviews.updateSuccess') || 'Avaliação atualizada com sucesso!' : t('reviews.submitSuccess') || 'Avaliação enviada com sucesso!',
           [
             {
-              text: 'OK',
+              text: t('common.ok') || 'OK',
               onPress: () => {
                 onSuccess?.();
                 handleClose();
@@ -140,7 +140,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   const renderStars = () => {
     return (
       <View style={styles.starsContainer}>
-        <Text style={styles.ratingLabel}>Sua avaliação:</Text>
+        <Text style={styles.ratingLabel}>{t('ratings.yourRating')}</Text>
         <View style={styles.stars}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity
@@ -158,11 +158,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
         </View>
         {rating > 0 && (
           <Text style={styles.ratingText}>
-            {rating === 1 && 'Muito ruim'}
-            {rating === 2 && 'Ruim'}
-            {rating === 3 && 'Regular'}
-            {rating === 4 && 'Bom'}
-            {rating === 5 && 'Excelente'}
+            {rating === 1 && t('ratings.veryBad')}
+            {rating === 2 && t('ratings.bad')}
+            {rating === 3 && t('ratings.regular')}
+            {rating === 4 && t('ratings.good')}
+            {rating === 5 && t('ratings.excellent')}
           </Text>
         )}
       </View>
@@ -185,7 +185,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
               <Text style={styles.title}>
-                {isEditing ? 'Editar Avaliação' : 'Avaliar Serviço'}
+                {isEditing ? t('ratings.editReview') : t('ratings.rateService')}
               </Text>
               <View style={styles.placeholder} />
             </View>
@@ -195,8 +195,8 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
               <Text style={styles.serviceName}>{serviceName}</Text>
               <Text style={styles.servicePrompt}>
                 {isEditing 
-                  ? 'Edite sua avaliação sobre este serviço'
-                  : 'Como foi sua experiência com este serviço?'
+                  ? t('ratings.editPrompt')
+                  : t('ratings.experiencePrompt')
                 }
               </Text>
             </View>
@@ -226,7 +226,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
 
             {/* Guidelines */}
             <View style={styles.guidelines}>
-              <Text style={styles.guidelinesTitle}>Diretrizes para avaliações:</Text>
+              <Text style={styles.guidelinesTitle}>{t('app.reviewGuidelines')}</Text>
               <Text style={styles.guidelineText}>
                 • Seja honesto e construtivo{'\n'}
                 • Descreva sua experiência real{'\n'}

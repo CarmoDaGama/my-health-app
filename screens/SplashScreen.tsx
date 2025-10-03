@@ -3,6 +3,7 @@ import { View, StyleSheet, Image, Text } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { Colors, spacing } from '../constants';
+import { useTranslation } from '../hooks/useTranslation';
 
 type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   console.log('🎬 SplashScreen renderizada');
   
   return (
@@ -23,7 +25,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.pulseSymbol}>~</Text>
           </View>
         </View>
-        <Text style={styles.appName}>MEDILOCATOR</Text>
+        <Text style={styles.appName}>{t('app.name') || 'MEDILOCATOR'}</Text>
       </View>
     </View>
   );

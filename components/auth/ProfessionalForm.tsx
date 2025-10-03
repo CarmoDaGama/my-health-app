@@ -90,15 +90,15 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         }
         
         Alert.alert(
-          'Localização Obtida!',
+          t('common.success') || 'Localização Obtida!',
           `Sua localização foi capturada com precisão de ${location.accuracy.toFixed(0)} metros.`,
-          [{ text: 'OK' }]
+          [{ text: t('common.ok') || 'OK' }]
         );
       }
     } catch (error) {
       Alert.alert(
-        'Erro ao Obter Localização',
-        'Não foi possível obter sua localização via GPS. Use a seleção manual no mapa.'
+        t('app.locationError'),
+        t('app.locationGpsError')
       );
     } finally {
       setIsGettingLocation(false);
@@ -123,7 +123,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Informações Profissionais</Text>
+      <Text style={styles.title}>{t('forms.professionalInfo')}</Text>
       
       <ValidatedInput
         label="Especialidade"
@@ -144,7 +144,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       />
       
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Serviços Disponíveis *</Text>
+        <Text style={styles.label}>{t('forms.availableServices')} *</Text>
         <TouchableOpacity
           style={styles.servicesButton}
           onPress={() => setShowServicesPicker(true)}
@@ -198,7 +198,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         {isGeocodingAddress && (
           <View style={styles.geocodingIndicator}>
             <ActivityIndicator size="small" color="#3B82F6" />
-            <Text style={styles.geocodingText}>Obtendo coordenadas...</Text>
+            <Text style={styles.geocodingText}>{t('forms.gettingCoordinates')}</Text>
           </View>
         )}
       </View>
@@ -216,9 +216,9 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
 
       {/* Seção de Coordenadas */}
       <View style={styles.coordinatesSection}>
-        <Text style={styles.label}>Localização Exata</Text>
+        <Text style={styles.label}>{t('forms.exactLocation')}</Text>
         <Text style={styles.coordinatesHelp}>
-          Para melhor precisão no mapa, capture sua localização exata:
+          {t('app.locationPrecisionProfessional')}
         </Text>
         
         {coordinates ? (
@@ -232,7 +232,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
               onPress={() => setShowLocationPicker(true)}
             >
               <Text style={styles.updateLocationButtonText}>
-                📍 Ajustar no Mapa
+                {t('app.adjustOnMap')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -257,7 +257,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
               onPress={() => setShowLocationPicker(true)}
             >
               <Text style={styles.locationOptionText}>
-                🗺️ Selecionar no Mapa
+                {t('app.selectOnMap')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -304,7 +304,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
               style={styles.modalCloseButton}
               onPress={() => setShowServicesPicker(false)}
             >
-              <Text style={styles.modalCloseText}>Fechar</Text>
+              <Text style={styles.modalCloseText}>{t('forms.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

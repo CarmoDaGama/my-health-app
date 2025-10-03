@@ -519,7 +519,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         {!isMapReady && (
           <View style={styles.mapLoadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.mapLoadingText}>Carregando mapa OpenStreetMap...</Text>
+            <Text style={styles.mapLoadingText}>{t('app.loadingMap')}</Text>
           </View>
         )}
         

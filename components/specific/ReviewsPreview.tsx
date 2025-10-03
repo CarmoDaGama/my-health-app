@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Review } from '../../types';
 import { useReviews } from '../../hooks/useReviews';
 import { useAuth } from '../../hooks/useAuth-firebase';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ReviewsPreviewProps {
   serviceId: string;
@@ -24,6 +25,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
 }) => {
   const { user } = useAuth();
   const { loadReviews, reviews, stats, isLoading, error } = useReviews();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (serviceId) {
@@ -94,7 +96,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
             onPress={() => onEditReview(review)}
           >
             <Ionicons name="pencil-outline" size={14} color="#2196F3" />
-            <Text style={styles.editButtonText}>Editar</Text>
+            <Text style={styles.editButtonText}>{t('common.edit')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -105,7 +107,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator color="#2196F3" size="small" />
-        <Text style={styles.loadingText}>Carregando avaliações...</Text>
+        <Text style={styles.loadingText}>{t('reviews.loading')}</Text>
       </View>
     );
   }
@@ -113,7 +115,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Erro ao carregar avaliações</Text>
+        <Text style={styles.errorText}>{t('reviews.loadError')}</Text>
       </View>
     );
   }
@@ -121,7 +123,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
   if (reviews.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Nenhuma avaliação ainda</Text>
+        <Text style={styles.emptyText}>{t('reviews.noReviews')}</Text>
       </View>
     );
   }

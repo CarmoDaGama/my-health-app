@@ -16,6 +16,7 @@ import { HealthService, Region } from '../types';
 import { MapDirectionsScreenNavigationProp, MapDirectionsScreenRouteProp } from '../types/navigation';
 import { Colors, spacing, borderRadius, fontSize, ROUTE_PROFILES } from '../constants';
 import { useLocation } from '../hooks/useLocation';
+import { useTranslation } from '../hooks/useTranslation';
 import { RoutingService, RouteResponse, RouteStep } from '../services/routing';
 
 interface MapDirectionsScreenProps {
@@ -35,6 +36,7 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
 }) => {
   const { service } = route.params;
   const { location } = useLocation();
+  const { t } = useTranslation();
   const webViewRef = React.useRef<WebView>(null);
   const [region, setRegion] = useState<Region>({
     latitude: service.coordinates.latitude || -8.8379,
@@ -100,7 +102,7 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
       Alert.alert(
         'Localização Necessária',
         'Não foi possível obter sua localização. Verifique se o GPS está ativado.',
-        [{ text: 'OK' }]
+        [{ text: t('common.ok') || 'OK' }]
       );
       return;
     }
@@ -138,13 +140,13 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
         Alert.alert(
           'Problema de Conexão',
           'Verifique sua conexão com a internet. Uma rota aproximada será exibida.',
-          [{ text: 'OK' }]
+          [{ text: t('common.ok') || 'OK' }]
         );
       } else {
         Alert.alert(
           'Aviso',
           'Exibindo rota aproximada. Para rotas precisas, verifique sua conexão.',
-          [{ text: 'OK' }]
+          [{ text: t('common.ok') || 'OK' }]
         );
       }
     } finally {
@@ -292,7 +294,7 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
           <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Direções</Text>
+          <Text style={styles.headerTitle}>{t('directions.title')}</Text>
           <Text style={styles.headerSubtitle}>{service.name}</Text>
         </View>
       </View>
@@ -367,7 +369,7 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
           <TouchableOpacity style={styles.directionsButton} onPress={toggleDirections}>
             <Ionicons name="list" size={20} color={Colors.primary} />
             <Text style={styles.directionsButtonText}>
-              {showDirections ? 'Ocultar' : 'Ver'} Direções
+              {showDirections ? t('directions.hide') : t('directions.show')} {t('directions.title')}
             </Text>
           </TouchableOpacity>
         </View>

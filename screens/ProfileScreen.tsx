@@ -134,7 +134,7 @@ export const ProfileScreen: React.FC = () => {
             <Text style={styles.infoLabel}>
               {t('profile.developer') || 'Desenvolvedor'}
             </Text>
-            <Text style={styles.infoValue}>Health App Team</Text>
+            <Text style={styles.infoValue}>{t('company.developer')}</Text>
           </View>
         </View>
       </ScrollView>

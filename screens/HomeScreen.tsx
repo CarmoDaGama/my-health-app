@@ -29,7 +29,7 @@ interface HomeScreenProps {
   navigation: HomeScreenNavigationProp;
 }
 
-type TabType = 'profissionais' | 'instituicoes' | 'mais';
+type TabType = 'professionals' | 'institutions' | 'more';
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +38,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [categoriesVisible, setCategoriesVisible] = useState(false);
   const [isFullScreenMode, setIsFullScreenMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>('profissionais');
+  const [activeTab, setActiveTab] = useState<TabType>('professionals');
   const [region, setRegion] = useState<Region>({
     latitude: -8.8379,  // Luanda default
     longitude: 13.2894,
@@ -400,17 +400,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Tab navigation handlers
   const handleProfessionalsPress = () => {
     setIsFullScreenMode(true);
-    setActiveTab('profissionais');
+    setActiveTab('professionals');
   };
 
   const handleInstitutionsPress = () => {
     setIsFullScreenMode(true);
-    setActiveTab('instituicoes');
+    setActiveTab('institutions');
   };
 
   const handleMorePress = () => {
     setIsFullScreenMode(true);
-    setActiveTab('mais');
+    setActiveTab('more');
   };
 
   const handleBackPress = () => {
@@ -427,13 +427,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     }
     
     switch (activeTab) {
-      case 'profissionais':
+      case 'professionals':
         // Filtra apenas profissionais
         filteredData = services.filter(service => 
           service.type === 'professional'
         );
         break;
-      case 'instituicoes':
+      case 'institutions':
         // Filtra apenas instituições de Luanda, Angola
         filteredData = services.filter(service => 
           (service.type === 'hospital' || 
@@ -443,7 +443,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           service.country === 'Angola'
         );
         break;
-      case 'mais':
+      case 'more':
         // Filtra laboratórios, farmácias e outros serviços de Luanda
         filteredData = services.filter(service => 
           (service.type === 'laboratory' || 
@@ -500,11 +500,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
     const getTabTitle = () => {
       switch (activeTab) {
-        case 'profissionais':
+        case 'professionals':
           return t('serviceTypes.healthProfessionals');
-        case 'instituicoes':
+        case 'institutions':
           return t('serviceTypes.healthInstitutions');
-        case 'mais':
+        case 'more':
           return t('serviceTypes.otherServices');
         default:
           return t('serviceTypes.all');
@@ -638,49 +638,49 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Tab Navigation */}
           <View style={styles.tabContainer}>
             <TouchableOpacity 
-              style={[styles.tabButton, activeTab === 'profissionais' && styles.activeTabButton]}
-              onPress={() => setActiveTab('profissionais')}
+              style={[styles.tabButton, activeTab === 'professionals' && styles.activeTabButton]}
+              onPress={() => setActiveTab('professionals')}
             >
               <View style={styles.tabIconContainer}>
                 <Ionicons 
                   name="people" 
                   size={20} 
-                  color={activeTab === 'profissionais' ? Colors.primary : Colors.text.primary} 
+                  color={activeTab === 'professionals' ? Colors.primary : Colors.text.primary} 
                 />
               </View>
-              <Text style={[styles.tabText, activeTab === 'profissionais' && styles.activeTabText]}>
+              <Text style={[styles.tabText, activeTab === 'professionals' && styles.activeTabText]}>
                 {t('serviceTypes.professionals')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.tabButton, activeTab === 'instituicoes' && styles.activeTabButton]}
-              onPress={() => setActiveTab('instituicoes')}
+              style={[styles.tabButton, activeTab === 'institutions' && styles.activeTabButton]}
+              onPress={() => setActiveTab('institutions')}
             >
               <View style={styles.tabIconContainer}>
                 <Ionicons 
                   name="business" 
                   size={20} 
-                  color={activeTab === 'instituicoes' ? Colors.primary : Colors.text.primary} 
+                  color={activeTab === 'institutions' ? Colors.primary : Colors.text.primary} 
                 />
               </View>
-              <Text style={[styles.tabText, activeTab === 'instituicoes' && styles.activeTabText]}>
+              <Text style={[styles.tabText, activeTab === 'institutions' && styles.activeTabText]}>
                 {t('serviceTypes.institutions')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.tabButton, activeTab === 'mais' && styles.activeTabButton]}
-              onPress={() => setActiveTab('mais')}
+              style={[styles.tabButton, activeTab === 'more' && styles.activeTabButton]}
+              onPress={() => setActiveTab('more')}
             >
               <View style={styles.tabIconContainer}>
                 <Ionicons 
                   name="medical" 
                   size={20} 
-                  color={activeTab === 'mais' ? Colors.primary : Colors.text.primary} 
+                  color={activeTab === 'more' ? Colors.primary : Colors.text.primary} 
                 />
               </View>
-              <Text style={[styles.tabText, activeTab === 'mais' && styles.activeTabText]}>
+              <Text style={[styles.tabText, activeTab === 'more' && styles.activeTabText]}>
                 {t('serviceTypes.others')}
               </Text>
             </TouchableOpacity>
@@ -709,7 +709,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 <View style={styles.mapOptimizingContent}>
                   <LoadingSpinner size="small" color={Colors.primary} />
                   <Text style={styles.mapOptimizingText}>
-                    Obtendo sua localização...
+                    {t('app.gettingLocation')}
                   </Text>
                 </View>
               </View>
