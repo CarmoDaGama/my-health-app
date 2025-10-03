@@ -12,7 +12,7 @@ import { ProfileScreenNavigationProp } from '../types/navigation';
 import { useAuth, useUser } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
 import { usePreferences } from '../hooks/usePreferences';
-import { UserAvatar } from '../components';
+import { UserAvatar, LanguageSelector } from '../components';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
 
@@ -167,15 +167,16 @@ export const ProfileScreen: React.FC = () => {
           <Text style={styles.menuItemArrow}>→</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.menuItem} onPress={handleLanguageChange}>
-          <Text style={styles.menuItemText}>
-            {t('profile.language') || 'Language'}
-          </Text>
-          <Text style={styles.menuItemValue}>
-            {user.preferences.language === 'pt' ? 'Português' : 'English'}
-          </Text>
-          <Text style={styles.menuItemArrow}>→</Text>
-        </TouchableOpacity>
+        {/* Language Selection Section */}
+        <View style={styles.languageSection}>
+          <LanguageSelector 
+            isGuest={false}
+            onLanguageChange={(language) => {
+              // This will automatically save via the LanguageSelector component
+              console.log('Language changed to:', language);
+            }}
+          />
+        </View>
         
         <View style={styles.menuItem}>
           <Text style={styles.menuItemText}>
@@ -321,6 +322,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.text.primary,
     marginBottom: spacing.md,
+  },
+  languageSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    marginBottom: spacing.md,
+    paddingVertical: spacing.sm,
   },
   
   // Menu items

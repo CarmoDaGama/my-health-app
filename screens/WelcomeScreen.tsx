@@ -13,11 +13,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
   const { continueAsGuest } = useAuth();
   const { t } = useTranslation();
 
-  const handleLogin = () => {
-    navigation.navigate('Login');
-  };
-
-  const handleContinueAsGuest = () => {
+  const handleFindProfessional = () => {
     continueAsGuest();
   };
 
@@ -46,12 +42,8 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-            <Text style={styles.primaryButtonText}>{t('welcome.login')}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleContinueAsGuest}>
-            <Text style={styles.secondaryButtonText}>{t('welcome.continueAsGuest')}</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleFindProfessional}>
+            <Text style={styles.primaryButtonText}>{t('welcome.findProfessional')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -150,19 +142,5 @@ const styles = StyleSheet.create({
     color: Colors.text.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: Colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

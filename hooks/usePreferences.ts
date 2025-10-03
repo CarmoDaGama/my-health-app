@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { UserPreferences } from '../types';
 import { useAuth } from './useAuth-firebase';
 import { useTranslation } from './useTranslation';
+import { saveUserLanguagePreference } from '../utils/i18n';
 
 export const usePreferences = () => {
   const { user, updatePreferences: updateUserPreferences } = useAuth();
@@ -55,7 +56,18 @@ export const usePreferences = () => {
    */
   const setLanguage = async (language: 'pt' | 'en'): Promise<void> => {
     try {
-      await updatePreferences({ language });
+      // Atualizar o i18n imediatamente
+      await changeLanguage(language, false);
+      
+      // Se o usuário estiver autenticado, salvar nas preferências do perfil
+      if (user && preferences) {
+        await updatePreferences({ language });
+        // Também salvar localmente para backup
+        await saveUserLanguagePreference(language);
+      } else {
+        // Para usuários não autenticados, apenas salvar localmente
+        await saveUserLanguagePreference(language);
+      }
     } catch (error) {
       console.error('Erro ao alterar idioma:', error);
       throw error;

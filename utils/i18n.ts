@@ -1,5 +1,9 @@
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Chave para salvar a preferência de idioma do usuário
+const LANGUAGE_PREFERENCE_KEY = '@health_app:language_preference';
 
 // Traduções
 const translations = {
@@ -258,6 +262,7 @@ const translations = {
       subtitle: 'Quickly find the best health services in your region. Access detailed information, locations and reviews.',
       login: 'Login',
       continueAsGuest: 'Continue as Guest',
+      findProfessional: 'Find Professional',
     },
     categories: {
       title: 'Categories',
@@ -396,6 +401,12 @@ const translations = {
       hospitalization: 'Hospitalization',
       icu: 'ICU',
       maternity: 'Maternity',
+    },
+    settings: {
+      language: 'Language',
+      selectLanguage: 'Select Language',
+      guestLanguageNote: 'Language preference will be saved for your next visit',
+      languageChanged: 'Language changed successfully',
     }
   },
   pt: {
@@ -652,6 +663,7 @@ const translations = {
       subtitle: 'Encontre rapidamente os melhores serviços de saúde da sua região. Acesse informações detalhadas, localizações e avaliações.',
       login: 'Entrar',
       continueAsGuest: 'Continuar como Convidado',
+      findProfessional: 'Encontrar Profissional',
     },
     categories: {
       title: 'Categorias',
@@ -790,6 +802,12 @@ const translations = {
       hospitalization: 'Internação',
       icu: 'UTI',
       maternity: 'Maternidade',
+    },
+    settings: {
+      language: 'Idioma',
+      selectLanguage: 'Selecionar Idioma',
+      guestLanguageNote: 'A preferência de idioma será salva para sua próxima visita',
+      languageChanged: 'Idioma alterado com sucesso',
     }
   }
 };
@@ -801,8 +819,97 @@ const i18n = new I18n(translations);
 i18n.enableFallback = true;
 i18n.defaultLocale = 'en';
 
-// Detectar idioma do dispositivo
-const deviceLanguage = getLocales()[0]?.languageCode || 'en';
-i18n.locale = translations[deviceLanguage as keyof typeof translations] ? deviceLanguage : 'en';
+/**
+ * Obtém o idioma do dispositivo
+ */
+export const getDeviceLanguage = (): string => {
+  try {
+    const locales = getLocales();
+    const deviceLanguage = locales[0]?.languageCode || 'en';
+    
+    // Verificar se o idioma do dispositivo está disponível
+    return translations[deviceLanguage as keyof typeof translations] ? deviceLanguage : 'en';
+  } catch (error) {
+    console.warn('Erro ao detectar idioma do dispositivo:', error);
+    return 'en';
+  }
+};
+
+/**
+ * Salva a preferência de idioma do usuário
+ */
+export const saveUserLanguagePreference = async (language: string): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(LANGUAGE_PREFERENCE_KEY, language);
+  } catch (error) {
+    console.warn('Erro ao salvar preferência de idioma:', error);
+  }
+};
+
+/**
+ * Obtém a preferência de idioma do usuário
+ */
+export const getUserLanguagePreference = async (): Promise<string | null> => {
+  try {
+    return await AsyncStorage.getItem(LANGUAGE_PREFERENCE_KEY);
+  } catch (error) {
+    console.warn('Erro ao carregar preferência de idioma:', error);
+    return null;
+  }
+};
+
+/**
+ * Remove as preferências de idioma
+ */
+export const clearLanguagePreferences = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(LANGUAGE_PREFERENCE_KEY);
+  } catch (error) {
+    console.warn('Erro ao limpar preferências de idioma:', error);
+  }
+};
+
+/**
+ * Determina qual idioma usar baseado na seguinte prioridade:
+ * 1. Preferência do usuário autenticado
+ * 2. Idioma do sistema operativo
+ * 3. Idioma padrão (en)
+ */
+export const determineLanguage = async (isGuest: boolean = false, userPreferredLanguage?: string): Promise<string> => {
+  try {
+    // 1. Se o usuário autenticado tem preferência definida nas configurações, usar ela
+    if (!isGuest && userPreferredLanguage) {
+      return userPreferredLanguage;
+    }
+    
+    // 2. Para usuários convidados ou usuários sem preferência definida, usar idioma do sistema
+    const deviceLanguage = getDeviceLanguage();
+    
+    return deviceLanguage;
+  } catch (error) {
+    console.warn('Erro ao determinar idioma:', error);
+    return 'en'; // Fallback final
+  }
+};
+
+/**
+ * Configura o idioma do i18n
+ */
+export const setLanguage = (language: string): void => {
+  i18n.locale = language;
+};
+
+/**
+ * Obtém os idiomas disponíveis
+ */
+export const getAvailableLanguages = () => {
+  return [
+    { code: 'pt', name: 'Português', nativeName: 'Português' },
+    { code: 'en', name: 'English', nativeName: 'English' }
+  ];
+};
+
+// Inicialização com idioma padrão
+setLanguage('en');
 
 export default i18n;

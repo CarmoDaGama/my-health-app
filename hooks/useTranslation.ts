@@ -1,35 +1,62 @@
-import { useState, useEffect } from 'react';
-import i18n from '../utils/i18n';
+import { useState, useEffect, useCallback } from 'react';
+import i18n, { 
+  determineLanguage, 
+  setLanguage, 
+  getAvailableLanguages,
+  saveUserLanguagePreference
+} from '../utils/i18n';
 import { getLocales } from 'expo-localization';
 
 export const useTranslation = () => {
   const [locale, setLocale] = useState(i18n.locale);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  /**
+   * Inicializa o idioma com base nas preferências do usuário
+   */
+  const initializeLanguage = useCallback(async (isGuest: boolean = false, userPreferredLanguage?: string) => {
+    try {
+      const determinedLanguage = await determineLanguage(isGuest, userPreferredLanguage);
+      setLanguage(determinedLanguage);
+      setLocale(determinedLanguage);
+      setIsInitialized(true);
+    } catch (error) {
+      console.warn('Erro ao inicializar idioma:', error);
+      // Fallback para inglês
+      setLanguage('en');
+      setLocale('en');
+      setIsInitialized(true);
+    }
+  }, []);
 
   useEffect(() => {
-    const handleLocaleChange = () => {
-      setLocale(i18n.locale);
-    };
-
-    // Não há listener nativo no i18n-js, então usamos polling simples se necessário
-    // Em uma implementação mais robusta, você poderia usar Context API para isso
-    
-    return () => {
-      // Cleanup se necessário
-    };
-  }, []);
+    // Inicializar com idioma padrão se ainda não foi inicializado
+    if (!isInitialized) {
+      initializeLanguage();
+    }
+  }, [initializeLanguage, isInitialized]);
 
   const t = (key: string, options?: object) => {
     return i18n.t(key, options);
   };
 
-  const changeLanguage = (newLocale: string) => {
-    i18n.locale = newLocale;
-    setLocale(newLocale);
+  const changeLanguage = async (newLocale: string, isGuest: boolean = false) => {
+    try {
+      setLanguage(newLocale);
+      setLocale(newLocale);
+      
+      // Salvar a preferência apenas se não for usuário convidado
+      if (!isGuest) {
+        await saveUserLanguagePreference(newLocale);
+      }
+    } catch (error) {
+      console.warn('Erro ao alterar idioma:', error);
+    }
   };
 
   const getCurrentLocale = () => locale;
 
-  const getAvailableLocales = () => ['pt', 'en'];
+  const getAvailableLocales = () => getAvailableLanguages();
 
   const isRTL = () => {
     // Angola usa escrita da esquerda para direita
@@ -55,6 +82,8 @@ export const useTranslation = () => {
     getAvailableLocales,
     isRTL,
     locale,
+    isInitialized,
+    initializeLanguage,
   };
 };
 

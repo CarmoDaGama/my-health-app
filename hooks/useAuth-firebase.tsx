@@ -3,6 +3,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { AuthServiceFirebase } from '../services/auth-firebase';
 import { AuthCredentials, RegisterData, UserProfile, UserType } from '../types';
+import { getUserLanguagePreference } from '../utils/i18n';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -159,6 +160,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         setFirebaseUser(null);
         setIsGuestMode(false);
+        
+        // Não limpar preferências de idioma no logout
+        // O sistema usará detecção automática do sistema operativo
       }
       
       return response;

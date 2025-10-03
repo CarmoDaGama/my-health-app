@@ -1,6 +1,7 @@
 export { Button } from './common/Button';
 export { default as ErrorBoundary } from './common/ErrorBoundary';
 export { default as ErrorDisplay } from './common/ErrorDisplay';
+export { LanguageSelector } from './common/LanguageSelector';
 export { default as LoadingSpinner } from './common/LoadingSpinner';
 export { default as Skeleton, SkeletonListItem } from './common/Skeleton';
 export { default as ValidatedInput } from './common/ValidatedInput';
