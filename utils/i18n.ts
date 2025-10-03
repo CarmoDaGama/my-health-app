@@ -50,6 +50,8 @@ const translations = {
       goToLogin: 'Go to Login',
       alreadyLoggedIn: 'Already Logged In',
       alreadyLoggedInMessage: 'You are already logged into the system.',
+      user: 'User',
+      selectAccountType: 'Account Type',
     },
     
     // Profile
@@ -143,9 +145,20 @@ const translations = {
     },
     serviceTypes: {
       all: 'All Services',
-      professionals: 'Health Professionals',
-      institutions: 'Health Institutions',
+      professionals: 'Professionals',
+      institutions: 'Institutions',
       others: 'Other Services',
+      professional: 'Professional',
+      institution: 'Institution',
+      types: {
+        hospital: 'Hospital',
+        clinic: 'Clinic',
+        laboratory: 'Laboratory',
+        pharmacy: 'Pharmacy',
+      },
+      healthProfessionals: 'Health Professionals',
+      healthInstitutions: 'Health Institutions',
+      otherServices: 'Other Services',
     },
     screens: {
       home: 'Home',
@@ -219,6 +232,9 @@ const translations = {
       rateService: 'Rate Service',
     },
     reviews: {
+      title: 'Reviews',
+      allReviews: 'All Reviews',
+      reviewsCount: 'reviews',
       verified: '✓ Verified',
       sortBy: 'Sort by:',
       noReviews: 'No reviews yet',
@@ -235,6 +251,7 @@ const translations = {
       submitting: 'Submitting...',
       updateReview: 'Update Review',
       submitReview: 'Submit Review',
+      beFirstToReview: 'Be the first to review this service and help other users!',
     },
     map: {
       loading: 'Loading map...',
@@ -242,12 +259,15 @@ const translations = {
     },
     forms: {
       selectType: 'Select type',
-      selectServices: 'Select the services offered',
+      selectServices: 'Select offered services',
       selectServicesTitle: 'Select Services',
       selectTypeTitle: 'Select Type',
       selectLocation: 'Select a Location',
       selectLocationMessage: 'Please tap on the map to select a location.',
-      locationNotAvailable: 'Could not get your current location. Select manually on the map.',
+      locationNotAvailable: 'Could not get your current location. Please select manually on the map.',
+      officeAddress: 'Office or clinic address',
+      professionalDescription: 'Doctor, nurse or other health professional',
+      institutionDescription: 'Hospital, clinic, laboratory or pharmacy',
     }
   },
   pt: {
@@ -297,6 +317,8 @@ const translations = {
       goToLogin: 'Fazer Login',
       alreadyLoggedIn: 'Já Logado',
       alreadyLoggedInMessage: 'Você já está logado no sistema.',
+      user: 'Usuário',
+      selectAccountType: 'Tipo de Conta',
     },
     
     // Profile
@@ -395,9 +417,20 @@ const translations = {
     },
     serviceTypes: {
       all: 'Todos os Serviços',
-      professionals: 'Profissionais de Saúde',
-      institutions: 'Instituições de Saúde',
-      others: 'Outros Serviços',
+      professionals: 'Profissionais',
+      institutions: 'Instituições',
+      others: 'Mais',
+      professional: 'Profissional',
+      institution: 'Instituição',
+      types: {
+        hospital: 'Hospital',
+        clinic: 'Clínica',
+        laboratory: 'Laboratório',
+        pharmacy: 'Farmácia',
+      },
+      healthProfessionals: 'Profissionais de Saúde',
+      healthInstitutions: 'Instituições de Saúde',
+      otherServices: 'Outros Serviços',
     },
     screens: {
       home: 'Início',
@@ -470,6 +503,9 @@ const translations = {
       rateService: 'Avaliar Serviço',
     },
     reviews: {
+      title: 'Avaliações',
+      allReviews: 'Todas as Avaliações',
+      reviewsCount: 'avaliações',
       verified: '✓ Verificado',
       sortBy: 'Ordenar por:',
       noReviews: 'Nenhuma avaliação ainda',
@@ -486,6 +522,7 @@ const translations = {
       submitting: 'Enviando...',
       updateReview: 'Atualizar Avaliação',
       submitReview: 'Enviar Avaliação',
+      beFirstToReview: 'Seja o primeiro a avaliar este serviço e ajude outros usuários!',
     },
     map: {
       loading: 'Carregando mapa...',
@@ -499,6 +536,9 @@ const translations = {
       selectLocation: 'Selecione uma Localização',
       selectLocationMessage: 'Por favor, toque no mapa para selecionar uma localização.',
       locationNotAvailable: 'Não foi possível obter sua localização atual. Selecione manualmente no mapa.',
+      officeAddress: 'Endereço do consultório ou clínica',
+      professionalDescription: 'Médico, enfermeiro ou outro profissional de saúde',
+      institutionDescription: 'Hospital, clínica, laboratório ou farmácia',
     }
   }
 };

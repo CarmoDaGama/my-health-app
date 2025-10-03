@@ -13,15 +13,6 @@ interface InstitutionFormProps {
   errors: Record<string, string>;
 }
 
-const INSTITUTION_TYPES = [
-  { label: 'forms.selectType', value: '' },
-  { label: 'Hospital', value: 'hospital' },
-  { label: 'Clínica', value: 'clinic' },
-  { label: 'Laboratório', value: 'laboratory' },
-  { label: 'Farmácia', value: 'pharmacy' },
-  { label: 'Outro', value: 'other' },
-];
-
 const AVAILABLE_SERVICES = [
   'Emergência',
   'Cirurgia',
@@ -51,6 +42,17 @@ const AVAILABLE_SERVICES = [
 
 export default function InstitutionForm({ data, onChange, errors }: InstitutionFormProps) {
   const { t } = useTranslation();
+  
+  // Helper function to get translated institution types
+  const getInstitutionTypes = () => [
+    { label: t('forms.selectType'), value: '' },
+    { label: t('serviceTypes.types.hospital'), value: 'hospital' },
+    { label: t('serviceTypes.types.clinic'), value: 'clinic' },
+    { label: t('serviceTypes.types.laboratory'), value: 'laboratory' },
+    { label: t('serviceTypes.types.pharmacy'), value: 'pharmacy' },
+    { label: t('common.other'), value: 'other' },
+  ];
+
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [showServicesPicker, setShowServicesPicker] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>(data.services || []);
@@ -137,7 +139,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
     return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
   };
 
-  const selectedTypeLabel = INSTITUTION_TYPES.find(type => type.value === data.type)?.label || 'forms.selectType';
+  const selectedTypeLabel = getInstitutionTypes().find(type => type.value === data.type)?.label || t('forms.selectType');
   const getTranslatedLabel = (label: string) => {
     if (label === 'forms.selectType') return t('forms.selectType');
     return label;
@@ -170,7 +172,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('forms.selectTypeTitle')}</Text>
             <FlatList
-              data={INSTITUTION_TYPES.filter(type => type.value !== '')}
+              data={getInstitutionTypes().filter(type => type.value !== '')}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
                 <TouchableOpacity

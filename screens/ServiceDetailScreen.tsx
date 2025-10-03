@@ -435,7 +435,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               >
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Todas as Avaliações</Text>
+              <Text style={styles.modalTitle}>{t('reviews.allReviews')}</Text>
               <View style={styles.modalPlaceholder} />
             </View>
             <ReviewsList

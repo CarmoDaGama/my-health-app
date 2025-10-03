@@ -56,6 +56,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { error: asyncError, isLoading: asyncLoading, executeAsync, clearError } = useAsyncError();
   const { t } = useTranslation();
 
+  // Helper function to translate service types
+  const getServiceTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'hospital':
+        return t('serviceTypes.types.hospital');
+      case 'clinic':
+        return t('serviceTypes.types.clinic');
+      case 'laboratory':
+        return t('serviceTypes.types.laboratory');
+      case 'pharmacy':
+        return t('serviceTypes.types.pharmacy');
+      case 'emergency':
+        return t('services.emergency');
+      default:
+        return t('services.healthService');
+    }
+  };
+
   useEffect(() => {
     loadServices();
   }, []);
@@ -483,13 +501,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const getTabTitle = () => {
       switch (activeTab) {
         case 'profissionais':
-          return 'Profissionais de Saúde';
+          return t('serviceTypes.healthProfessionals');
         case 'instituicoes':
-          return 'Instituições de Saúde';
+          return t('serviceTypes.healthInstitutions');
         case 'mais':
-          return 'Outros Serviços';
+          return t('serviceTypes.otherServices');
         default:
-          return 'Serviços de Saúde';
+          return t('serviceTypes.all');
       }
     };
 
@@ -558,7 +576,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     <View style={styles.ratingContainer}>
                       <Ionicons name="star" size={14} color="#FFD700" />
                       <Text style={styles.ratingText}>
-                        {item.rating} ({item.reviews} avaliações)
+                        {item.rating} ({item.reviews} {t('reviews.reviewsCount')})
                       </Text>
                     </View>
                   )}
@@ -570,11 +588,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     {item.name}
                   </Text>
                   <Text style={styles.serviceType}>
-                    {item.type === 'hospital' ? 'Hospital' :
-                     item.type === 'clinic' ? 'Clínica' :
-                     item.type === 'emergency' ? 'Emergência' :
-                     item.type === 'laboratory' ? 'Laboratório' :
-                     item.type === 'pharmacy' ? 'Farmácia' : 'Serviço de Saúde'}
+                    {getServiceTypeLabel(item.type)}
                   </Text>
                   <Text style={styles.serviceAddress} numberOfLines={1}>
                     {item.address}
@@ -635,7 +649,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
               </View>
               <Text style={[styles.tabText, activeTab === 'profissionais' && styles.activeTabText]}>
-                Profissionais
+                {t('serviceTypes.professionals')}
               </Text>
             </TouchableOpacity>
 
@@ -651,7 +665,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
               </View>
               <Text style={[styles.tabText, activeTab === 'instituicoes' && styles.activeTabText]}>
-                Instituições
+                {t('serviceTypes.institutions')}
               </Text>
             </TouchableOpacity>
 
@@ -667,7 +681,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 />
               </View>
               <Text style={[styles.tabText, activeTab === 'mais' && styles.activeTabText]}>
-                Mais
+                {t('serviceTypes.others')}
               </Text>
             </TouchableOpacity>
           </View>

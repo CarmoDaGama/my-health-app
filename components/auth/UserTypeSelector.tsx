@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserType } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface UserTypeSelectorProps {
   selectedType: UserType;
@@ -8,32 +9,34 @@ interface UserTypeSelectorProps {
   disabled?: boolean;
 }
 
-const USER_TYPE_OPTIONS = [
-  {
-    type: UserType.NORMAL_USER,
-    title: 'Usuário',
-    description: 'Procurar instituições e profissionais de saúde',
-    icon: '👤'
-  },
-  {
-    type: UserType.PROFESSIONAL,
-    title: 'Profissional',
-    description: 'Médico, enfermeiro ou outro profissional de saúde',
-    icon: '👨‍⚕️'
-  },
-  {
-    type: UserType.INSTITUTION,
-    title: 'Instituição',
-    description: 'Hospital, clínica, laboratório ou farmácia',
-    icon: '🏥'
-  }
-];
-
 export default function UserTypeSelector({ selectedType, onSelect, disabled }: UserTypeSelectorProps) {
+  const { t } = useTranslation();
+  
+  const getUserTypes = () => [
+    {
+      type: UserType.NORMAL_USER,
+      title: t('auth.user'),
+      description: t('app.searchSubtitle'),
+      icon: '👤'
+    },
+    {
+      type: UserType.PROFESSIONAL,
+      title: t('serviceTypes.professional'),
+      description: t('forms.professionalDescription'),
+      icon: '👨‍⚕️'
+    },
+    {
+      type: UserType.INSTITUTION,
+      title: t('serviceTypes.institution'),
+      description: t('forms.institutionDescription'),
+      icon: '🏥'
+    }
+  ];
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tipo de Conta</Text>
-      {USER_TYPE_OPTIONS.map((option) => (
+      <Text style={styles.title}>{t('auth.selectAccountType')}</Text>
+      {getUserTypes().map((option) => (
         <TouchableOpacity
           key={option.type}
           style={[

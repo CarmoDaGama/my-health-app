@@ -192,7 +192,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
           value={data.address || ''}
           onChangeText={handleAddressChange}
           error={errors.address}
-          placeholder="Endereço do consultório ou clínica"
+          placeholder={t('forms.officeAddress')}
           required
         />
         {isGeocodingAddress && (
