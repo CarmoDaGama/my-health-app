@@ -130,7 +130,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         value={data.specialty || ''}
         onChangeText={(value) => onChange('specialty', value)}
         error={errors.specialty}
-        placeholder="Ex: Cardiologia, Pediatria..."
+        placeholder={t('forms.specialtyPlaceholder')}
         required
       />
       
@@ -139,7 +139,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         value={data.license || ''}
         onChangeText={(value) => onChange('license', value)}
         error={errors.license}
-        placeholder="Número do registro profissional"
+        placeholder={t('forms.licenseNumberPlaceholder')}
         required
       />
       
@@ -151,7 +151,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         >
           <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
             {selectedServices.length > 0 
-              ? `${selectedServices.length} serviço(s) selecionado(s)`
+              ? `${selectedServices.length} ${t('forms.servicesSelected')}`
               : t('forms.selectServices')
             }
           </Text>
@@ -176,7 +176,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       </View>
       
       <ValidatedInput
-        label="Anos de Experiência"
+        label={t('forms.yearsOfExperience')}
         value={data.experience?.toString() || ''}
         onChangeText={(value) => onChange('experience', parseInt(value) || 0)}
         error={errors.experience}
@@ -188,7 +188,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       
       <View style={styles.inputGroup}>
         <ValidatedInput
-          label="Endereço"
+          label={t('forms.address')}
           value={data.address || ''}
           onChangeText={handleAddressChange}
           error={errors.address}
@@ -204,7 +204,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       </View>
 
       <ValidatedInput
-        label="Descrição/Biografia"
+        label={t('forms.descriptionBiography')}
         value={data.description || data.bio || ''}
         onChangeText={(value) => onChange('description', value)}
         error={errors.description}
@@ -223,7 +223,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         
         {coordinates ? (
           <View style={styles.coordinatesDisplay}>
-            <Text style={styles.coordinatesTitle}>📍 Coordenadas Capturadas:</Text>
+            <Text style={styles.coordinatesTitle}>📍 {t('forms.coordinatesCaptured')}:</Text>
             <Text style={styles.coordinatesText}>
               {formatCoordinates(coordinates)}
             </Text>
@@ -247,7 +247,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
                 <ActivityIndicator size="small" color="#3B82F6" />
               ) : (
                 <Text style={styles.locationOptionText}>
-                  🎯 Usar GPS
+                  🎯 {t('forms.useGPS')}
                 </Text>
               )}
             </TouchableOpacity>

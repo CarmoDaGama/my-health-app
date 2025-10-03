@@ -16,7 +16,7 @@ export default function UserTypeSelector({ selectedType, onSelect, disabled }: U
     {
       type: UserType.NORMAL_USER,
       title: t('auth.user'),
-      description: t('app.searchSubtitle'),
+      description: t('forms.userDescription'),
       icon: '👤'
     },
     {

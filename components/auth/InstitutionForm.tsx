@@ -229,7 +229,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
         >
           <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
             {selectedServices.length > 0 
-              ? `${selectedServices.length} serviço(s) selecionado(s)`
+              ? `${selectedServices.length} ${t('forms.servicesSelected')}`
               : t('forms.selectServices')
             }
           </Text>
@@ -289,59 +289,59 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
               style={styles.modalCloseButton}
               onPress={() => setShowServicesPicker(false)}
             >
-              <Text style={styles.modalCloseText}>Fechar</Text>
+              <Text style={styles.modalCloseText}>{t('forms.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       
-      <Text style={styles.sectionTitle}>Endereço</Text>
+      <Text style={styles.sectionTitle}>{t('forms.address')}</Text>
       
       <View style={styles.inputGroup}>
         <ValidatedInput
-          label="Rua"
+          label={t('forms.street')}
           value={data.address?.street || ''}
           onChangeText={(value) => handleAddressChange('address.street', value)}
           error={errors['address.street']}
-          placeholder="Rua, número"
+          placeholder={t('forms.streetPlaceholder')}
           required
         />
         {isGeocodingAddress && (
           <View style={styles.geocodingIndicator}>
             <ActivityIndicator size="small" color="#3B82F6" />
-            <Text style={styles.geocodingText}>Obtendo coordenadas...</Text>
+            <Text style={styles.geocodingText}>{t('forms.gettingCoordinates')}</Text>
           </View>
         )}
       </View>
       
       <ValidatedInput
-        label="Cidade"
+        label={t('forms.city')}
         value={data.address?.city || ''}
         onChangeText={(value) => handleNestedChange('address.city', value)}
         error={errors['address.city']}
-        placeholder="Cidade"
+        placeholder={t('forms.cityPlaceholder')}
         required
       />
       
       <ValidatedInput
-        label="Província"
+        label={t('forms.province')}
         value={data.address?.state || ''}
         onChangeText={(value) => handleNestedChange('address.state', value)}
         error={errors['address.state']}
-        placeholder="Província"
+        placeholder={t('forms.provincePlaceholder')}
         required
       />
 
       {/* Seção de Coordenadas */}
       <View style={styles.coordinatesSection}>
-        <Text style={styles.label}>Localização Exata da Instituição</Text>
+        <Text style={styles.label}>{t('forms.exactInstitutionLocation')}</Text>
         <Text style={styles.coordinatesHelp}>
           {t('app.locationPrecisionInstitution')}
         </Text>
         
         {coordinates ? (
           <View style={styles.coordinatesDisplay}>
-            <Text style={styles.coordinatesTitle}>📍 Coordenadas Capturadas:</Text>
+            <Text style={styles.coordinatesTitle}>📍 {t('forms.coordinatesCaptured')}:</Text>
             <Text style={styles.coordinatesText}>
               {formatCoordinates(coordinates)}
             </Text>
@@ -365,7 +365,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
                 <ActivityIndicator size="small" color="#3B82F6" />
               ) : (
                 <Text style={styles.locationOptionText}>
-                  🎯 Usar GPS
+                  🎯 {t('forms.useGPS')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -387,11 +387,11 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       </View>
       
       <ValidatedInput
-        label="Descrição da Instituição"
+        label={t('forms.institutionDescriptionForm')}
         value={data.description || ''}
         onChangeText={(value) => onChange('description', value)}
         error={errors.description}
-        placeholder="Descreva a instituição e seus serviços..."
+        placeholder={t('forms.institutionDescriptionPlaceholder')}
         multiline
         numberOfLines={3}
         required
@@ -403,7 +403,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
         onClose={() => setShowLocationPicker(false)}
         onLocationSelect={handleLocationSelect}
         initialCoordinates={coordinates || undefined}
-        title="Selecionar Localização da Instituição"
+        title={t('forms.selectInstitutionLocation')}
       />
     </View>
   );
