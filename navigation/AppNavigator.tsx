@@ -14,14 +14,15 @@ import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import { useAuth } from '../hooks/useAuth-firebase';
+import { useTranslation } from '../hooks/useTranslation';
 import { ProtectedRoute } from '../components';
 import { Colors } from '../constants';
-import i18n from '../utils/i18n';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigatorContent: React.FC = () => {
   const { isAuthenticated, isGuest, loading } = useAuth();
+  const { t } = useTranslation();
 
   console.log('🚀 AppNavigatorContent renderizado:', { isAuthenticated, isGuest, loading });
 
@@ -53,6 +54,7 @@ const AppNavigatorContent: React.FC = () => {
     >
       {!showMainApp ? (
         // Auth Stack - shown when user is not authenticated
+                // Auth Stack - shown when user is not authenticated
         <>
           <Stack.Screen
             name="Welcome"
@@ -66,7 +68,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Login"
             component={LoginScreen}
             options={{
-              title: i18n.t('auth.login') || 'Login',
+              title: t('auth.login') || 'Login',
               headerLeft: () => null, // Disable back button
             }}
           />
@@ -75,7 +77,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Register"
             component={RegisterScreen}
             options={{
-              title: i18n.t('auth.register') || 'Registrar',
+              title: t('auth.register') || 'Registrar',
             }}
           />
           
@@ -83,7 +85,7 @@ const AppNavigatorContent: React.FC = () => {
             name="ForgotPassword"
             component={ForgotPasswordScreen}
             options={{
-              title: i18n.t('auth.forgotPassword') || 'Recuperar Senha',
+              title: t('auth.forgotPassword') || 'Recuperar Senha',
             }}
           />
         </>
@@ -94,7 +96,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Home"
             component={HomeScreen}
             options={{
-              title: i18n.t('screens.home') || 'Início',
+              title: t('screens.home') || 'Início',
               headerLeft: () => null, // Disable back button
             }}
           />
@@ -103,7 +105,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Map"
             component={MapScreen}
             options={{
-              title: i18n.t('screens.map') || 'Mapa',
+              title: t('screens.map') || 'Mapa',
             }}
           />
           
@@ -111,7 +113,7 @@ const AppNavigatorContent: React.FC = () => {
             name="ServiceDetail"
             component={ServiceDetailScreen}
             options={{
-              title: i18n.t('screens.details') || 'Detalhes',
+              title: t('screens.details') || 'Detalhes',
             }}
           />
           
@@ -127,7 +129,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Profile"
             component={ProfileScreen}
             options={{
-              title: i18n.t('screens.profile') || 'Perfil',
+              title: t('screens.profile') || 'Perfil',
             }}
           />
           
@@ -135,7 +137,7 @@ const AppNavigatorContent: React.FC = () => {
             name="UserProfile"
             component={UserProfileScreen}
             options={{
-              title: i18n.t('profile.myProfile') || 'Meu Perfil',
+              title: t('profile.myProfile') || 'Meu Perfil',
             }}
           />
           
@@ -144,7 +146,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Login"
             component={LoginScreen}
             options={{
-              title: i18n.t('auth.login') || 'Login',
+              title: t('auth.login') || 'Login',
             }}
           />
           
@@ -152,7 +154,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Register"
             component={RegisterScreen}
             options={{
-              title: i18n.t('auth.register') || 'Registrar',
+              title: t('auth.register') || 'Registrar',
             }}
           />
           
@@ -160,7 +162,7 @@ const AppNavigatorContent: React.FC = () => {
             name="ForgotPassword"
             component={ForgotPasswordScreen}
             options={{
-              title: i18n.t('auth.forgotPassword') || 'Recuperar Senha',
+              title: t('auth.forgotPassword') || 'Recuperar Senha',
             }}
           />
         </>

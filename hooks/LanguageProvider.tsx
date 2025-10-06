@@ -21,18 +21,27 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const { initializeLanguage } = useTranslation();
+  const { initializeLanguage, isInitialized } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
 
   // Inicializar idioma quando o estado de autenticação estiver determinado
+  // mas apenas uma vez ou quando houver mudança significativa de usuário
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && !isInitialized) {
       const isGuest = !user;
       const userPreferredLanguage = user?.preferences?.language;
       
       initializeLanguage(isGuest, userPreferredLanguage);
     }
-  }, [user, authLoading, initializeLanguage]);
+  }, [authLoading, isInitialized, initializeLanguage]);
+
+  // Separar effect para mudanças de usuário após inicialização
+  useEffect(() => {
+    if (!authLoading && isInitialized && user?.preferences?.language) {
+      const currentLanguage = user.preferences.language;
+      initializeLanguage(false, currentLanguage);
+    }
+  }, [user?.preferences?.language, authLoading, isInitialized, initializeLanguage]);
 
   const contextValue: LanguageContextType = {
     initializeLanguage,

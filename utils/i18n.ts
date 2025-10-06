@@ -872,8 +872,9 @@ export const clearLanguagePreferences = async (): Promise<void> => {
 /**
  * Determina qual idioma usar baseado na seguinte prioridade:
  * 1. Preferência do usuário autenticado
- * 2. Idioma do sistema operativo
- * 3. Idioma padrão (en)
+ * 2. Preferência salva localmente (para guests que já escolheram)
+ * 3. Idioma do sistema operativo
+ * 4. Idioma padrão (en)
  */
 export const determineLanguage = async (isGuest: boolean = false, userPreferredLanguage?: string): Promise<string> => {
   try {
@@ -882,7 +883,13 @@ export const determineLanguage = async (isGuest: boolean = false, userPreferredL
       return userPreferredLanguage;
     }
     
-    // 2. Para usuários convidados ou usuários sem preferência definida, usar idioma do sistema
+    // 2. Verificar se há preferência salva localmente (para guests ou backup)
+    const savedLanguage = await getUserLanguagePreference();
+    if (savedLanguage && translations[savedLanguage as keyof typeof translations]) {
+      return savedLanguage;
+    }
+    
+    // 3. Para usuários sem preferência definida, usar idioma do sistema
     const deviceLanguage = getDeviceLanguage();
     
     return deviceLanguage;

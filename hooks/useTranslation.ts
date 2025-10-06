@@ -7,9 +7,26 @@ import i18n, {
 } from '../utils/i18n';
 import { getLocales } from 'expo-localization';
 
+// Estado global para forçar re-render quando idioma muda
+let globalTranslationUpdateId = 0;
+const globalTranslationListeners: Set<(id: number) => void> = new Set();
+
+const notifyTranslationChange = () => {
+  globalTranslationUpdateId++;
+  console.log('🔄 Notificando mudança de idioma para', globalTranslationListeners.size, 'componentes');
+  globalTranslationListeners.forEach(listener => {
+    try {
+      listener(globalTranslationUpdateId);
+    } catch (error) {
+      console.warn('Erro em listener de tradução:', error);
+    }
+  });
+};
+
 export const useTranslation = () => {
   const [locale, setLocale] = useState(i18n.locale);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [translationUpdateId, setTranslationUpdateId] = useState(0);
 
   /**
    * Inicializa o idioma com base nas preferências do usuário
@@ -20,13 +37,34 @@ export const useTranslation = () => {
       setLanguage(determinedLanguage);
       setLocale(determinedLanguage);
       setIsInitialized(true);
+      
+      // Notificar sobre inicialização/mudança
+      notifyTranslationChange();
     } catch (error) {
       console.warn('Erro ao inicializar idioma:', error);
       // Fallback para inglês
       setLanguage('en');
       setLocale('en');
       setIsInitialized(true);
+      notifyTranslationChange();
     }
+  }, []);
+
+  // Registrar listener para mudanças globais de tradução
+  useEffect(() => {
+    const listener = (updateId: number) => {
+      console.log('📱 Componente recebeu atualização de idioma:', updateId);
+      setLocale(i18n.locale);
+      setTranslationUpdateId(updateId);
+    };
+    
+    globalTranslationListeners.add(listener);
+    console.log('✅ Listener registrado. Total de listeners:', globalTranslationListeners.size);
+    
+    return () => {
+      globalTranslationListeners.delete(listener);
+      console.log('🗑️ Listener removido. Total de listeners:', globalTranslationListeners.size);
+    };
   }, []);
 
   useEffect(() => {
@@ -37,7 +75,13 @@ export const useTranslation = () => {
   }, [initializeLanguage, isInitialized]);
 
   const t = (key: string, options?: object) => {
-    return i18n.t(key, options);
+    // Usar translationUpdateId para garantir re-render quando idioma muda
+    const translation = i18n.t(key, options);
+    // Log para debug (remover em produção)
+    if (translationUpdateId > 0) {
+      console.log(`🔤 Traduzindo "${key}" (updateId: ${translationUpdateId}):`, translation);
+    }
+    return translation;
   };
 
   const changeLanguage = async (newLocale: string, isGuest: boolean = false) => {
@@ -45,10 +89,11 @@ export const useTranslation = () => {
       setLanguage(newLocale);
       setLocale(newLocale);
       
-      // Salvar a preferência apenas se não for usuário convidado
-      if (!isGuest) {
-        await saveUserLanguagePreference(newLocale);
-      }
+      // Sempre salvar a preferência localmente para persistência
+      await saveUserLanguagePreference(newLocale);
+      
+      // Notificar todos os componentes sobre mudança de idioma
+      notifyTranslationChange();
     } catch (error) {
       console.warn('Erro ao alterar idioma:', error);
     }
