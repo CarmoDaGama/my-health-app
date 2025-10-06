@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -77,6 +77,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   useEffect(() => {
     loadServices();
   }, []);
+
+  // Control header visibility based on full screen mode
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: !isFullScreenMode,
+    });
+  }, [navigation, isFullScreenMode]);
 
   // Recarregar dados quando a tela for focada (útil quando voltando de registro)
   useFocusEffect(
