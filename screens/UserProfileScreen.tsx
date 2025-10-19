@@ -16,6 +16,7 @@ import { useAuth, useUser } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
+import { UserStatusBanner } from '../components/common/UserStatusBanner';
 
 export default function UserProfileScreen() {
   const navigation = useNavigation<UserProfileScreenNavigationProp>();
@@ -28,7 +29,6 @@ export default function UserProfileScreen() {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    address: user?.address || '',
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -60,7 +60,6 @@ export default function UserProfileScreen() {
     setFormData({
       name: user?.name || '',
       phone: user?.phone || '',
-      address: user?.address || '',
     });
     setIsEditing(false);
   };
@@ -94,6 +93,9 @@ export default function UserProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {/* Banner de status do usuário (apenas para profissionais/instituições não verificados) */}
+      <UserStatusBanner />
+      
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarText}>
@@ -186,27 +188,6 @@ export default function UserProfileScreen() {
           ) : (
             <Text style={styles.fieldValue}>
               {user.phone || t('profile.notProvided') || 'Não informado'}
-            </Text>
-          )}
-        </View>
-
-        <View style={styles.fieldContainer}>
-          <Text style={styles.fieldLabel}>
-            {t('profile.address') || 'Endereço'}
-          </Text>
-          {isEditing ? (
-            <TextInput
-              style={[styles.textInput, styles.textAreaInput]}
-              value={formData.address}
-              onChangeText={(text) => handleInputChange('address', text)}
-              placeholder={t('profile.addressPlaceholder') || 'Digite seu endereço'}
-              placeholderTextColor={Colors.text.secondary}
-              multiline
-              numberOfLines={3}
-            />
-          ) : (
-            <Text style={styles.fieldValue}>
-              {user.address || t('profile.notProvided') || 'Não informado'}
             </Text>
           )}
         </View>

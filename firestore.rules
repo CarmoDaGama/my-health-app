@@ -2,38 +2,142 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rules for users collection - TEMPORARIAMENTE MAIS PERMISSIVO PARA DEBUG
+    
+    // ========================================
+    // IMPLEMENTAÇÃO CLIENT-SIDE
+    // ========================================
+    // Estas regras suportam implementação client-side como alternativa
+    // aos Cloud Functions. Para produção, recomenda-se usar Cloud Functions
+    // para maior segurança e funcionalidades como envio de emails.
+    //
+    // NOTA: Custom Claims (isAdmin, role) devem ser definidos manualmente
+    // via Firebase Console ou scripts de admin, pois apenas Cloud Functions
+    // podem definir Custom Claims automaticamente.
+    // ========================================
+    
+    // ========================================
+    // FUNÇÕES AUXILIARES PARA ADMIN
+    // ========================================
+    
+    // Verificar se usuário é admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.isAdmin == true;
+    }
+    
+    // Verificar se usuário tem role específica
+    function hasRole(role) {
+      return request.auth != null && 
+             request.auth.token.role == role;
+    }
+    
+    // Verificar se é super admin
+    function isSuperAdmin() {
+      return hasRole('super_admin');
+    }
+    
+    // Verificar se é moderador
+    function isModerator() {
+      return hasRole('moderator') || isSuperAdmin();
+    }
+    
+    // Verificar se tem acesso a analytics
+    function hasAnalyticsAccess() {
+      return hasRole('analytics_viewer') || isAdmin();
+    }
+    
+    // ========================================
+    // COLEÇÃO: users
+    // ========================================
     match /users/{userId} {
-      // Users can read and write their own data
+      // Users podem ler e escrever seus próprios dados
       allow read, write: if request.auth != null && request.auth.uid == userId;
-      // Allow creation during registration
+      // Permitir criação durante registro
       allow create: if request.auth != null;
-      // Also allow reading user data when authenticated (for debugging)
-      allow read: if request.auth != null;
+      // Admins podem ler todos os usuários
+      allow read: if isAdmin();
+      // Admins podem atualizar usuários (para verificação, etc)
+      allow update: if isAdmin();
     }
     
-    // Rules for healthServices collection - DEBUG MODE
+    // ========================================
+    // COLEÇÃO: healthServices (serviços aprovados)
+    // ========================================
     match /healthServices/{serviceId} {
-      // Anyone can read health services (public data)
+      // Qualquer um pode ler serviços aprovados (dados públicos)
       allow read: if true;
-      // Allow any authenticated user to create/update services (simplified for debug)
-      allow create, update: if request.auth != null;
-      // Allow any authenticated user to delete services (simplified for debug)
-      allow delete: if request.auth != null;
+      // Apenas admins podem criar serviços diretamente (bypass approval)
+      allow create: if isAdmin();
+      // Criadores podem atualizar seus próprios serviços, ou admins
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.createdBy || isAdmin());
+      // Apenas admins podem deletar
+      allow delete: if isAdmin();
     }
     
-    // Rules for registeredServices collection (pending approval)
+    // ========================================
+    // COLEÇÃO: registeredServices (aguardando aprovação)
+    // ========================================
     match /registeredServices/{serviceId} {
-      // Only authenticated users can read
-      allow read: if request.auth != null;
-      // Any authenticated user can create (submit for approval)
-      allow create: if request.auth != null;
-      // Only creator or admin can update
+      // Admins podem ler todos os registros pendentes
+      allow read: if isAdmin();
+      // Criadores podem ler seus próprios registros
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.createdBy;
+      
+      // Qualquer usuário autenticado pode criar (submeter para aprovação)
+      // Deve incluir campos obrigatórios
+      allow create: if request.auth != null &&
+        request.resource.data.keys().hasAll(['name', 'createdBy', 'createdAt', 'status']) &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.createdBy == request.auth.uid;
+      
+      // Apenas criador pode atualizar (se ainda pendente)
       allow update: if request.auth != null && 
-        (request.auth.uid == resource.data.createdBy || 
-         request.auth.token.admin == true);
-      // Only admin can delete
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+        request.auth.uid == resource.data.createdBy &&
+        resource.data.status == 'pending';
+      
+      // Admins podem atualizar status (aprovar/rejeitar)
+      allow update: if isAdmin();
+      
+      // Apenas admin pode deletar
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // COLEÇÃO: adminRoles (roles administrativas)
+    // ========================================
+    match /adminRoles/{userId} {
+      // Admins podem ler suas próprias roles
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Super admins e admins podem ler todas as roles
+      allow read: if isAdmin();
+      
+      // Apenas super admins podem criar novas roles
+      allow create: if isSuperAdmin() &&
+        request.resource.data.keys().hasAll(['userId', 'role', 'isAdmin', 'createdAt', 'assignedBy']) &&
+        request.resource.data.assignedBy == request.auth.uid &&
+        request.resource.data.isAdmin == true;
+      
+      // Apenas super admins podem atualizar roles
+      allow update: if isSuperAdmin();
+      
+      // Apenas super admins podem deletar roles
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ========================================
+    // COLEÇÃO: adminLogs (logs de ações administrativas)
+    // ========================================
+    match /adminLogs/{logId} {
+      // Apenas admins podem ler logs
+      allow read: if isAdmin();
+      // Admins podem criar logs (para implementação client-side)
+      allow create: if isAdmin() && 
+        request.resource.data.keys().hasAll(['adminId', 'adminEmail', 'action', 'timestamp']) &&
+        request.resource.data.adminId == request.auth.uid;
+      // Logs não podem ser atualizados ou deletados
+      allow update, delete: if false;
     }
     
     // Rules for favorites collection
@@ -42,19 +146,36 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Rules for reviews collection - DEBUG MODE
+    // ========================================
+    // COLEÇÃO: reviews (avaliações de serviços)
+    // ========================================
     match /reviews/{reviewId} {
-      // Anyone can read reviews (public data)
+      // Qualquer um pode ler reviews públicas
       allow read: if true;
       
-      // DEBUG: Allow any authenticated user to create reviews (no validation)
+      // Usuários autenticados podem criar reviews
+      allow create: if request.auth != null && 
+        validateReviewData(request.resource.data);
+      
+      // Criadores podem atualizar suas reviews, ou moderadores
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isModerator());
+      
+      // Criadores podem deletar suas reviews, ou moderadores
+      allow delete: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isModerator());
+    }
+    
+    // ========================================
+    // COLEÇÃO: reportedReviews (reviews reportadas)
+    // ========================================
+    match /reportedReviews/{reportId} {
+      // Apenas moderadores podem ler
+      allow read: if isModerator();
+      // Usuários podem criar reports
       allow create: if request.auth != null;
-      
-      // Allow any authenticated user to update reviews  
-      allow update: if request.auth != null;
-      
-      // Allow any authenticated user to delete reviews
-      allow delete: if request.auth != null;
+      // Apenas moderadores podem atualizar/deletar
+      allow update, delete: if isModerator();
     }
     
     // Helper functions for review validation

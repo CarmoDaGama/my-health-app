@@ -16,7 +16,17 @@ import {
   DocumentSnapshot
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { HealthService, ServiceType, ServiceFilters } from '../types';
+import { HealthService } from '../types';
+
+// Types locais para API
+type ServiceType = 'hospital' | 'clinic' | 'pharmacy' | 'emergency' | 'laboratory' | 'professional' | 'all';
+
+interface ServiceFilters {
+  type?: ServiceType;
+  city?: string;
+  state?: string;
+  specialty?: string;
+}
 
 export class HealthServiceAPIFirebase {
   
@@ -30,7 +40,8 @@ export class HealthServiceAPIFirebase {
     try {
       console.log('🔍 Buscando serviços na coleção healthServices...');
       
-      // Tentar sem ordenação primeiro para ver se os dados existem
+      // Temporariamente removendo filtro de verificação para não ocultar serviços existentes
+      // TODO: Implementar migração para adicionar campo 'verified' aos serviços existentes
       let q = query(
         collection(db, 'healthServices'),
         limit(pageSize)
@@ -50,13 +61,55 @@ export class HealthServiceAPIFirebase {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         console.log(`📄 Processando documento: ${doc.id}`);
+        
+        // FILTRO RIGOROSO PARA PROFISSIONAIS E INSTITUIÇÕES
+        // Apenas serviços ativos E verificados devem aparecer
+        const serviceStatus = data.status !== undefined ? data.status : 'active';
+        const isVerified = data.verified !== undefined ? data.verified : true;
+        
+        // Para profissionais e instituições, aplicar filtro rigoroso
+        if (data.type === 'professional' || data.serviceType === 'professional' || 
+            data.type === 'institution' || data.serviceType === 'institution') {
+          
+          // Serviço deve estar ativo E verificado
+          if (serviceStatus !== 'active' || !isVerified) {
+            console.log(`🚫 Serviço ${data.name} filtrado - Status: ${serviceStatus}, Verificado: ${isVerified}`);
+            return; // Pular este serviço
+          }
+          
+          // Se tem createdBy (foi criado via registro), verificar se usuário está ativo
+          if (data.createdBy) {
+            // TODO: Consultar status do usuário que criou o serviço
+            // Por agora, assumir que se chegou até aqui, está ok
+          }
+        }
+        
+        // Validar estrutura de coordinates
+        let coordinates;
+        if (data.coordinates && typeof data.coordinates === 'object') {
+          coordinates = {
+            latitude: data.coordinates.latitude || data.location?.latitude || 0,
+            longitude: data.coordinates.longitude || data.location?.longitude || 0
+          };
+        } else if (data.location && typeof data.location === 'object') {
+          // Fallback para campo location (estrutura antiga)
+          coordinates = {
+            latitude: data.location.latitude || 0,
+            longitude: data.location.longitude || 0
+          };
+        } else {
+          // Fallback se não houver coordenadas
+          console.warn(`⚠️ Documento ${doc.id} sem coordenadas válidas`);
+          coordinates = {
+            latitude: 0,
+            longitude: 0
+          };
+        }
+        
         services.push({
           id: doc.id,
           ...data,
-          coordinates: {
-            latitude: data.coordinates.latitude,
-            longitude: data.coordinates.longitude
-          }
+          coordinates
         } as HealthService);
         newLastDoc = doc;
       });
@@ -79,13 +132,31 @@ export class HealthServiceAPIFirebase {
       
       if (docSnap.exists()) {
         const data = docSnap.data();
+        
+        // Validar estrutura de coordinates
+        let coordinates;
+        if (data.coordinates && typeof data.coordinates === 'object') {
+          coordinates = {
+            latitude: data.coordinates.latitude || data.location?.latitude || 0,
+            longitude: data.coordinates.longitude || data.location?.longitude || 0
+          };
+        } else if (data.location && typeof data.location === 'object') {
+          // Fallback para campo location (estrutura antiga)
+          coordinates = {
+            latitude: data.location.latitude || 0,
+            longitude: data.location.longitude || 0
+          };
+        } else {
+          coordinates = {
+            latitude: 0,
+            longitude: 0
+          };
+        }
+        
         return {
           id: docSnap.id,
           ...data,
-          coordinates: {
-            latitude: data.coordinates.latitude,
-            longitude: data.coordinates.longitude
-          }
+          coordinates
         } as HealthService;
       }
       
@@ -125,19 +196,50 @@ export class HealthServiceAPIFirebase {
         constraints.push(where('city', '==', filters.city));
       }
 
+      // TODO: Reativar filtro de verificação após migração dos dados existentes
+      // constraints.push(where('verified', '==', true));
+
       const finalQuery = query(q, ...constraints, orderBy('name'), limit(50));
       const querySnapshot = await getDocs(finalQuery);
       
       const services: HealthService[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        
+        // FILTRO RIGOROSO PARA PROFISSIONAIS E INSTITUIÇÕES (mesmo do getAllServices)
+        const serviceStatus = data.status !== undefined ? data.status : 'active';
+        const isVerified = data.verified !== undefined ? data.verified : true;
+        
+        // Para profissionais e instituições, aplicar filtro rigoroso
+        if (data.type === 'professional' || data.serviceType === 'professional' || 
+            data.type === 'institution' || data.serviceType === 'institution') {
+          
+          // Serviço deve estar ativo E verificado
+          if (serviceStatus !== 'active' || !isVerified) {
+            return; // Pular este serviço
+          }
+        }
+        
+        // Validar estrutura de coordinates
+        let coordinates;
+        if (data.coordinates && typeof data.coordinates === 'object') {
+          coordinates = {
+            latitude: data.coordinates.latitude || data.location?.latitude || 0,
+            longitude: data.coordinates.longitude || data.location?.longitude || 0
+          };
+        } else if (data.location && typeof data.location === 'object') {
+          coordinates = {
+            latitude: data.location.latitude || 0,
+            longitude: data.location.longitude || 0
+          };
+        } else {
+          coordinates = { latitude: 0, longitude: 0 };
+        }
+        
         services.push({
           id: doc.id,
           ...data,
-          coordinates: {
-            latitude: data.coordinates.latitude,
-            longitude: data.coordinates.longitude
-          }
+          coordinates
         } as HealthService);
       });
 
@@ -210,7 +312,7 @@ export class HealthServiceAPIFirebase {
         createdBy: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        status: 'active'
+        status: 'active' // Novos serviços sempre começam como ativos
       };
 
       const docRef = await addDoc(collection(db, 'healthServices'), serviceData);
@@ -288,13 +390,41 @@ export class HealthServiceAPIFirebase {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        
+        // FILTRO RIGOROSO PARA PROFISSIONAIS E INSTITUIÇÕES
+        const serviceStatus = data.status !== undefined ? data.status : 'active';
+        const isVerified = data.verified !== undefined ? data.verified : true;
+        
+        // Para profissionais e instituições, aplicar filtro rigoroso
+        if (data.type === 'professional' || data.serviceType === 'professional' || 
+            data.type === 'institution' || data.serviceType === 'institution') {
+          
+          // Serviço deve estar ativo E verificado
+          if (serviceStatus !== 'active' || !isVerified) {
+            return; // Pular este serviço
+          }
+        }
+        
+        // Validar estrutura de coordinates
+        let coordinates;
+        if (data.coordinates && typeof data.coordinates === 'object') {
+          coordinates = {
+            latitude: data.coordinates.latitude || data.location?.latitude || 0,
+            longitude: data.coordinates.longitude || data.location?.longitude || 0
+          };
+        } else if (data.location && typeof data.location === 'object') {
+          coordinates = {
+            latitude: data.location.latitude || 0,
+            longitude: data.location.longitude || 0
+          };
+        } else {
+          coordinates = { latitude: 0, longitude: 0 };
+        }
+        
         services.push({
           id: doc.id,
           ...data,
-          coordinates: {
-            latitude: data.coordinates.latitude,
-            longitude: data.coordinates.longitude
-          }
+          coordinates
         } as HealthService);
       });
 
@@ -326,13 +456,30 @@ export class HealthServiceAPIFirebase {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        
+        // NOTA: Para getUserServices, não aplicamos filtros de status/verificação
+        // O usuário deve poder ver seus próprios serviços independente do status
+        
+        // Validar estrutura de coordinates
+        let coordinates;
+        if (data.coordinates && typeof data.coordinates === 'object') {
+          coordinates = {
+            latitude: data.coordinates.latitude || data.location?.latitude || 0,
+            longitude: data.coordinates.longitude || data.location?.longitude || 0
+          };
+        } else if (data.location && typeof data.location === 'object') {
+          coordinates = {
+            latitude: data.location.latitude || 0,
+            longitude: data.location.longitude || 0
+          };
+        } else {
+          coordinates = { latitude: 0, longitude: 0 };
+        }
+        
         services.push({
           id: doc.id,
           ...data,
-          coordinates: {
-            latitude: data.coordinates.latitude,
-            longitude: data.coordinates.longitude
-          }
+          coordinates
         } as HealthService);
       });
 

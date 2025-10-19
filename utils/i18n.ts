@@ -80,6 +80,12 @@ const translations = {
       requiredFields: 'Required Fields',
       fillAllFields: 'Please fill in all required fields.',
       registrationFailed: 'Could not create account. Please try again.',
+      
+      // Account status validations
+      accountInactive: 'Account Inactive',
+      accountInactiveMessage: 'Your account has been deactivated. Please contact support for assistance.',
+      serviceSuspended: 'Service Suspended',
+      serviceSuspendedMessage: 'Your professional service is suspended and will not appear in searches.',
     },
     
     // Profile
@@ -136,6 +142,8 @@ const translations = {
       disabled: 'Disabled',
       yes: 'Yes',
       no: 'No',
+      contactSupport: 'Contact Support',
+      other: 'Other',
     },
     
     // Validation
@@ -482,6 +490,12 @@ const translations = {
       requiredFields: 'Campos Obrigatórios',
       fillAllFields: 'Por favor, preencha todos os campos obrigatórios.',
       registrationFailed: 'Não foi possível criar a conta. Tente novamente.',
+      
+      // Account status validations
+      accountInactive: 'Conta Inativa',
+      accountInactiveMessage: 'Sua conta foi desativada. Entre em contato com o suporte para assistência.',
+      serviceSuspended: 'Serviço Suspenso',
+      serviceSuspendedMessage: 'Seu serviço profissional está suspenso e não aparecerá nas buscas.',
     },
     
     // Profile
@@ -538,6 +552,8 @@ const translations = {
       disabled: 'Desativado',
       yes: 'Sim',
       no: 'Não',
+      contactSupport: 'Entrar em Contato',
+      other: 'Outro',
     },
     
     // Validation

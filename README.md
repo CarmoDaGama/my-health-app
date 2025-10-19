@@ -4,6 +4,7 @@ Um aplicativo móvel multiplataforma para localizar serviços de saúde próximo
 
 ## 🎯 Funcionalidades
 
+### Para Usuários
 - **Localização de serviços de saúde próximos** usando GPS
 - **Visualização em mapa interativo** com OpenStreetMap
 - **Lista de serviços** com informações detalhadas
@@ -12,6 +13,21 @@ Um aplicativo móvel multiplataforma para localizar serviços de saúde próximo
 - **Direções** integradas com aplicativo de mapas
 - **Ligação direta** para os serviços
 - **Suporte multilíngue** (Português e Inglês)
+- **Sistema de avaliações** e comentários
+- **Favoritos** para acesso rápido
+
+### Para Profissionais de Saúde
+- **Registro de serviços** (hospitais, clínicas, farmácias)
+- **Submissão para aprovação** por administradores
+- **Status de aprovação** em tempo real
+
+### Para Administradores ⭐ NOVO!
+- **Dashboard administrativo** com estatísticas
+- **Aprovação de profissionais** aguardando cadastro
+- **Rejeição com motivo** personalizado
+- **Gerenciamento de roles** (Super Admin, Admin, Moderador)
+- **Logs de ações** administrativas
+- **Interface moderna** e intuitiva
 
 ## 🏥 Tipos de Serviços
 
@@ -63,6 +79,10 @@ npm start
 - **Expo** - Plataforma de desenvolvimento
 - **TypeScript** - Linguagem de programação
 - **React Navigation** - Navegação entre telas
+- **Firebase** - Backend as a Service
+  - Authentication - Autenticação de usuários
+  - Firestore - Banco de dados NoSQL
+  - Storage - Armazenamento de arquivos
 - **OpenStreetMap** - Mapas de código aberto
 - **Leaflet** - Biblioteca de mapas interativos
 - **Expo Location** - Serviços de geolocalização
@@ -74,16 +94,27 @@ npm start
 my-health-app/
 ├── components/           # Componentes reutilizáveis
 │   ├── common/          # Componentes genéricos
-│   └── specific/        # Componentes específicos
+│   ├── specific/        # Componentes específicos
+│   └── auth/            # Componentes de autenticação
 ├── constants/           # Constantes (cores, dimensões)
 ├── data/               # Dados mockados
 ├── hooks/              # Custom hooks
 ├── navigation/         # Configuração de navegação
 ├── screens/            # Telas da aplicação
+│   ├── Admin*.tsx      # Telas administrativas ⭐
+│   └── ...             # Outras telas
 ├── services/           # Serviços e APIs
+│   ├── *-client.ts     # Serviços client-side ⭐
+│   ├── *-firebase.ts   # Integração Firebase
+│   └── ...             # Outros serviços
+├── scripts/            # Scripts administrativos ⭐
 ├── types/              # Definições de tipos TypeScript
-└── utils/              # Utilitários e configurações
+├── utils/              # Utilitários e configurações
+├── firestore.rules     # Regras de segurança Firestore
+└── 📚 Documentação/    # Guias e documentos ⭐
 ```
+
+⭐ = Novo na Fase 2 (Sistema Administrativo)
 
 ## 🌍 Internacionalização
 
@@ -106,6 +137,38 @@ O aplicativo inclui dados mockados de serviços de saúde em São Paulo para dem
 - Notificações
 - Integração com APIs de saúde pública
 - Modo offline
+
+## 🎓 Sistema Administrativo
+
+Este projeto inclui um **sistema completo de aprovação de profissionais** implementado sem custos adicionais (Firebase Spark Plan).
+
+### 📖 Documentação
+
+- **[QUICKSTART.md](./QUICKSTART.md)** - Guia rápido (5 minutos)
+- **[CLIENT_SIDE_IMPLEMENTATION.md](./CLIENT_SIDE_IMPLEMENTATION.md)** - Documentação técnica completa
+- **[DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Índice de toda a documentação
+
+### ⚡ Quick Start
+
+```bash
+# 1. Instalar Firebase Admin SDK
+npm install firebase-admin
+
+# 2. Configurar primeiro Super Admin
+node scripts/set-super-admin.js set seu-email@exemplo.com
+
+# 3. Ver documentação completa
+cat QUICKSTART.md
+```
+
+### ✨ Features Administrativas
+
+- ✅ Dashboard com estatísticas
+- ✅ Aprovar/rejeitar profissionais
+- ✅ Gerenciar roles de admin
+- ✅ Logs de ações administrativas
+- ✅ Interface moderna e responsiva
+- ✅ **Custo: R$ 0,00/mês**
 
 ## 📄 Licença
 

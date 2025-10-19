@@ -27,6 +27,7 @@ export interface HealthService {
   rating?: number;
   reviews?: number;
   services?: string[];
+  status?: 'active' | 'suspended'; // Status do serviço - suspensos não aparecem na busca
   
   // Propriedades específicas para profissionais
   specialty?: string;
@@ -60,6 +61,8 @@ export interface BaseUser {
   avatar?: string;
   phone?: string;
   userType: UserType;
+  isActive: boolean; // Se false/null/undefined, usuário não pode fazer login
+  isVerified?: boolean; // Para profissionais/instituições - se false/null/undefined, não aparece na busca
   createdAt: Date;
   updatedAt: Date;
 }

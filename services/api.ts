@@ -24,6 +24,20 @@ export class HealthServiceAPI {
       
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        
+        // APLICAR FILTROS RIGOROSOS para profissionais e instituições
+        const serviceStatus = data.status !== undefined ? data.status : 'active';
+        const isVerified = data.verified !== undefined ? data.verified : true;
+        
+        // Para profissionais e instituições, filtrar não ativos ou não verificados
+        if (data.type === 'professional' || data.serviceType === 'professional' || 
+            data.type === 'institution' || data.serviceType === 'institution') {
+          
+          if (serviceStatus !== 'active' || !isVerified) {
+            return; // Pular este serviço
+          }
+        }
+        
         firestoreServices.push({
           id: doc.id,
           ...data

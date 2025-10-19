@@ -38,6 +38,16 @@ export class AuthServiceFirebase {
         throw new Error('Dados do usuário não encontrados');
       }
       
+      // Validate if user is active
+      if (userData.isActive === false || userData.isActive === null || userData.isActive === undefined) {
+        // Sign out the user immediately since account is inactive
+        await signOut(auth);
+        return {
+          success: false,
+          error: 'Sua conta foi desativada. Entre em contato com o suporte para assistência.'
+        };
+      }
+      
       // Get Firebase token
       const token = await userCredential.user.getIdToken();
       
@@ -49,6 +59,8 @@ export class AuthServiceFirebase {
           name: userData.name,
           phone: userData.phone,
           userType: userData.userType,
+          isActive: userData.isActive,
+          isVerified: userData.isVerified,
           preferences: userData.preferences
         } as any,
         token
@@ -57,7 +69,7 @@ export class AuthServiceFirebase {
       console.error('Login error:', error);
       return {
         success: false,
-        error: this.getErrorMessage(error.code)
+        error: this.getErrorMessage(error.code) || error.message
       };
     }
   }
@@ -85,6 +97,8 @@ export class AuthServiceFirebase {
         email: data.email,
         phone: data.phone,
         userType: data.userType,
+        isActive: true, // New users are active by default
+        isVerified: data.userType === UserType.NORMAL_USER ? true : false, // Normal users are verified, professionals/institutions need verification
         preferences: {
           language: 'en',
           notifications: {
@@ -124,17 +138,20 @@ export class AuthServiceFirebase {
         name: data.name,
         phone: data.phone,
         userType: data.userType,
+        isActive: userData.isActive,
+        isVerified: userData.isVerified,
         preferences: userData.preferences
       };
       
       // Adicionar aos serviços de saúde se for profissional ou instituição
+      // FASE 2: Usar registeredServices (aguardar aprovação) ao invés de healthServices direto
       if (data.userType === UserType.PROFESSIONAL || data.userType === UserType.INSTITUTION) {
         try {
-          console.log('🏥 Adicionando usuário aos serviços de saúde...', data.userType);
-          await AuthService.addToHealthServices(newUser, data);
-          console.log('✅ Usuário adicionado aos serviços de saúde com sucesso!');
+          console.log('🏥 Registrando serviço para aprovação...', data.userType);
+          await this.addToRegisteredServices(newUser, data);
+          console.log('✅ Serviço registrado e aguardando aprovação!');
         } catch (error) {
-          console.error('❌ Erro ao adicionar aos serviços de saúde:', error);
+          console.error('❌ Erro ao registrar serviço:', error);
           // Não falha o registro se houver erro na adição aos serviços
         }
       }
@@ -233,6 +250,58 @@ export class AuthServiceFirebase {
     } catch (error) {
       console.error('Error fetching user data:', error);
       return null;
+    }
+  }
+
+  /**
+   * Add professional/institution to registeredServices (pending approval)
+   * FASE 2: Novo fluxo de aprovação
+   */
+  static async addToRegisteredServices(user: any, data: RegisterData): Promise<void> {
+    try {
+      const professionalInfo = data.professionalInfo || {};
+      const institutionInfo = data.institutionInfo || {};
+      
+      const serviceData = {
+        // Informações do serviço
+        name: institutionInfo.name || professionalInfo.name || data.name,
+        serviceType: data.userType === UserType.PROFESSIONAL ? 'professional' : 'institution',
+        specialty: professionalInfo.specialty || institutionInfo.specialty || 'Geral',
+        description: professionalInfo.description || institutionInfo.description || '',
+        
+        // Localização
+        address: professionalInfo.address || institutionInfo.address || '',
+        city: professionalInfo.city || institutionInfo.city || 'Luanda',
+        province: professionalInfo.province || institutionInfo.province || 'Luanda',
+        location: professionalInfo.location || institutionInfo.location || { 
+          latitude: -8.8383, 
+          longitude: 13.2344 
+        },
+        
+        // Contato
+        contactEmail: data.email,
+        contactPhone: data.phone || professionalInfo.phone || institutionInfo.phone || '',
+        
+        // Metadata de registro
+        createdBy: user.id,
+        createdAt: serverTimestamp(),
+        status: 'suspended', // Status inicial: suspenso até aprovação
+        verified: false, // Campo adicional para controle interno
+        
+        // Informações adicionais
+        userType: data.userType,
+        professionalInfo: data.professionalInfo || null,
+        institutionInfo: data.institutionInfo || null,
+      };
+
+      // Criar documento em registeredServices com ID do usuário
+      const serviceRef = doc(db, 'registeredServices', user.id);
+      await setDoc(serviceRef, serviceData);
+
+      console.log('✅ Serviço registrado em registeredServices:', user.id);
+    } catch (error) {
+      console.error('❌ Erro ao adicionar a registeredServices:', error);
+      throw error;
     }
   }
 
