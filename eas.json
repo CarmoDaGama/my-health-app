@@ -6,6 +6,7 @@
   "build": {
     "development": {
       "distribution": "internal",
+      "node": "18.19.0",
       "android": {
         "gradleCommand": ":app:assembleDebug"
       },
@@ -14,9 +15,18 @@
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "18.19.0",
+      "env": {
+        "NODE_ENV": "production"
+      }
     },
-    "production": {}
+    "production": {
+      "node": "18.19.0",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
   },
   "submit": {
     "production": {}

@@ -1,0 +1,11 @@
+# EAS ignore file
+node_modules/
+.expo/
+.git/
+functions/
+dataconnect/
+temp-check/
+scripts/
+*.log
+*.backup
+.DS_Store
