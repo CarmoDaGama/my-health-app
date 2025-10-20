@@ -106,6 +106,26 @@ export class HealthServiceAPIFirebase {
           };
         }
         
+        // Validar campos obrigatórios antes de adicionar
+        if (!data.name || !data.type || !data.address) {
+          console.warn(`⚠️ Documento ${doc.id} com campos obrigatórios ausentes:`, {
+            hasName: !!data.name,
+            hasType: !!data.type,
+            hasAddress: !!data.address
+          });
+          return; // Pular este serviço
+        }
+        
+        // Validar tipos dos campos obrigatórios
+        if (typeof data.name !== 'string' || typeof data.type !== 'string' || typeof data.address !== 'string') {
+          console.warn(`⚠️ Documento ${doc.id} com campos obrigatórios de tipo inválido:`, {
+            nameType: typeof data.name,
+            typeType: typeof data.type,
+            addressType: typeof data.address
+          });
+          return; // Pular este serviço
+        }
+        
         services.push({
           id: doc.id,
           ...data,
@@ -132,6 +152,22 @@ export class HealthServiceAPIFirebase {
       
       if (docSnap.exists()) {
         const data = docSnap.data();
+        
+        // Validar campos obrigatórios
+        if (!data.name || !data.type || !data.address) {
+          console.warn(`⚠️ Serviço ${serviceId} com campos obrigatórios ausentes`);
+          return null;
+        }
+        
+        // Validar tipos dos campos obrigatórios
+        if (typeof data.name !== 'string' || typeof data.type !== 'string' || typeof data.address !== 'string') {
+          console.warn(`⚠️ Serviço ${serviceId} com campos obrigatórios de tipo inválido:`, {
+            nameType: typeof data.name,
+            typeType: typeof data.type,
+            addressType: typeof data.address
+          });
+          return null;
+        }
         
         // Validar estrutura de coordinates
         let coordinates;

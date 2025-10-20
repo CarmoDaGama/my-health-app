@@ -154,11 +154,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       return;
     }
 
-    const filtered = services.filter(service =>
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.address.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = services.filter(service => {
+      // Verificar se as propriedades existem e são strings antes de usar toLowerCase
+      const name = (typeof service.name === 'string' ? service.name.toLowerCase() : '');
+      const type = (typeof service.type === 'string' ? service.type.toLowerCase() : '');
+      const address = (typeof service.address === 'string' ? service.address.toLowerCase() : '');
+      const query = searchQuery.toLowerCase();
+      
+      return name.includes(query) || type.includes(query) || address.includes(query);
+    });
     setFilteredServices(filtered);
   };
 
@@ -544,7 +548,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
           </View>
         )}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          // Validação extra para garantir que os campos obrigatórios existem
+          if (!item.name || !item.type || !item.address) {
+            console.warn('⚠️ Item com dados incompletos ignorado na renderização:', item.id);
+            return null;
+          }
+          
+          return (
           <TouchableOpacity 
             style={styles.listItem}
             onPress={() => handleServicePress(item)}
@@ -568,22 +579,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 // Layout para profissionais
                 <>
                   <Text style={styles.serviceName} numberOfLines={1}>
-                    {item.name}
+                    {typeof item.name === 'string' ? item.name : 'Nome não disponível'}
                   </Text>
                   <Text style={styles.serviceSpecialty}>
-                    {item.specialty}
+                    {typeof item.specialty === 'string' ? item.specialty : ''}
                   </Text>
                   <Text style={styles.serviceClinic} numberOfLines={1}>
-                    {item.clinic}
+                    {typeof item.clinic === 'string' ? item.clinic : ''}
                   </Text>
                   <Text style={styles.serviceAddress} numberOfLines={1}>
-                    {item.address}
+                    {typeof item.address === 'string' ? item.address : 'Endereço não disponível'}
                   </Text>
                   {item.rating && (
                     <View style={styles.ratingContainer}>
                       <Ionicons name="star" size={14} color="#FFD700" />
                       <Text style={styles.ratingText}>
-                        {item.rating} ({item.reviews} {t('reviews.reviewsCount')})
+                        {item.rating} ({item.reviews || 0} {t('reviews.reviewsCount')})
                       </Text>
                     </View>
                   )}
@@ -592,13 +603,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 // Layout para instituições
                 <>
                   <Text style={styles.serviceName} numberOfLines={2}>
-                    {item.name}
+                    {typeof item.name === 'string' ? item.name : 'Nome não disponível'}
                   </Text>
                   <Text style={styles.serviceType}>
                     {getServiceTypeLabel(item.type)}
                   </Text>
                   <Text style={styles.serviceAddress} numberOfLines={1}>
-                    {item.address}
+                    {typeof item.address === 'string' ? item.address : 'Endereço não disponível'}
                   </Text>
                   {item.rating && (
                     <View style={styles.ratingContainer}>
@@ -615,7 +626,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
             </View>
           </TouchableOpacity>
-        )}
+        )}}
       />
     );
   };
