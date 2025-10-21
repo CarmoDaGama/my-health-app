@@ -128,6 +128,88 @@ const translations = {
       notProvided: 'Not provided',
       changeLanguage: 'Change Language',
       changeLanguageConfirmation: 'Change language to',
+      
+      // Profile edit form translations
+      basicInfo: 'Basic Information',
+      dateOfBirth: 'Date of Birth',
+      gender: 'Gender',
+      male: 'Male',
+      female: 'Female',
+      other: 'Other',
+      emergencyContact: 'Emergency Contact',
+      emergencyName: 'Emergency Contact Name',
+      emergencyPhone: 'Emergency Contact Phone',
+      emergencyRelationship: 'Relationship',
+      emergencyNamePlaceholder: 'Name of emergency contact',
+      emergencyPhonePlaceholder: 'Emergency contact phone',
+      emergencyRelationshipPlaceholder: 'e.g., Father/Mother, Spouse, Sibling',
+      
+      // Professional form translations
+      professionalInfo: 'Professional Information',
+      specialty: 'Specialty',
+      license: 'License Number',
+      experience: 'Years of Experience',
+      bio: 'Biography/Description',
+      certifications: 'Certifications',
+      consultationFee: 'Consultation Fee (AOA)',
+      acceptsInsurance: 'Accepts Insurance',
+      workingHours: 'Working Hours',
+      specialtyPlaceholder: 'e.g., Cardiology, Pediatrics, etc.',
+      licensePlaceholder: 'Professional registration number',
+      bioPlaceholder: 'Describe your professional experience and approach',
+      certificationsPlaceholder: 'Separate certifications with commas',
+      
+      // Institution form translations
+      institutionName: 'Institution Name',
+      institutionNamePlaceholder: 'Name of health institution',
+      type: 'Institution Type',
+      description: 'Description',
+      services: 'Services Offered',
+      street: 'Street/Avenue',
+      city: 'City',
+      state: 'Province',
+      zipCode: 'Postal Code',
+      contactInfo: 'Contact Information',
+      website: 'Website',
+      serviceSettings: 'Service Settings',
+      emergencyService: '24h Emergency Service',
+      descriptionPlaceholder: 'Describe the services and differentials of the institution',
+      servicesPlaceholder: 'Separate services with commas (e.g., Consultations, Exams, Surgeries)',
+      streetPlaceholder: 'Street, number, neighborhood',
+      cityPlaceholder: 'City',
+      statePlaceholder: 'Province',
+      zipCodePlaceholder: 'Postal code',
+      emailPlaceholder: 'Contact email',
+      websitePlaceholder: 'https://www.example.com',
+      
+      // Institution types
+      hospital: 'Hospital',
+      clinic: 'Clinic',
+      laboratory: 'Laboratory',
+      pharmacy: 'Pharmacy',
+      
+      // Days of the week
+      monday: 'Monday',
+      tuesday: 'Tuesday',
+      wednesday: 'Wednesday',
+      thursday: 'Thursday',
+      friday: 'Friday',
+      saturday: 'Saturday',
+      sunday: 'Sunday',
+      
+      // Time labels
+      startTime: 'Start Time',
+      endTime: 'End Time',
+      
+      // Errors
+      errors: {
+        nameRequired: 'Name is required',
+        specialtyRequired: 'Specialty is required',
+        addressRequired: 'Complete address is required',
+      },
+      
+      // Success messages
+      updateSuccess: 'Profile updated successfully!',
     },
     
     // Common
@@ -144,6 +226,10 @@ const translations = {
       no: 'No',
       contactSupport: 'Contact Support',
       other: 'Other',
+      loading: 'Loading...',
+      saving: 'Saving...',
+      success: 'Success',
+      back: 'Back',
     },
     
     // Validation
@@ -538,6 +624,88 @@ const translations = {
       notProvided: 'Não informado',
       changeLanguage: 'Alterar Idioma',
       changeLanguageConfirmation: 'Alterar idioma para',
+      
+      // Traduções do formulário de edição de perfil
+      basicInfo: 'Informações Básicas',
+      dateOfBirth: 'Data de Nascimento',
+      gender: 'Gênero',
+      male: 'Masculino',
+      female: 'Feminino',
+      other: 'Outro',
+      emergencyContact: 'Contato de Emergência',
+      emergencyName: 'Nome do Contato de Emergência',
+      emergencyPhone: 'Telefone do Contato de Emergência',
+      emergencyRelationship: 'Relacionamento',
+      emergencyNamePlaceholder: 'Nome da pessoa de contato',
+      emergencyPhonePlaceholder: 'Telefone da pessoa de contato',
+      emergencyRelationshipPlaceholder: 'Ex: Pai/Mãe, Cônjuge, Irmão(ã)',
+      
+      // Traduções do formulário profissional
+      professionalInfo: 'Informações Profissionais',
+      specialty: 'Especialidade',
+      license: 'Número da Licença',
+      experience: 'Anos de Experiência',
+      bio: 'Biografia/Descrição',
+      certifications: 'Certificações',
+      consultationFee: 'Taxa de Consulta (AOA)',
+      acceptsInsurance: 'Aceita Seguro',
+      workingHours: 'Horário de Atendimento',
+      specialtyPlaceholder: 'Ex: Cardiologia, Pediatria, etc.',
+      licensePlaceholder: 'Número do registro profissional',
+      bioPlaceholder: 'Descreva sua experiência e abordagem profissional',
+      certificationsPlaceholder: 'Separe as certificações por vírgula',
+      
+      // Traduções do formulário institucional
+      institutionName: 'Nome da Instituição',
+      institutionNamePlaceholder: 'Nome da instituição de saúde',
+      type: 'Tipo de Instituição',
+      description: 'Descrição',
+      services: 'Serviços Oferecidos',
+      street: 'Rua/Avenida',
+      city: 'Cidade',
+      state: 'Província',
+      zipCode: 'Código Postal',
+      contactInfo: 'Informações de Contato',
+      website: 'Website',
+      serviceSettings: 'Configurações de Serviço',
+      emergencyService: 'Atendimento de Emergência 24h',
+      descriptionPlaceholder: 'Descreva os serviços e diferenciais da instituição',
+      servicesPlaceholder: 'Separe os serviços por vírgula (Ex: Consultas, Exames, Cirurgias)',
+      streetPlaceholder: 'Rua, número, bairro',
+      cityPlaceholder: 'Cidade',
+      statePlaceholder: 'Província',
+      zipCodePlaceholder: 'Código postal',
+      emailPlaceholder: 'Email para contato',
+      websitePlaceholder: 'https://www.example.com',
+      
+      // Tipos de instituição
+      hospital: 'Hospital',
+      clinic: 'Clínica',
+      laboratory: 'Laboratório',
+      pharmacy: 'Farmácia',
+      
+      // Dias da semana
+      monday: 'Segunda-feira',
+      tuesday: 'Terça-feira',
+      wednesday: 'Quarta-feira',
+      thursday: 'Quinta-feira',
+      friday: 'Sexta-feira',
+      saturday: 'Sábado',
+      sunday: 'Domingo',
+      
+      // Rótulos de tempo
+      startTime: 'Início',
+      endTime: 'Fim',
+      
+      // Erros
+      errors: {
+        nameRequired: 'Nome é obrigatório',
+        specialtyRequired: 'Especialidade é obrigatória',
+        addressRequired: 'Endereço completo é obrigatório',
+      },
+      
+      // Mensagens de sucesso
+      updateSuccess: 'Perfil atualizado com sucesso!',
     },
     
     // Common
@@ -554,6 +722,10 @@ const translations = {
       no: 'Não',
       contactSupport: 'Entrar em Contato',
       other: 'Outro',
+      loading: 'Carregando...',
+      saving: 'Salvando...',
+      success: 'Sucesso',
+      back: 'Voltar',
     },
     
     // Validation

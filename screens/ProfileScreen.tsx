@@ -25,7 +25,7 @@ export const ProfileScreen: React.FC = () => {
 
   const handleEditProfile = () => {
     if (isAuthenticated && user) {
-      navigation.navigate('UserProfile');
+      navigation.navigate('EditProfile');
     } else {
       navigation.navigate('Login');
     }

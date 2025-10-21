@@ -13,6 +13,9 @@ export { MapView } from './specific/MapView';
 export { ReviewForm } from './specific/ReviewForm';
 export { ReviewsList } from './specific/ReviewsList';
 export { ReviewsPreview } from './specific/ReviewsPreview';
+export { NormalUserForm } from './specific/NormalUserForm';
+export { ProfessionalForm as ProfessionalEditForm } from './specific/ProfessionalForm';
+export { InstitutionForm as InstitutionEditForm } from './specific/InstitutionForm';
 
 // Auth components
 export { default as UserTypeSelector } from './auth/UserTypeSelector';

@@ -13,6 +13,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
+import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { useAuth } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
 import { ProtectedRoute } from '../components';
@@ -138,6 +139,14 @@ const AppNavigatorContent: React.FC = () => {
             component={UserProfileScreen}
             options={{
               title: t('profile.myProfile') || 'Meu Perfil',
+            }}
+          />
+          
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfileScreen}
+            options={{
+              title: t('profile.editProfile') || 'Editar Perfil',
             }}
           />
           
