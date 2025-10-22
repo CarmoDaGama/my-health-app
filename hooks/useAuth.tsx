@@ -120,15 +120,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       const response = await AuthServiceFirebase.login(credentials);
       
+      // Check if the authentication was successful
+      if (!response.success) {
+        const errorMessage = response.error || 'Erro no login';
+        console.error('🚨 ERRO NO HOOK useAuth - Login negado:', {
+          error: errorMessage,
+          credentials: {
+            email: credentials.email,
+            hasPassword: !!credentials.password
+          }
+        });
+        
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+        }));
+        throw new Error(errorMessage);
+      }
+      
+      // Login successful - set user data
       setAuthState(prev => ({
         ...prev,
         isAuthenticated: true,
-        user: response.user,
-        token: response.token,
-        refreshToken: response.refreshToken,
+        user: response.user as AnyUser,
+        token: response.token || null,
+        refreshToken: response.refreshToken || null,
         isLoading: false,
         error: null,
       }));
+
+      // Save user data to AsyncStorage
+      if (response.user) {
+        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no login';
       console.error('🚨 ERRO NO HOOK useAuth - Login falhou:', {
@@ -159,9 +184,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       setAuthState(prev => ({
         ...prev,
-        user: response.user,
-        token: response.token,
-        refreshToken: response.refreshToken,
+        user: response.user as AnyUser,
+        token: response.token || null,
+        refreshToken: response.refreshToken || null,
         isLoading: false,
         error: null,
       }));
