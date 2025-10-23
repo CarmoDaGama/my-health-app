@@ -15,6 +15,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { UserAvatar, LanguageSelector } from '../components';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
+import { UserType, isProfessional, isInstitution } from '../types';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
@@ -217,14 +218,28 @@ export const ProfileScreen: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {t('profile.appInfo') || 'Sobre o App'}
+          {t('profile.userDetails') || 'Detalhes do Usuário'}
         </Text>
         
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>
-            {t('profile.version') || 'Versão'}
+            {t('profile.userType') || 'Tipo de Usuário'}
           </Text>
-          <Text style={styles.infoValue}>1.0.0</Text>
+          <Text style={styles.infoValue}>
+            {user.userType === UserType.NORMAL_USER ? (t('userTypes.normalUser') || 'Usuário Normal') :
+             user.userType === UserType.PROFESSIONAL ? (t('userTypes.professional') || 'Profissional') :
+             user.userType === UserType.INSTITUTION ? (t('userTypes.institution') || 'Instituição') :
+             (user as any).userType || (t('common.unknown') || 'Desconhecido')}
+          </Text>
+        </View>
+        
+        <View style={styles.infoItem}>
+          <Text style={styles.infoLabel}>
+            {t('profile.phone') || 'Telefone'}
+          </Text>
+          <Text style={styles.infoValue}>
+            {user.phone || (t('common.notProvided') || 'Não informado')}
+          </Text>
         </View>
         
         <View style={styles.infoItem}>
@@ -232,10 +247,198 @@ export const ProfileScreen: React.FC = () => {
             {t('profile.memberSince') || 'Membro desde'}
           </Text>
           <Text style={styles.infoValue}>
-            {new Date(user.createdAt).toLocaleDateString()}
+            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : (t('common.notAvailable') || 'Não disponível')}
           </Text>
         </View>
+        
+        <View style={styles.infoItem}>
+          <Text style={styles.infoLabel}>
+            {t('profile.accountStatus') || 'Status da Conta'}
+          </Text>
+          <Text style={[styles.infoValue, { color: user.isActive ? Colors.success : Colors.error }]}>
+            {user.isActive ? (t('status.active') || 'Ativa') : (t('status.inactive') || 'Inativa')}
+          </Text>
+        </View>
+        
+        {(isProfessional(user) || isInstitution(user)) && (user as any).isVerified !== undefined && (
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>
+              {t('profile.verification') || 'Verificação'}
+            </Text>
+            <Text style={[styles.infoValue, { color: (user as any).isVerified ? Colors.success : Colors.warning }]}>
+              {(user as any).isVerified ? (t('status.verified') || 'Verificado') : (t('status.pending') || 'Pendente')}
+            </Text>
+          </View>
+        )}
       </View>
+
+      {/* Card com informações específicas do tipo de usuário */}
+      {user && (
+        user.userType === UserType.NORMAL_USER ||
+        (isProfessional(user) && (user as any).professionalInfo) ||
+        (isInstitution(user) && (user as any).institutionInfo)
+      ) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {isProfessional(user) ? (t('profile.professionalInfo') || 'Informações Profissionais') :
+             isInstitution(user) ? (t('profile.institutionInfo') || 'Informações da Instituição') :
+             (t('profile.personalInfo') || 'Informações Pessoais')}
+          </Text>
+          
+          {/* Informações específicas para usuário normal */}
+          {user.userType === UserType.NORMAL_USER && (
+            <>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>
+                  {t('profile.dateOfBirth') || 'Data de Nascimento'}
+                </Text>
+                <Text style={styles.infoValue}>
+                  {(user as any).dateOfBirth || (t('common.notProvided') || 'Não informado')}
+                </Text>
+              </View>
+              
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>
+                  {t('profile.gender') || 'Gênero'}
+                </Text>
+                <Text style={styles.infoValue}>
+                  {(user as any).gender ? 
+                    ((user as any).gender === 'male' ? (t('gender.male') || 'Masculino') :
+                     (user as any).gender === 'female' ? (t('gender.female') || 'Feminino') :
+                     (t('gender.other') || 'Outro')) :
+                    (t('common.notProvided') || 'Não informado')
+                  }
+                </Text>
+              </View>
+              
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>
+                  {t('profile.address') || 'Endereço'}
+                </Text>
+                <Text style={styles.infoValue}>
+                  {(user as any).address || (t('common.notProvided') || 'Não informado')}
+                </Text>
+              </View>
+              
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>
+                  {t('profile.emergencyContact') || 'Contato de Emergência'}
+                </Text>
+                <Text style={styles.infoValue}>
+                  {(user as any).emergencyContact ? 
+                    `${(user as any).emergencyContact.name} (${(user as any).emergencyContact.relationship})` :
+                    (t('common.notProvided') || 'Não informado')
+                  }
+                </Text>
+              </View>
+            </>
+          )}
+          
+          {/* Informações específicas para profissional */}
+          {isProfessional(user) && (user as any).professionalInfo && (
+            <>
+              {(user as any).professionalInfo.specialty && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.specialty') || 'Especialidade'}
+                  </Text>
+                  <Text style={styles.infoValue}>
+                    {(user as any).professionalInfo.specialty}
+                  </Text>
+                </View>
+              )}
+              
+              {(user as any).professionalInfo.license && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.license') || 'Licença'}
+                  </Text>
+                  <Text style={styles.infoValue}>
+                    {(user as any).professionalInfo.license}
+                  </Text>
+                </View>
+              )}
+              
+              {(user as any).professionalInfo.experience && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.experience') || 'Experiência'}
+                  </Text>
+                  <Text style={styles.infoValue}>
+                    {(user as any).professionalInfo.experience} {t('time.years') || 'anos'}
+                  </Text>
+                </View>
+              )}
+              
+              {(user as any).professionalInfo.bio && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.bio') || 'Biografia'}
+                  </Text>
+                  <Text style={[styles.infoValue, styles.multilineText]}>
+                    {(user as any).professionalInfo.bio}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+          
+          {/* Informações específicas para instituição */}
+          {isInstitution(user) && (user as any).institutionInfo && (
+            <>
+              {(user as any).institutionInfo.type && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.institutionType') || 'Tipo de Instituição'}
+                  </Text>
+                  <Text style={styles.infoValue}>
+                    {(user as any).institutionInfo.type === 'hospital' ? (t('institutionTypes.hospital') || 'Hospital') :
+                     (user as any).institutionInfo.type === 'clinic' ? (t('institutionTypes.clinic') || 'Clínica') :
+                     (user as any).institutionInfo.type === 'laboratory' ? (t('institutionTypes.laboratory') || 'Laboratório') :
+                     (user as any).institutionInfo.type === 'pharmacy' ? (t('institutionTypes.pharmacy') || 'Farmácia') :
+                     (t('common.other') || 'Outro')}
+                  </Text>
+                </View>
+              )}
+              
+              {(user as any).institutionInfo.address && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.institutionAddress') || 'Endereço da Instituição'}
+                  </Text>
+                  <Text style={[styles.infoValue, styles.multilineText]}>
+                    {typeof (user as any).institutionInfo.address === 'string' 
+                      ? (user as any).institutionInfo.address 
+                      : `${(user as any).institutionInfo.address.street}, ${(user as any).institutionInfo.address.city}`}
+                  </Text>
+                </View>
+              )}
+              
+              {(user as any).institutionInfo.services && (user as any).institutionInfo.services.length > 0 && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.services') || 'Serviços'}
+                  </Text>
+                  <Text style={[styles.infoValue, styles.multilineText]}>
+                    {(user as any).institutionInfo.services.join(', ')}
+                  </Text>
+                </View>
+              )}
+              
+              {(user as any).institutionInfo.description && (
+                <View style={styles.infoItem}>
+                  <Text style={styles.infoLabel}>
+                    {t('profile.description') || 'Descrição'}
+                  </Text>
+                  <Text style={[styles.infoValue, styles.multilineText]}>
+                    {(user as any).institutionInfo.description}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      )}
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -357,17 +560,24 @@ const styles = StyleSheet.create({
   infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: spacing.sm,
   },
   infoLabel: {
     fontSize: 14,
     color: Colors.text.secondary,
+    width: '35%',
   },
   infoValue: {
     fontSize: 14,
     color: Colors.text.primary,
     fontWeight: '500',
+    width: '65%',
+    textAlign: 'right',
+  },
+  multilineText: {
+    textAlign: 'right',
+    lineHeight: 20,
   },
   
   // Buttons

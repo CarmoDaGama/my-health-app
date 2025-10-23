@@ -98,6 +98,10 @@ const translations = {
       personalInfo: 'Personal Information',
       accountInfo: 'Account Information',
       favorites: 'Favorites',
+      userDetails: 'User Details',
+      userType: 'User Type',
+      accountStatus: 'Account Status',
+      verification: 'Verification',
       favoriteServices: 'Favorite Services',
       favoriteLocations: 'Favorite Locations',
       language: 'Language',
@@ -210,6 +214,22 @@ const translations = {
       
       // Success messages
       updateSuccess: 'Profile updated successfully!',
+    },
+
+    // Status
+    status: {
+      active: 'Active',
+      verified: 'Verified',
+      pending: 'Pending',
+      inactive: 'Inactive',
+      unverified: 'Unverified',
+    },
+
+    // User Types
+    userTypes: {
+      normal_user: 'Normal User',
+      professional: 'Professional',
+      institution: 'Institution',
     },
     
     // Common
@@ -594,6 +614,10 @@ const translations = {
       personalInfo: 'Informações Pessoais',
       accountInfo: 'Informações da Conta',
       favorites: 'Favoritos',
+      userDetails: 'Detalhes do Usuário',
+      userType: 'Tipo de Usuário',
+      accountStatus: 'Status da Conta',
+      verification: 'Verificação',
       favoriteServices: 'Serviços Favoritos',
       favoriteLocations: 'Locais Favoritos',
       language: 'Idioma',
@@ -706,6 +730,22 @@ const translations = {
       
       // Mensagens de sucesso
       updateSuccess: 'Perfil atualizado com sucesso!',
+    },
+
+    // Status
+    status: {
+      active: 'Ativo',
+      verified: 'Verificado',
+      pending: 'Pendente',
+      inactive: 'Inativo',
+      unverified: 'Não Verificado',
+    },
+
+    // Tipos de Usuário
+    userTypes: {
+      normal_user: 'Usuário Normal',
+      professional: 'Profissional',
+      institution: 'Instituição',
     },
     
     // Common

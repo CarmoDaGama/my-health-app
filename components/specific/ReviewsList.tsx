@@ -261,8 +261,38 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
   }, [markHelpful]);
 
   const handleReport = useCallback(async (reviewId: string) => {
-    await reportReview(reviewId);
-  }, [reportReview]);
+    try {
+      console.log('🚨 Iniciando denúncia da avaliação:', reviewId);
+      
+      const success = await reportReview(reviewId);
+      
+      if (success) {
+        console.log('✅ Avaliação denunciada com sucesso');
+        
+        Alert.alert(
+          t('reviews.reportSuccess') || 'Denúncia Enviada',
+          t('reviews.reportSuccessMessage') || 'Sua denúncia foi registrada com sucesso. Nossa equipe irá analisar o conteúdo reportado.',
+          [{ text: t('common.ok') || 'OK' }]
+        );
+      } else {
+        console.log('❌ Falha ao denunciar avaliação');
+        
+        Alert.alert(
+          t('errors.title') || 'Erro',
+          t('reviews.reportError') || 'Não foi possível processar sua denúncia. Tente novamente.',
+          [{ text: t('common.ok') || 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('🚨 Erro ao denunciar avaliação:', error);
+      
+      Alert.alert(
+        t('errors.title') || 'Erro',
+        t('reviews.reportError') || 'Não foi possível processar sua denúncia. Tente novamente.',
+        [{ text: t('common.ok') || 'OK' }]
+      );
+    }
+  }, [reportReview, t]);
 
   const renderFilterButtons = () => {
     if (!showFilters) return null;

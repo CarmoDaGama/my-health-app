@@ -110,14 +110,43 @@ export const EditProfileScreen: React.FC = () => {
   }
 
   console.log('🔍 EditProfileScreen - Tipo de usuário:', authUser.userType);
-  console.log('🔍 EditProfileScreen - Dados do usuário:', {
+  console.log('🔍 EditProfileScreen - Dados completos do usuário:', JSON.stringify(authUser, null, 2));
+  console.log('🔍 EditProfileScreen - Análise dos tipos:', {
     id: authUser.id,
     userType: authUser.userType,
     hasNormalUser: isNormalUser(authUser),
     hasProfessional: isProfessional(authUser),
     hasInstitution: isInstitution(authUser),
-    professionalInfo: isProfessional(authUser) ? (authUser as Professional).professionalInfo : 'N/A',
-    institutionInfo: isInstitution(authUser) ? (authUser as Institution).institutionInfo : 'N/A'
+    
+    // Dados específicos de usuário normal
+    ...(isNormalUser(authUser) && {
+      normalUserData: {
+        name: (authUser as NormalUser).name,
+        phone: (authUser as NormalUser).phone,
+        dateOfBirth: (authUser as NormalUser).dateOfBirth,
+        gender: (authUser as NormalUser).gender,
+        address: (authUser as NormalUser).address,
+        emergencyContact: (authUser as NormalUser).emergencyContact
+      }
+    }),
+    
+    // Dados específicos de profissional
+    ...(isProfessional(authUser) && {
+      professionalData: {
+        name: (authUser as Professional).name,
+        phone: (authUser as Professional).phone,
+        professionalInfo: (authUser as Professional).professionalInfo
+      }
+    }),
+    
+    // Dados específicos de instituição
+    ...(isInstitution(authUser) && {
+      institutionData: {
+        name: (authUser as Institution).name,
+        phone: (authUser as Institution).phone,
+        institutionInfo: (authUser as Institution).institutionInfo
+      }
+    })
   });
 
   return (

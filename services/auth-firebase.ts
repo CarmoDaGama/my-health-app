@@ -212,14 +212,21 @@ export class AuthServiceFirebase {
   /**
    * Update user profile
    */
-  static async updateProfile(userId: string, updates: Partial<{
-    name: string;
-    phone: string;
-    preferences: any;
-  }>): Promise<{ success: boolean; error?: string }> {
+  /**
+   * Update user profile in Firestore
+   */
+  static async updateProfile(userId: string, updates: Partial<any>): Promise<{ success: boolean; error?: string }> {
     try {
+      // Remove campos undefined para evitar sobrescrever dados existentes
+      const cleanUpdates = Object.keys(updates).reduce((acc, key) => {
+        if (updates[key] !== undefined) {
+          acc[key] = updates[key];
+        }
+        return acc;
+      }, {} as any);
+
       await updateDoc(doc(db, 'users', userId), {
-        ...updates,
+        ...cleanUpdates,
         updatedAt: serverTimestamp()
       });
       

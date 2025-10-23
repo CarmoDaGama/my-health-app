@@ -15,6 +15,7 @@ import {
   writeBatch,
   Timestamp,
   DocumentSnapshot,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { Review, ReviewInput, ReviewStats, ReviewsResponse, ReviewFilters } from '../types';
@@ -381,13 +382,55 @@ export class ReviewsService {
    */
   static async reportReview(reviewId: string): Promise<void> {
     try {
+      console.log('🚨 ReviewsService - Denunciando avaliação:', reviewId);
+      
       const reviewRef = doc(db, REVIEWS_COLLECTION, reviewId);
+      
+      // Verificar se a avaliação existe
+      const reviewDoc = await getDoc(reviewRef);
+      if (!reviewDoc.exists()) {
+        throw new Error('Avaliação não encontrada');
+      }
+      
+      // Atualizar a avaliação como denunciada
       await updateDoc(reviewRef, {
         reported: true,
+        reportedAt: serverTimestamp(),
       });
+      
+      console.log('✅ ReviewsService - Avaliação marcada como denunciada');
+      
+      // Adicionar à coleção de moderação para análise administrativa
+      await this.addToReportedReviews(reviewId, reviewDoc.data());
+      
     } catch (error) {
-      console.error('Error reporting review:', error);
+      console.error('❌ ReviewsService - Erro ao denunciar avaliação:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Add review to reported reviews collection for moderation
+   */
+  private static async addToReportedReviews(reviewId: string, reviewData: any): Promise<void> {
+    try {
+      const reportData = {
+        reviewId,
+        originalReview: reviewData,
+        reportedBy: auth.currentUser?.uid || 'anonymous',
+        reportedAt: serverTimestamp(),
+        status: 'pending', // pending, approved, rejected
+        moderatedBy: null,
+        moderatedAt: null,
+        reason: 'inappropriate_content', // default reason
+      };
+      
+      await addDoc(collection(db, 'reportedReviews'), reportData);
+      console.log('✅ Denúncia adicionada à lista de moderação');
+      
+    } catch (error) {
+      console.error('❌ Erro ao adicionar à lista de moderação:', error);
+      // Não falhar a denúncia se não conseguir adicionar à moderação
     }
   }
 

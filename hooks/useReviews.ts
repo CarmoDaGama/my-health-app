@@ -239,6 +239,8 @@ export const useReviews = (initialServiceId?: string): UseReviewsReturn => {
   // Report a review
   const reportReview = useCallback(async (reviewId: string): Promise<boolean> => {
     try {
+      console.log('🚨 useReviews - Iniciando denúncia:', reviewId);
+      
       await ReviewsService.reportReview(reviewId);
       
       // Update the reported status in local state
@@ -249,11 +251,13 @@ export const useReviews = (initialServiceId?: string): UseReviewsReturn => {
             ? { ...review, reported: true }
             : review
         ),
+        error: null, // Limpar erro anterior
       }));
       
+      console.log('✅ useReviews - Denúncia processada com sucesso');
       return true;
     } catch (error) {
-      console.error('Error reporting review:', error);
+      console.error('❌ useReviews - Erro ao denunciar:', error);
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Erro ao denunciar avaliação',

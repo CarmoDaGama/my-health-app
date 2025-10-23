@@ -72,14 +72,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
               }
             };
             
-            setUser({
+            // Criar objeto de usuário completo com todos os campos necessários
+            const completeUser = {
               id: firebaseUser.uid,
               email: firebaseUser.email!,
               name: userData.name || firebaseUser.displayName || '',
               phone: userData.phone || '',
+              avatar: userData.avatar,
               userType: userData.userType || UserType.NORMAL_USER,
-              preferences: mergedPreferences
-            } as any);
+              isActive: userData.isActive !== false, // Default true se não especificado
+              isVerified: userData.isVerified,
+              createdAt: userData.createdAt,
+              updatedAt: userData.updatedAt,
+              preferences: mergedPreferences,
+              
+              // Campos específicos para usuários normais
+              ...(userData.userType === UserType.NORMAL_USER && {
+                favoriteInstitutions: userData.favoriteInstitutions || [],
+                searchHistory: userData.searchHistory || [],
+                dateOfBirth: userData.dateOfBirth,
+                gender: userData.gender,
+                address: userData.address,
+                emergencyContact: userData.emergencyContact
+              }),
+              
+              // Campos específicos para profissionais
+              ...(userData.userType === UserType.PROFESSIONAL && {
+                professionalInfo: userData.professionalInfo || {},
+                institutionId: userData.institutionId,
+                favoriteInstitutions: userData.favoriteInstitutions || []
+              }),
+              
+              // Campos específicos para instituições
+              ...(userData.userType === UserType.INSTITUTION && {
+                institutionInfo: userData.institutionInfo || {},
+                professionals: userData.professionals || []
+              })
+            };
+            
+            setUser(completeUser as any);
             setIsGuestMode(false); // Reset guest mode when user is authenticated
           } else {
             // User exists in Firebase Auth but not in Firestore
@@ -193,8 +224,82 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await AuthServiceFirebase.updateProfile(user.id, updates);
       
       if (response.success) {
-        // Update local state
-        setUser(current => current ? { ...current, ...updates } as any : null);
+        // Buscar dados atualizados do Firestore para garantir sincronização completa
+        const updatedUserData = await AuthServiceFirebase.getUserData(user.id);
+        
+        if (updatedUserData) {
+          const defaultPreferences = {
+            language: 'en',
+            notifications: {
+              enabled: true,
+              serviceReminders: true,
+              healthTips: true,
+              emergencyAlerts: true,
+            },
+            favorites: { services: [], locations: [] },
+            privacy: { shareLocation: true, publicProfile: false }
+          };
+          
+          const mergedPreferences = {
+            ...defaultPreferences,
+            ...updatedUserData.preferences,
+            notifications: {
+              ...defaultPreferences.notifications,
+              ...updatedUserData.preferences?.notifications,
+            },
+            favorites: {
+              ...defaultPreferences.favorites,
+              ...updatedUserData.preferences?.favorites,
+            },
+            privacy: {
+              ...defaultPreferences.privacy,
+              ...updatedUserData.preferences?.privacy,
+            }
+          };
+          
+          // Reconstruir usuário completo com dados atualizados
+          const completeUpdatedUser = {
+            id: user.id,
+            email: updatedUserData.email || user.email,
+            name: updatedUserData.name || user.name,
+            phone: updatedUserData.phone || '',
+            avatar: updatedUserData.avatar,
+            userType: updatedUserData.userType || user.userType,
+            isActive: updatedUserData.isActive !== false,
+            isVerified: updatedUserData.isVerified,
+            createdAt: updatedUserData.createdAt || user.createdAt,
+            updatedAt: updatedUserData.updatedAt,
+            preferences: mergedPreferences,
+            
+            // Campos específicos para usuários normais
+            ...(updatedUserData.userType === UserType.NORMAL_USER && {
+              favoriteInstitutions: updatedUserData.favoriteInstitutions || [],
+              searchHistory: updatedUserData.searchHistory || [],
+              dateOfBirth: updatedUserData.dateOfBirth,
+              gender: updatedUserData.gender,
+              address: updatedUserData.address,
+              emergencyContact: updatedUserData.emergencyContact
+            }),
+            
+            // Campos específicos para profissionais
+            ...(updatedUserData.userType === UserType.PROFESSIONAL && {
+              professionalInfo: updatedUserData.professionalInfo || {},
+              institutionId: updatedUserData.institutionId,
+              favoriteInstitutions: updatedUserData.favoriteInstitutions || []
+            }),
+            
+            // Campos específicos para instituições
+            ...(updatedUserData.userType === UserType.INSTITUTION && {
+              institutionInfo: updatedUserData.institutionInfo || {},
+              professionals: updatedUserData.professionals || []
+            })
+          };
+          
+          setUser(completeUpdatedUser as any);
+        } else {
+          // Fallback: atualizar apenas localmente se não conseguir buscar do Firestore
+          setUser(current => current ? { ...current, ...updates } as any : null);
+        }
       }
       
       return response;
