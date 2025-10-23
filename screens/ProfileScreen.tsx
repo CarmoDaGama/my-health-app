@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ProfileScreenNavigationProp } from '../types/navigation';
 import { useAuth, useUser } from '../hooks/useAuth-firebase';
-import { useTranslation } from '../hooks/useTranslation';
+import { useTranslation, useLocalization } from '../hooks/useTranslation';
 import { usePreferences } from '../hooks/usePreferences';
 import { UserAvatar, LanguageSelector } from '../components';
 import { Colors } from '../constants/colors';
@@ -22,6 +22,7 @@ export const ProfileScreen: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const { user } = useUser();
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
   const { setLanguage } = usePreferences();
 
   const handleEditProfile = () => {
@@ -242,14 +243,14 @@ export const ProfileScreen: React.FC = () => {
           </Text>
         </View>
         
-        <View style={styles.infoItem}>
+        {/* <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>
             {t('profile.memberSince') || 'Membro desde'}
           </Text>
           <Text style={styles.infoValue}>
-            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : (t('common.notAvailable') || 'Não disponível')}
+            {user.createdAt ? formatDate(new Date(user.createdAt)) : (t('common.notAvailable') || 'Não disponível')}
           </Text>
-        </View>
+        </View> */}
         
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>

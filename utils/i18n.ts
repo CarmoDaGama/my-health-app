@@ -250,6 +250,7 @@ const translations = {
       saving: 'Saving...',
       success: 'Success',
       back: 'Back',
+      notAvailable: 'Not available',
     },
     
     // Validation
@@ -766,6 +767,7 @@ const translations = {
       saving: 'Salvando...',
       success: 'Sucesso',
       back: 'Voltar',
+      notAvailable: 'Não disponível',
     },
     
     // Validation

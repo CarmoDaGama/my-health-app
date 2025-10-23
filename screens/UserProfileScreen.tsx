@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { UserProfileScreenNavigationProp } from '../types/navigation';
 import { User } from '../types';
 import { useAuth, useUser } from '../hooks/useAuth-firebase';
-import { useTranslation } from '../hooks/useTranslation';
+import { useTranslation, useLocalization } from '../hooks/useTranslation';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
 import { UserStatusBanner } from '../components/common/UserStatusBanner';
@@ -23,6 +23,7 @@ export default function UserProfileScreen() {
   const { logout } = useAuth();
   const { user, updateProfile } = useUser();
   const { t } = useTranslation();
+  const { formatDate } = useLocalization();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -203,7 +204,7 @@ export default function UserProfileScreen() {
             {t('profile.memberSince') || 'Membro desde'}
           </Text>
           <Text style={styles.infoValue}>
-            {new Date(user.createdAt).toLocaleDateString()}
+            {formatDate(new Date(user.createdAt))}
           </Text>
         </View>
 
@@ -212,7 +213,7 @@ export default function UserProfileScreen() {
             {t('profile.lastUpdate') || 'Última atualização'}
           </Text>
           <Text style={styles.infoValue}>
-            {new Date(user.updatedAt).toLocaleDateString()}
+            {formatDate(new Date(user.updatedAt))}
           </Text>
         </View>
       </View>
