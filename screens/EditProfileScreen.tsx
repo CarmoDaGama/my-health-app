@@ -134,76 +134,95 @@ export const EditProfileScreen: React.FC = () => {
     phone: authUser.phone,
     userType: authUser.userType
   });
-  console.log('🔍 EditProfileScreen - Dados RAW do Firestore:', JSON.stringify(authUser, null, 2));
+  console.log('🔍 EditProfileScreen - Dados RAW do usuário authUser:', JSON.stringify(authUser, null, 2));
+  
+  // Se for profissional sem professionalInfo, criar um objeto básico temporário
+  let userForForm = authUser;
+  if (isProfessional(authUser) && !authUser.professionalInfo) {
+    console.log('⚠️ Profissional sem professionalInfo - criando objeto temporário');
+    userForForm = {
+      ...authUser,
+      professionalInfo: {
+        specialty: '',
+        license: '',
+        experience: 0,
+        bio: '',
+        certifications: [],
+        workingHours: {},
+        acceptsInsurance: false
+      }
+    } as Professional;
+  }
+  
   console.log('🔍 EditProfileScreen - Análise dos tipos:', {
     id: authUser.id,
     email: authUser.email,
     userType: authUser.userType,
-    hasNormalUser: isNormalUser(authUser),
-    hasProfessional: isProfessional(authUser),
-    hasInstitution: isInstitution(authUser),
+    hasNormalUser: isNormalUser(userForForm),
+    hasProfessional: isProfessional(userForForm),
+    hasInstitution: isInstitution(userForForm),
     
     // Dados específicos de usuário normal
-    ...(isNormalUser(authUser) && {
+    ...(isNormalUser(userForForm) && {
       normalUserData: {
-        name: (authUser as NormalUser).name,
-        phone: (authUser as NormalUser).phone,
-        dateOfBirth: (authUser as NormalUser).dateOfBirth,
-        gender: (authUser as NormalUser).gender,
-        address: (authUser as NormalUser).address,
-        emergencyContact: (authUser as NormalUser).emergencyContact
+        name: (userForForm as NormalUser).name,
+        phone: (userForForm as NormalUser).phone,
+        dateOfBirth: (userForForm as NormalUser).dateOfBirth,
+        gender: (userForForm as NormalUser).gender,
+        address: (userForForm as NormalUser).address,
+        emergencyContact: (userForForm as NormalUser).emergencyContact
       }
     }),
     
     // Dados específicos de profissional
-    ...(isProfessional(authUser) && {
+    ...(isProfessional(userForForm) && {
       professionalData: {
-        name: (authUser as Professional).name,
-        phone: (authUser as Professional).phone,
-        professionalInfo: (authUser as Professional).professionalInfo
+        name: (userForForm as Professional).name,
+        phone: (userForForm as Professional).phone,
+        professionalInfo: (userForForm as Professional).professionalInfo
       }
     }),
     
     // Dados específicos de instituição
-    ...(isInstitution(authUser) && {
+    ...(isInstitution(userForForm) && {
       institutionData: {
-        name: (authUser as Institution).name,
-        phone: (authUser as Institution).phone,
-        institutionInfo: (authUser as Institution).institutionInfo
+        name: (userForForm as Institution).name,
+        phone: (userForForm as Institution).phone,
+        institutionInfo: (userForForm as Institution).institutionInfo
       }
     })
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      {isNormalUser(authUser) && (
+      {isNormalUser(userForForm) && (
         <NormalUserForm
-          user={authUser as NormalUser}
+          user={userForForm as NormalUser}
           onSave={handleSave}
           isLoading={isSaving}
         />
       )}
       
-      {isProfessional(authUser) && (
+      {isProfessional(userForForm) && (
         <ProfessionalForm
-          user={authUser as Professional}
+          user={userForForm as Professional}
           onSave={handleSave}
           isLoading={isSaving}
         />
       )}
       
-      {isInstitution(authUser) && (
+      {isInstitution(userForForm) && (
         <InstitutionForm
-          user={authUser as Institution}
+          user={userForForm as Institution}
           onSave={handleSave}
           isLoading={isSaving}
         />
       )}
       
-      {!isNormalUser(authUser) && !isProfessional(authUser) && !isInstitution(authUser) && (
+      {!isNormalUser(userForForm) && !isProfessional(userForForm) && !isInstitution(userForForm) && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
-            Tipo de usuário não reconhecido: {(authUser as any).userType}
+            Tipo de usuário não reconhecido: {(userForForm as any).userType}
           </Text>
         </View>
       )}

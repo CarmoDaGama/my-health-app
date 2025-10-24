@@ -98,6 +98,8 @@ export interface Professional extends BaseUser {
     experience: number;
     bio?: string;
     certifications: string[];
+    coordinates?: Coordinates; // Padronizado: usar interface Coordinates
+    address?: string; // Adicionar campo address separado
     workingHours: {
       [key: string]: { start: string; end: string; available: boolean };
     };
@@ -114,12 +116,12 @@ export interface Institution extends BaseUser {
   userType: UserType.INSTITUTION;
   institutionInfo: {
     type: 'hospital' | 'clinic' | 'laboratory' | 'pharmacy' | 'other';
+    coordinates?: Coordinates; // Padronizado: usar interface Coordinates
     address: {
       street: string;
       city: string;
       state: string;
       zipCode: string;
-      coordinates?: { lat: number; lng: number };
     };
     services: string[];
     workingHours: {

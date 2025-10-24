@@ -29,21 +29,28 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Aguardar dados completos do usuário
-  if (!user || !user.professionalInfo) {
-    console.log('⏳ ProfessionalForm - Aguardando dados completos do usuário...', {
-      hasUser: !!user,
-      hasProfessionalInfo: !!user?.professionalInfo,
-      userData: user
+  // Aguardar dados completos do usuário (temporariamente relaxado para debug)
+  if (!user) {
+    console.log('⏳ ProfessionalForm - Aguardando usuário...', {
+      hasUser: !!user
     });
     return (
       <View style={styles.container}>
         <Text style={styles.loadingText}>
-          {t('common.loading') || 'Carregando dados do perfil...'}
+          {t('common.loading') || 'Carregando dados do usuário...'}
         </Text>
       </View>
     );
   }
+  
+  // Log dos dados recebidos
+  console.log('🔍 ProfessionalForm - Dados recebidos:', {
+    hasUser: !!user,
+    hasProfessionalInfo: !!user?.professionalInfo,
+    professionalInfoContent: user?.professionalInfo,
+    userKeys: Object.keys(user || {}),
+    userData: JSON.stringify(user, null, 2)
+  });
   
   const [formData, setFormData] = useState({
     name: user.name || '',

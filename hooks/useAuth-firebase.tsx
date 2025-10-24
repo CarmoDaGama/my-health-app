@@ -4,6 +4,7 @@ import { auth } from '../services/firebase';
 import { AuthServiceFirebase } from '../services/auth-firebase';
 import { AuthCredentials, RegisterData, UserProfile, UserType } from '../types';
 import { getUserLanguagePreference } from '../utils/i18n';
+import { normalizePreferences, normalizeCoordinates, debugUserData } from '../utils/userDataNormalizers';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -93,42 +94,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
               } : 'N/A'
             });
             
-            const completeUser = {
+            // Construir objeto base comum
+            const baseUser = {
               id: firebaseUser.uid,
               email: firebaseUser.email!,
               name: userData.name || firebaseUser.displayName || '',
               phone: userData.phone || '',
               avatar: userData.avatar,
               userType: userData.userType || UserType.NORMAL_USER,
-              isActive: userData.isActive !== false, // Default true se não especificado
+              isActive: userData.isActive !== false,
               isVerified: userData.isVerified,
               createdAt: userData.createdAt,
               updatedAt: userData.updatedAt,
-              preferences: mergedPreferences,
-              
-              // Campos específicos para usuários normais
-              ...(userData.userType === UserType.NORMAL_USER && {
-                favoriteInstitutions: userData.favoriteInstitutions || [],
-                searchHistory: userData.searchHistory || [],
-                dateOfBirth: userData.dateOfBirth,
-                gender: userData.gender,
-                address: userData.address,
-                emergencyContact: userData.emergencyContact
-              }),
-              
-              // Campos específicos para profissionais
-              ...(userData.userType === UserType.PROFESSIONAL && {
-                professionalInfo: userData.professionalInfo || {},
-                institutionId: userData.institutionId,
-                favoriteInstitutions: userData.favoriteInstitutions || []
-              }),
-              
-              // Campos específicos para instituições
-              ...(userData.userType === UserType.INSTITUTION && {
-                institutionInfo: userData.institutionInfo || {},
-                professionals: userData.professionals || []
-              })
+              preferences: mergedPreferences
             };
+            
+            // Adicionar campos específicos por tipo, PRESERVANDO dados existentes
+            let completeUser: any = { ...baseUser };
+            
+            if (userData.userType === UserType.NORMAL_USER) {
+              completeUser.favoriteInstitutions = userData.favoriteInstitutions || [];
+              completeUser.searchHistory = userData.searchHistory || [];
+              completeUser.dateOfBirth = userData.dateOfBirth;
+              completeUser.gender = userData.gender;
+              completeUser.address = userData.address;
+              completeUser.emergencyContact = userData.emergencyContact;
+            } else if (userData.userType === UserType.PROFESSIONAL) {
+              completeUser.professionalInfo = userData.professionalInfo; // PRESERVAR dados existentes
+              completeUser.institutionId = userData.institutionId;
+              completeUser.favoriteInstitutions = userData.favoriteInstitutions || [];
+            } else if (userData.userType === UserType.INSTITUTION) {
+              completeUser.institutionInfo = userData.institutionInfo; // PRESERVAR dados existentes
+              completeUser.professionals = userData.professionals || [];
+            }
             
             console.log('✅ Objeto completo criado:', JSON.stringify(completeUser, null, 2));
             
@@ -250,34 +248,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const updatedUserData = await AuthServiceFirebase.getUserData(user.id);
         
         if (updatedUserData) {
-          const defaultPreferences = {
-            language: 'en',
-            notifications: {
-              enabled: true,
-              serviceReminders: true,
-              healthTips: true,
-              emergencyAlerts: true,
-            },
-            favorites: { services: [], locations: [] },
-            privacy: { shareLocation: true, publicProfile: false }
-          };
-          
-          const mergedPreferences = {
-            ...defaultPreferences,
-            ...updatedUserData.preferences,
-            notifications: {
-              ...defaultPreferences.notifications,
-              ...updatedUserData.preferences?.notifications,
-            },
-            favorites: {
-              ...defaultPreferences.favorites,
-              ...updatedUserData.preferences?.favorites,
-            },
-            privacy: {
-              ...defaultPreferences.privacy,
-              ...updatedUserData.preferences?.privacy,
-            }
-          };
+          // Usar a função utilitária para normalizar preferences
+          const normalizedPreferences = normalizePreferences(updatedUserData.preferences);
           
           // Reconstruir usuário completo com dados atualizados
           const completeUpdatedUser = {
@@ -291,7 +263,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             isVerified: updatedUserData.isVerified,
             createdAt: updatedUserData.createdAt || user.createdAt,
             updatedAt: updatedUserData.updatedAt,
-            preferences: mergedPreferences,
+            preferences: normalizedPreferences,
             
             // Campos específicos para usuários normais
             ...(updatedUserData.userType === UserType.NORMAL_USER && {
