@@ -348,7 +348,6 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               />
             </View>
             <Text style={styles.serviceName}>{service.name}</Text>
-            <Text style={styles.serviceType}>{getServiceTypeLabel(service.type)}</Text>
           </View>
 
           <View style={styles.section}>

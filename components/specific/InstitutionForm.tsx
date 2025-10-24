@@ -124,6 +124,12 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
     { value: 'clinic', label: t('profile.clinic') || 'Clínica' },
     { value: 'laboratory', label: t('profile.laboratory') || 'Laboratório' },
     { value: 'pharmacy', label: t('profile.pharmacy') || 'Farmácia' },
+    { value: 'emergency', label: t('profile.emergency') || 'Emergência' },
+    { value: 'maternity', label: t('profile.maternity') || 'Maternidade' },
+    { value: 'rehabilitation', label: t('profile.rehabilitation') || 'Reabilitação' },
+    { value: 'dental', label: t('profile.dental') || 'Clínica Dentária' },
+    { value: 'physiotherapy', label: t('profile.physiotherapy') || 'Fisioterapia' },
+    { value: 'psychology', label: t('profile.psychology') || 'Psicologia' },
     { value: 'other', label: t('profile.other') || 'Outro' },
   ];
 

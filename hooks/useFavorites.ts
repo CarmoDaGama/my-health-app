@@ -22,7 +22,7 @@ export const useFavorites = () => {
   const loadFavorites = async () => {
     try {
       setIsLoading(true);
-            const [favoriteServices, favoriteLocations] = await Promise.all([
+      const [services, locations] = await Promise.all([
         FavoritesServiceFirebase.getFavoriteServices(),
         FavoritesServiceFirebase.getFavoriteLocations(),
       ]);
@@ -38,7 +38,6 @@ export const useFavorites = () => {
   const addFavoriteService = async (serviceId: string): Promise<void> => {
     try {
       await FavoritesServiceFirebase.addFavoriteService(serviceId);
-      setIsFavorite(true);
       setFavoriteServices(prev => [...prev, serviceId]);
     } catch (error) {
       console.error('Erro ao adicionar serviço favorito:', error);
@@ -49,7 +48,6 @@ export const useFavorites = () => {
   const removeFavoriteService = async (serviceId: string): Promise<void> => {
     try {
       await FavoritesServiceFirebase.removeFavoriteService(serviceId);
-      setIsFavorite(false);
       setFavoriteServices(prev => prev.filter(id => id !== serviceId));
     } catch (error) {
       console.error('Erro ao remover serviço favorito:', error);

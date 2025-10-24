@@ -28,6 +28,7 @@ export interface HealthService {
   reviews?: number;
   services?: string[];
   status?: 'active' | 'suspended'; // Status do serviço - suspensos não aparecem na busca
+  createdBy?: string; // ID do usuário que criou o serviço
   
   // Propriedades específicas para profissionais
   specialty?: string;
@@ -50,7 +51,8 @@ export enum UserType {
   GUEST = 'guest',
   NORMAL_USER = 'normal_user',
   PROFESSIONAL = 'professional',
-  INSTITUTION = 'institution'
+  INSTITUTION = 'institution',
+  ADMIN = 'admin'
 }
 
 // Base User Interface

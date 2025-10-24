@@ -9,12 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Switch
+  Switch,
+  Modal,
+  FlatList
 } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { spacing } from '../../constants/dimensions';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Professional } from '../../types';
+import { MEDICAL_SPECIALTIES } from '../../constants/specialties';
 
 interface ProfessionalFormProps {
   user: Professional;
@@ -74,6 +77,8 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
       }
     }
   });
+
+  const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
 
   // Atualizar formData quando user props mudar
   useEffect(() => {
@@ -231,17 +236,19 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
             <Text style={styles.label}>
               {t('profile.specialty') || 'Especialidade'} *
             </Text>
-            <TextInput
-              style={styles.input}
-              value={formData.professionalInfo.specialty}
-              onChangeText={(text) => setFormData(prev => ({
-                ...prev,
-                professionalInfo: { ...prev.professionalInfo, specialty: text }
-              }))}
-              placeholder={t('profile.specialtyPlaceholder') || 'Ex: Cardiologia, Pediatria, etc.'}
-              placeholderTextColor={Colors.text.secondary}
-              editable={!isLoading}
-            />
+            <TouchableOpacity
+              style={styles.specialtyButton}
+              onPress={() => setShowSpecialtyPicker(true)}
+              disabled={isLoading}
+            >
+              <Text style={[
+                styles.specialtyButtonText, 
+                !formData.professionalInfo.specialty && styles.placeholder
+              ]}>
+                {formData.professionalInfo.specialty || 
+                 (t('profile.selectSpecialty') || 'Selecione uma especialidade')}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
@@ -419,6 +426,59 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
           </Text>
         </TouchableOpacity>
       </ScrollView>
+      
+      {/* Modal de Seleção de Especialidade */}
+      <Modal
+        visible={showSpecialtyPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSpecialtyPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {t('profile.selectSpecialty') || 'Selecione uma Especialidade'}
+            </Text>
+            <FlatList
+              data={MEDICAL_SPECIALTIES}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.specialtyOption,
+                    formData.professionalInfo.specialty === item && styles.selectedSpecialtyOption
+                  ]}
+                  onPress={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      professionalInfo: { ...prev.professionalInfo, specialty: item }
+                    }));
+                    setShowSpecialtyPicker(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.specialtyOptionText,
+                    formData.professionalInfo.specialty === item && styles.selectedSpecialtyOptionText
+                  ]}>
+                    {item}
+                  </Text>
+                  {formData.professionalInfo.specialty === item && (
+                    <Text style={styles.checkmark}>✓</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowSpecialtyPicker(false)}
+            >
+              <Text style={styles.modalCloseText}>
+                {t('common.close') || 'Fechar'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -533,5 +593,79 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
     textAlign: 'center',
     marginTop: 50,
+  },
+  // Estilos para seleção de especialidade
+  specialtyButton: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    padding: spacing.md,
+    backgroundColor: Colors.surface,
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  specialtyButtonText: {
+    fontSize: 16,
+    color: Colors.text.primary,
+  },
+  placeholder: {
+    color: Colors.text.secondary,
+  },
+  // Estilos do modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: spacing.lg,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  specialtyOption: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectedSpecialtyOption: {
+    backgroundColor: Colors.primary + '10',
+  },
+  specialtyOptionText: {
+    fontSize: 16,
+    color: Colors.text.primary,
+    flex: 1,
+  },
+  selectedSpecialtyOptionText: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  checkmark: {
+    fontSize: 18,
+    color: Colors.primary,
+    fontWeight: 'bold',
+  },
+  modalCloseButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+    padding: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  modalCloseText: {
+    color: Colors.surface,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

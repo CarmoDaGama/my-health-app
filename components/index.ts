@@ -21,3 +21,7 @@ export { InstitutionForm as InstitutionEditForm } from './specific/InstitutionFo
 export { default as UserTypeSelector } from './auth/UserTypeSelector';
 export { default as ProfessionalForm } from './auth/ProfessionalForm';
 export { default as InstitutionForm } from './auth/InstitutionForm';
+
+// New common components  
+export { SmartDashboard } from './common/SmartDashboard';
+export { ProtectedComponent, useConditionalRender, usePermissionedAction } from './common/ProtectedComponent';
