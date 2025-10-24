@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,22 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
   isLoading = false
 }) => {
   const { t } = useTranslation();
+
+  // Aguardar dados completos do usuário
+  if (!user || !user.institutionInfo) {
+    console.log('⏳ InstitutionForm - Aguardando dados completos do usuário...', {
+      hasUser: !!user,
+      hasInstitutionInfo: !!user?.institutionInfo,
+      userData: user
+    });
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>
+          {t('common.loading') || 'Carregando dados do perfil...'}
+        </Text>
+      </View>
+    );
+  }
   
   const [formData, setFormData] = useState({
     name: user.name || '',
@@ -60,6 +76,48 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
       }
     }
   });
+
+  // Atualizar formData quando user props mudar
+  useEffect(() => {
+    console.log('🔄 InstitutionForm - Atualizando dados do formulário:', {
+      userId: user.id,
+      name: user.name,
+      phone: user.phone,
+      institutionInfo: user.institutionInfo
+    });
+    
+    setFormData({
+      name: user.name || '',
+      phone: user.phone || '',
+      institutionInfo: {
+        type: user.institutionInfo?.type || 'clinic',
+        description: user.institutionInfo?.description || '',
+        services: user.institutionInfo?.services?.join(', ') || '',
+        acceptsInsurance: user.institutionInfo?.acceptsInsurance || false,
+        emergencyService: user.institutionInfo?.emergencyService || false,
+        address: {
+          street: user.institutionInfo?.address?.street || '',
+          city: user.institutionInfo?.address?.city || '',
+          state: user.institutionInfo?.address?.state || '',
+          zipCode: user.institutionInfo?.address?.zipCode || '',
+        },
+        contactInfo: {
+          phone: user.institutionInfo?.contactInfo?.phone || '',
+          email: user.institutionInfo?.contactInfo?.email || '',
+          website: user.institutionInfo?.contactInfo?.website || '',
+        },
+        workingHours: user.institutionInfo?.workingHours || {
+          monday: { start: '', end: '', available: false },
+          tuesday: { start: '', end: '', available: false },
+          wednesday: { start: '', end: '', available: false },
+          thursday: { start: '', end: '', available: false },
+          friday: { start: '', end: '', available: false },
+          saturday: { start: '', end: '', available: false },
+          sunday: { start: '', end: '', available: false },
+        }
+      }
+    });
+  }, [user]);
 
   const institutionTypes = [
     { value: 'hospital', label: t('profile.hospital') || 'Hospital' },
@@ -656,5 +714,11 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 50,
   },
 });

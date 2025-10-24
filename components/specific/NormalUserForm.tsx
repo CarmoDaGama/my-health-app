@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,32 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
       relationship: user.emergencyContact?.relationship || ''
     }
   });
+
+  // Atualizar formData quando user props mudar
+  useEffect(() => {
+    console.log('🔄 NormalUserForm - Atualizando dados do formulário:', {
+      userId: user.id,
+      name: user.name,
+      phone: user.phone,
+      dateOfBirth: user.dateOfBirth,
+      gender: user.gender,
+      address: user.address,
+      emergencyContact: user.emergencyContact
+    });
+    
+    setFormData({
+      name: user.name || '',
+      phone: user.phone || '',
+      dateOfBirth: user.dateOfBirth || '',
+      gender: user.gender || '',
+      address: user.address || '',
+      emergencyContact: {
+        name: user.emergencyContact?.name || '',
+        phone: user.emergencyContact?.phone || '',
+        relationship: user.emergencyContact?.relationship || ''
+      }
+    });
+  }, [user]);
 
   const handleSave = () => {
     // Validações básicas

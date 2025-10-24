@@ -41,7 +41,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (firebaseUser) {
         try {
           // Get user data from Firestore
+          console.log('🔥 Buscando dados do usuário no Firestore:', firebaseUser.uid);
           const userData = await AuthServiceFirebase.getUserData(firebaseUser.uid);
+          console.log('📊 Dados RAW do Firestore:', JSON.stringify(userData, null, 2));
+          
           if (userData) {
             const defaultPreferences = {
               language: 'en',
@@ -73,6 +76,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
             };
             
             // Criar objeto de usuário completo com todos os campos necessários
+            console.log('🔧 Construindo objeto completo do usuário...');
+            console.log('👤 UserType detectado:', userData.userType);
+            console.log('📋 Campos específicos disponíveis:', {
+              normalUser: userData.userType === UserType.NORMAL_USER ? {
+                dateOfBirth: userData.dateOfBirth,
+                gender: userData.gender,
+                address: userData.address,
+                emergencyContact: userData.emergencyContact
+              } : 'N/A',
+              professional: userData.userType === UserType.PROFESSIONAL ? {
+                professionalInfo: userData.professionalInfo
+              } : 'N/A',
+              institution: userData.userType === UserType.INSTITUTION ? {
+                institutionInfo: userData.institutionInfo
+              } : 'N/A'
+            });
+            
             const completeUser = {
               id: firebaseUser.uid,
               email: firebaseUser.email!,
@@ -109,6 +129,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 professionals: userData.professionals || []
               })
             };
+            
+            console.log('✅ Objeto completo criado:', JSON.stringify(completeUser, null, 2));
             
             setUser(completeUser as any);
             setIsGuestMode(false); // Reset guest mode when user is authenticated

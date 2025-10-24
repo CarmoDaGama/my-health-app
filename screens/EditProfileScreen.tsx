@@ -25,6 +25,7 @@ import { UserProfileService, UpdateProfileData } from '../services/userProfile';
 import { NormalUserForm } from '../components/specific/NormalUserForm';
 import { ProfessionalForm } from '../components/specific/ProfessionalForm';
 import { InstitutionForm } from '../components/specific/InstitutionForm';
+import { ProfileDebug } from '../components/debug/ProfileDebug';
 
 export const EditProfileScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -43,7 +44,10 @@ export const EditProfileScreen: React.FC = () => {
   }, [navigation, t]);
 
   const handleSave = async (updateData: UpdateProfileData) => {
+    console.log('💾 handleSave chamado com dados:', updateData);
+    
     if (!authUser) {
+      console.error('❌ authUser não está disponível!');
       Alert.alert(
         t('errors.title') || 'Erro',
         t('errors.userNotFound') || 'Usuário não encontrado'
@@ -51,15 +55,26 @@ export const EditProfileScreen: React.FC = () => {
       return;
     }
 
+    console.log('📊 Estado atual do usuário antes da atualização:', {
+      id: authUser.id,
+      name: authUser.name,
+      userType: authUser.userType,
+      dadosCompletos: JSON.stringify(authUser, null, 2)
+    });
+
     setIsSaving(true);
 
     try {
       console.log('🔄 Atualizando perfil do usuário:', authUser.id);
-      console.log('📝 Dados de atualização:', updateData);
+      console.log('📝 Dados de atualização:', JSON.stringify(updateData, null, 2));
 
       const response = await UserProfileService.updateProfile(authUser.id, updateData);
+      console.log('📥 Resposta do UserProfileService:', response);
 
       if (response.success && response.user) {
+        console.log('✅ Perfil atualizado com sucesso, atualizando contexto...');
+        console.log('👤 Dados atualizados do usuário:', JSON.stringify(response.user, null, 2));
+        
         // Atualizar usuário no contexto de autenticação
         await updateUserProfile(response.user);
 
@@ -74,6 +89,7 @@ export const EditProfileScreen: React.FC = () => {
           ]
         );
       } else {
+        console.error('❌ Falha na atualização:', response.error);
         throw new Error(response.error || 'Falha ao atualizar perfil');
       }
     } catch (error) {
@@ -109,10 +125,19 @@ export const EditProfileScreen: React.FC = () => {
     );
   }
 
+  console.log('🔍 EditProfileScreen - Render iniciado');
   console.log('🔍 EditProfileScreen - Tipo de usuário:', authUser.userType);
-  console.log('🔍 EditProfileScreen - Dados completos do usuário:', JSON.stringify(authUser, null, 2));
+  console.log('🔍 EditProfileScreen - Dados básicos:', {
+    id: authUser.id,
+    email: authUser.email,
+    name: authUser.name,
+    phone: authUser.phone,
+    userType: authUser.userType
+  });
+  console.log('🔍 EditProfileScreen - Dados RAW do Firestore:', JSON.stringify(authUser, null, 2));
   console.log('🔍 EditProfileScreen - Análise dos tipos:', {
     id: authUser.id,
+    email: authUser.email,
     userType: authUser.userType,
     hasNormalUser: isNormalUser(authUser),
     hasProfessional: isProfessional(authUser),

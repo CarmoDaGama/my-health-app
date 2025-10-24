@@ -121,13 +121,29 @@ export class AuthServiceFirebase {
       };
 
       // Add specific data based on user type
-      if (data.userType === UserType.PROFESSIONAL && data.professionalInfo) {
+      if (data.userType === UserType.NORMAL_USER) {
+        // Inicializar campos específicos do usuário normal
+        userData.favoriteInstitutions = [];
+        userData.searchHistory = [];
+        userData.dateOfBirth = null;
+        userData.gender = null;
+        userData.address = null;
+        userData.emergencyContact = null;
+        console.log('👤 Inicializando campos de usuário normal');
+      } else if (data.userType === UserType.PROFESSIONAL && data.professionalInfo) {
         userData.professionalInfo = data.professionalInfo;
+        userData.favoriteInstitutions = [];
+        userData.institutionId = null;
+        console.log('👨‍⚕️ Salvando dados profissionais:', data.professionalInfo);
       } else if (data.userType === UserType.INSTITUTION && data.institutionInfo) {
         userData.institutionInfo = data.institutionInfo;
+        userData.professionals = [];
+        console.log('🏥 Salvando dados de instituição:', data.institutionInfo);
       }
       
+      console.log('💾 Salvando dados do usuário no Firestore:', JSON.stringify(userData, null, 2));
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+      console.log('✅ Dados salvos com sucesso no Firestore');
       
       // Get token
       const token = await userCredential.user.getIdToken();
@@ -217,6 +233,9 @@ export class AuthServiceFirebase {
    */
   static async updateProfile(userId: string, updates: Partial<any>): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('🔄 Atualizando perfil do usuário:', userId);
+      console.log('📝 Dados de atualização recebidos:', JSON.stringify(updates, null, 2));
+      
       // Remove campos undefined para evitar sobrescrever dados existentes
       const cleanUpdates = Object.keys(updates).reduce((acc, key) => {
         if (updates[key] !== undefined) {
@@ -225,10 +244,14 @@ export class AuthServiceFirebase {
         return acc;
       }, {} as any);
 
+      console.log('🧹 Dados limpos para atualização:', JSON.stringify(cleanUpdates, null, 2));
+
       await updateDoc(doc(db, 'users', userId), {
         ...cleanUpdates,
         updatedAt: serverTimestamp()
       });
+      
+      console.log('✅ Perfil atualizado no Firestore com sucesso');
       
       // Update Firebase Auth profile if name changed
       if (updates.name && auth.currentUser) {
@@ -253,11 +276,92 @@ export class AuthServiceFirebase {
   static async getUserData(userId: string) {
     try {
       const userDoc = await getDoc(doc(db, 'users', userId));
-      return userDoc.exists() ? userDoc.data() : null;
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log('📥 Dados brutos do Firestore:', JSON.stringify(userData, null, 2));
+        
+        // Verificar se precisa migrar campos faltantes
+        const migratedData = await this.ensureUserFieldsExist(userId, userData);
+        console.log('🔄 Dados após migração (se necessária):', JSON.stringify(migratedData, null, 2));
+        
+        return migratedData;
+      }
+      return null;
     } catch (error) {
       console.error('Error fetching user data:', error);
       return null;
     }
+  }
+
+  /**
+   * Garantir que todos os campos necessários existem para cada tipo de usuário
+   */
+  static async ensureUserFieldsExist(userId: string, userData: any): Promise<any> {
+    let needsUpdate = false;
+    const updates: any = {};
+
+    // Para usuários normais, garantir que campos específicos existem
+    if (userData.userType === UserType.NORMAL_USER) {
+      if (userData.favoriteInstitutions === undefined) {
+        updates.favoriteInstitutions = [];
+        needsUpdate = true;
+      }
+      if (userData.searchHistory === undefined) {
+        updates.searchHistory = [];
+        needsUpdate = true;
+      }
+      // Não inicializar dateOfBirth, gender, address, emergencyContact como null
+      // pois o usuário pode querer deixá-los vazios intencionalmente
+      
+      console.log('👤 Verificando campos de usuário normal...');
+    }
+
+    // Para profissionais
+    if (userData.userType === UserType.PROFESSIONAL) {
+      if (userData.favoriteInstitutions === undefined) {
+        updates.favoriteInstitutions = [];
+        needsUpdate = true;
+      }
+      if (userData.professionalInfo === undefined) {
+        updates.professionalInfo = {};
+        needsUpdate = true;
+      }
+      
+      console.log('👨‍⚕️ Verificando campos de profissional...');
+    }
+
+    // Para instituições
+    if (userData.userType === UserType.INSTITUTION) {
+      if (userData.professionals === undefined) {
+        updates.professionals = [];
+        needsUpdate = true;
+      }
+      if (userData.institutionInfo === undefined) {
+        updates.institutionInfo = {};
+        needsUpdate = true;
+      }
+      
+      console.log('🏥 Verificando campos de instituição...');
+    }
+
+    // Se precisar atualizar, fazer a atualização
+    if (needsUpdate) {
+      console.log('🔄 Migração necessária, atualizando campos:', updates);
+      try {
+        await updateDoc(doc(db, 'users', userId), {
+          ...updates,
+          updatedAt: serverTimestamp()
+        });
+        
+        // Retornar dados atualizados
+        return { ...userData, ...updates };
+      } catch (error) {
+        console.error('❌ Erro na migração de campos:', error);
+        return userData; // Retornar dados originais se a migração falhar
+      }
+    }
+
+    return userData;
   }
 
   /**

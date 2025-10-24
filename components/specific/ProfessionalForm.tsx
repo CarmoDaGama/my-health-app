@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,22 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   isLoading = false
 }) => {
   const { t } = useTranslation();
+
+  // Aguardar dados completos do usuário
+  if (!user || !user.professionalInfo) {
+    console.log('⏳ ProfessionalForm - Aguardando dados completos do usuário...', {
+      hasUser: !!user,
+      hasProfessionalInfo: !!user?.professionalInfo,
+      userData: user
+    });
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>
+          {t('common.loading') || 'Carregando dados do perfil...'}
+        </Text>
+      </View>
+    );
+  }
   
   const [formData, setFormData] = useState({
     name: user.name || '',
@@ -51,6 +67,39 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
       }
     }
   });
+
+  // Atualizar formData quando user props mudar
+  useEffect(() => {
+    console.log('🔄 ProfessionalForm - Atualizando dados do formulário:', {
+      userId: user.id,
+      name: user.name,
+      phone: user.phone,
+      professionalInfo: user.professionalInfo
+    });
+    
+    setFormData({
+      name: user.name || '',
+      phone: user.phone || '',
+      professionalInfo: {
+        specialty: user.professionalInfo?.specialty || '',
+        license: user.professionalInfo?.license || '',
+        experience: user.professionalInfo?.experience?.toString() || '',
+        bio: user.professionalInfo?.bio || '',
+        certifications: user.professionalInfo?.certifications?.join(', ') || '',
+        consultationFee: user.professionalInfo?.consultationFee?.toString() || '',
+        acceptsInsurance: user.professionalInfo?.acceptsInsurance || false,
+        workingHours: user.professionalInfo?.workingHours || {
+          monday: { start: '', end: '', available: false },
+          tuesday: { start: '', end: '', available: false },
+          wednesday: { start: '', end: '', available: false },
+          thursday: { start: '', end: '', available: false },
+          friday: { start: '', end: '', available: false },
+          saturday: { start: '', end: '', available: false },
+          sunday: { start: '', end: '', available: false },
+        }
+      }
+    });
+  }, [user]);
 
   const weekDays = [
     { key: 'monday', name: t('profile.monday') || 'Segunda-feira' },
@@ -471,5 +520,11 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 50,
   },
 });
