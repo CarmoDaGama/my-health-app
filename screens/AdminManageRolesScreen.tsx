@@ -235,7 +235,7 @@ export default function AdminManageRolesScreen() {
       case 'analytics_viewer':
         return Colors.warning;
       default:
-        return Colors.text.secondary;
+        return Colors.textSecondary;
     }
   };
 
@@ -275,7 +275,7 @@ export default function AdminManageRolesScreen() {
 
       {/* Informações */}
       <View style={styles.adminInfo}>
-        <Ionicons name="calendar-outline" size={14} color={Colors.text.secondary} />
+        <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
         <Text style={styles.adminInfoText}>
           Adicionado em: {formatDate(item.createdAt)}
         </Text>
@@ -283,7 +283,7 @@ export default function AdminManageRolesScreen() {
 
       {item.assignedBy && (
         <View style={styles.adminInfo}>
-          <Ionicons name="person-add-outline" size={14} color={Colors.text.secondary} />
+          <Ionicons name="person-add-outline" size={14} color={Colors.textSecondary} />
           <Text style={styles.adminInfoText}>
             Por: {item.assignedBy}
           </Text>
@@ -365,7 +365,7 @@ export default function AdminManageRolesScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color={Colors.text.secondary} />
+            <Ionicons name="people-outline" size={64} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>Nenhum administrador</Text>
           </View>
         }
@@ -386,7 +386,7 @@ export default function AdminManageRolesScreen() {
             <TextInput
               style={styles.textInput}
               placeholder="exemplo@email.com"
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               value={newAdminEmail}
               onChangeText={setNewAdminEmail}
               keyboardType="email-address"
@@ -515,11 +515,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 4,
   },
   addButton: {
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   listContainer: {
     padding: 16,
@@ -577,11 +577,11 @@ const styles = StyleSheet.create({
   adminEmail: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   adminName: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   roleBadge: {
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   },
   adminInfoText: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: 6,
   },
   removeBtn: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 16,
   },
   errorContainer: {
@@ -658,13 +658,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 8,
   },
   textInput: {
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 16,
   },
   roleSelector: {
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
   roleOptionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginTop: 6,
   },
   roleOptionTextSelected: {
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   },
   roleOptionDesc: {
     fontSize: 11,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 2,
     textAlign: 'center',
   },
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
   modalCancelBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   modalConfirmBtn: {
     backgroundColor: Colors.primary,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: Colors.text.primary,
+    color: Colors.text,
     lineHeight: 18,
   },
 });

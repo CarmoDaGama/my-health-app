@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   retryButtonText: {
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontSize: 12,
     fontWeight: '500',
   },

@@ -230,7 +230,7 @@ export default function AdminPendingServicesScreen() {
       {/* Informações do Profissional */}
       {item.professionalInfo && (
         <View style={styles.professionalInfo}>
-          <Ionicons name="person" size={16} color={Colors.text.secondary} />
+          <Ionicons name="person" size={16} color={Colors.textSecondary} />
           <Text style={styles.professionalText}>
             {item.professionalInfo.displayName || 'Nome não informado'}
           </Text>
@@ -239,7 +239,7 @@ export default function AdminPendingServicesScreen() {
 
       {/* Localização */}
       <View style={styles.serviceInfo}>
-        <Ionicons name="location-outline" size={16} color={Colors.text.secondary} />
+        <Ionicons name="location-outline" size={16} color={Colors.textSecondary} />
         <Text style={styles.serviceInfoText}>
           {item.city}, {item.province}
         </Text>
@@ -247,13 +247,13 @@ export default function AdminPendingServicesScreen() {
 
       {/* Contato */}
       <View style={styles.serviceInfo}>
-        <Ionicons name="mail-outline" size={16} color={Colors.text.secondary} />
+        <Ionicons name="mail-outline" size={16} color={Colors.textSecondary} />
         <Text style={styles.serviceInfoText}>{item.contactEmail}</Text>
       </View>
 
       {/* Data de Registro */}
       <View style={styles.serviceInfo}>
-        <Ionicons name="time-outline" size={16} color={Colors.text.secondary} />
+        <Ionicons name="time-outline" size={16} color={Colors.textSecondary} />
         <Text style={styles.serviceInfoText}>
           Registrado em: {formatDate(item.createdAt)}
         </Text>
@@ -350,7 +350,7 @@ export default function AdminPendingServicesScreen() {
             <TextInput
               style={styles.textArea}
               placeholder="Adicionar observações sobre a aprovação..."
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               value={approvalNotes}
               onChangeText={setApprovalNotes}
               multiline
@@ -401,7 +401,7 @@ export default function AdminPendingServicesScreen() {
             <TextInput
               style={styles.textArea}
               placeholder="Informe o motivo da rejeição..."
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               value={rejectionReason}
               onChangeText={setRejectionReason}
               multiline
@@ -451,11 +451,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 4,
   },
   listContainer: {
@@ -491,11 +491,11 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   serviceSpecialty: {
     fontSize: 13,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   professionalInfo: {
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   professionalText: {
     fontSize: 13,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: 8,
   },
   serviceInfo: {
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   },
   serviceInfoText: {
     fontSize: 13,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: 8,
     flex: 1,
   },
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 13,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     lineHeight: 18,
   },
   cardActions: {
@@ -564,12 +564,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -602,18 +602,18 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 8,
   },
   textArea: {
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     minHeight: 100,
     marginBottom: 20,
   },
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
   modalCancelBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   modalConfirmBtn: {
     backgroundColor: Colors.success,

@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
@@ -483,13 +483,13 @@ const styles = StyleSheet.create({
   guestTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   guestSubtitle: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: spacing.md,
@@ -506,12 +506,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
   },
   userEmail: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   
   // Section styles
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   languageSection: {
@@ -546,15 +546,15 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   menuItemValue: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   menuItemArrow: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   
   // Info items
@@ -566,12 +566,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     width: '35%',
   },
   infoValue: {
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     fontWeight: '500',
     width: '65%',
     textAlign: 'right',
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
   registerButton: {
     borderWidth: 1,
@@ -620,6 +620,6 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
 });

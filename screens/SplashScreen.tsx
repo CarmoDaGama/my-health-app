@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   },
   heartSymbol: {
     fontSize: 80,
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontWeight: 'bold',
   },
   pulseIcon: {
@@ -57,13 +57,13 @@ const styles = StyleSheet.create({
   },
   pulseSymbol: {
     fontSize: 30,
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontWeight: 'bold',
   },
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     letterSpacing: 2,
   },
 });

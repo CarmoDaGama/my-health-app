@@ -67,6 +67,15 @@ export class HealthServiceAPIFirebase {
         const serviceStatus = data.status !== undefined ? data.status : 'active';
         const isVerified = data.verified !== undefined ? data.verified : true;
         
+        console.log(`🔍 Analisando serviço ${data.name}:`, {
+          type: data.type,
+          serviceType: data.serviceType,
+          status: serviceStatus,
+          verified: isVerified,
+          isProfessionalOrInstitution: data.type === 'professional' || data.serviceType === 'professional' || 
+                                     data.type === 'institution' || data.serviceType === 'institution'
+        });
+        
         // Para profissionais e instituições, aplicar filtro rigoroso
         if (data.type === 'professional' || data.serviceType === 'professional' || 
             data.type === 'institution' || data.serviceType === 'institution') {
@@ -77,34 +86,47 @@ export class HealthServiceAPIFirebase {
             return; // Pular este serviço
           }
           
-          // Se tem createdBy (foi criado via registro), verificar se usuário está ativo
-          if (data.createdBy) {
-            // TODO: Consultar status do usuário que criou o serviço
-            // Por agora, assumir que se chegou até aqui, está ok
+          console.log(`✅ Serviço profissional/instituição ${data.name} APROVADO`);
+        } else {
+          // Para outros tipos (hospital, clinic, pharmacy, etc), só verificar se está ativo
+          if (serviceStatus !== 'active') {
+            console.log(`🚫 Serviço ${data.name} filtrado - Status inativo: ${serviceStatus}`);
+            return; // Pular este serviço
           }
+          
+          console.log(`✅ Serviço geral ${data.name} APROVADO - Status: ${serviceStatus}`);
+        }
+        
+        // Continuar processando o serviço aprovado
+        
+        // Se tem createdBy (foi criado via registro), verificar se usuário está ativo
+        if (data.createdBy) {
+          // TODO: Consultar status do usuário que criou o serviço
+          // Por agora, assumir que se chegou até aqui, está ok
         }
         
         // Validar estrutura de coordinates
-        let coordinates;
-        if (data.coordinates && typeof data.coordinates === 'object') {
-          coordinates = {
-            latitude: data.coordinates.latitude || data.location?.latitude || 0,
-            longitude: data.coordinates.longitude || data.location?.longitude || 0
-          };
-        } else if (data.location && typeof data.location === 'object') {
-          // Fallback para campo location (estrutura antiga)
-          coordinates = {
-            latitude: data.location.latitude || 0,
-            longitude: data.location.longitude || 0
-          };
-        } else {
-          // Fallback se não houver coordenadas
-          console.warn(`⚠️ Documento ${doc.id} sem coordenadas válidas`);
-          coordinates = {
-            latitude: 0,
-            longitude: 0
-          };
-        }
+        const coordinates = (() => {
+          if (data.coordinates && typeof data.coordinates === 'object') {
+            return {
+              latitude: data.coordinates.latitude || data.location?.latitude || 0,
+              longitude: data.coordinates.longitude || data.location?.longitude || 0
+            };
+          } else if (data.location && typeof data.location === 'object') {
+            // Fallback para campo location (estrutura antiga)
+            return {
+              latitude: data.location.latitude || 0,
+              longitude: data.location.longitude || 0
+            };
+          } else {
+            // Fallback se não houver coordenadas
+            console.warn(`⚠️ Documento ${doc.id} sem coordenadas válidas`);
+            return {
+              latitude: 0,
+              longitude: 0
+            };
+          }
+        })();
         
         // Validar campos obrigatórios antes de adicionar
         if (!data.name || !data.type || !data.address) {

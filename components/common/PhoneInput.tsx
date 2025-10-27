@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   operatorText: {
     fontSize: 11,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
 });

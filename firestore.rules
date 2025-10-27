@@ -147,6 +147,42 @@ service cloud.firestore {
     }
     
     // ========================================
+    // COLEÇÃO: institutionServices (serviços gerenciados por instituições)
+    // ========================================
+    match /institutionServices/{serviceId} {
+      // Instituições podem ler seus próprios serviços
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.institutionId;
+      
+      // Instituições podem criar serviços para si mesmas
+      allow create: if request.auth != null && 
+        request.resource.data.institutionId == request.auth.uid &&
+        validateInstitutionServiceData(request.resource.data);
+      
+      // Instituições podem atualizar seus próprios serviços
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.institutionId;
+      
+      // Instituições podem deletar seus próprios serviços
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.institutionId;
+        
+      // Admins podem ler, criar, atualizar e deletar qualquer serviço
+      allow read, write: if isAdmin();
+    }
+    
+    // Função para validar dados de serviços de instituição
+    function validateInstitutionServiceData(data) {
+      return data.keys().hasAll(['name', 'description', 'category', 'institutionId', 'createdAt'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.description is string 
+        && data.description.size() > 0
+        && data.institutionId is string
+        && data.institutionId.size() > 0;
+    }
+
+    // ========================================
     // COLEÇÃO: reviews (avaliações de serviços)
     // ========================================
     match /reviews/{reviewId} {

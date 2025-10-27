@@ -121,7 +121,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               placeholder={t('auth.emailPlaceholder') || 'Digite seu email'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
             />
             {formErrors.email && (
               <Text style={styles.errorFieldText}>{formErrors.email}</Text>
@@ -136,7 +136,7 @@ export default function LoginScreen() {
               onChangeText={(text: string) => handleInputChange('password', text)}
               secureTextEntry
               placeholder={t('auth.passwordPlaceholder') || 'Digite sua senha'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
             />
             {formErrors.password && (
               <Text style={styles.errorFieldText}>{formErrors.password}</Text>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   header: {
     marginBottom: spacing.xxl,
@@ -206,13 +206,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   textInput: {
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   inputError: {
@@ -274,12 +274,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   buttonDisabled: {
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
   },
   loginButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
   registerContainer: {
     flexDirection: 'row',
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   registerLink: {
     fontSize: 14,

@@ -129,7 +129,7 @@ export const PatientDashboard: React.FC = () => {
         <Text style={styles.quickActionTitle}>{title}</Text>
         <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -162,7 +162,7 @@ export const PatientDashboard: React.FC = () => {
       
       {showDistance && (
         <View style={styles.serviceDistance}>
-          <Ionicons name="location" size={14} color={Colors.text.secondary} />
+          <Ionicons name="location" size={14} color={Colors.textSecondary} />
           <Text style={styles.distanceText}>2.5 km</Text>
         </View>
       )}
@@ -300,7 +300,7 @@ export const PatientDashboard: React.FC = () => {
           recentServices.map(service => renderServiceCard(service, false))
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={48} color={Colors.text.secondary} />
+            <Ionicons name="time-outline" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>
               {t('dashboard.noRecentServices') || 'Nenhum serviço visitado recentemente'}
             </Text>
@@ -341,19 +341,19 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   userName: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   profileButton: {
     padding: spacing.xs,
   },
   subtitle: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   statsSection: {
     padding: spacing.lg,
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   statsContainer: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: spacing.xs,
   },
   quickActionsSection: {
@@ -415,12 +415,12 @@ const styles = StyleSheet.create({
   quickActionTitle: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
   },
   quickActionSubtitle: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   nearbySection: {
     paddingHorizontal: spacing.lg,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     fontSize: fontSize.md,
   },
   servicesContainer: {
@@ -478,11 +478,11 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   serviceType: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   serviceDistance: {
     flexDirection: 'row',
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   },
   distanceText: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: spacing.xs,
   },
   ratingContainer: {
@@ -500,13 +500,13 @@ const styles = StyleSheet.create({
   },
   rating: {
     fontSize: fontSize.sm,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.xs,
     fontWeight: '600',
   },
   ratingCount: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: spacing.xs,
   },
   recentSection: {
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.md,
   },

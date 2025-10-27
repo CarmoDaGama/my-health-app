@@ -13,6 +13,9 @@ export interface Schedule {
   sunday?: string;
 }
 
+// Export types for institution service management
+export * from './institutionService';
+
 export interface HealthService {
   id: string;
   name: string;
@@ -26,9 +29,12 @@ export interface HealthService {
   description: string;
   rating?: number;
   reviews?: number;
+  reviewCount?: number;
   services?: string[];
-  status?: 'active' | 'suspended'; // Status do serviço - suspensos não aparecem na busca
-  createdBy?: string; // ID do usuário que criou o serviço
+  status?: 'active' | 'suspended';
+  isActive?: boolean;
+  createdBy?: string;
+  institutionId?: string;
   
   // Propriedades específicas para profissionais
   specialty?: string;

@@ -17,6 +17,12 @@ export { NormalUserForm } from './specific/NormalUserForm';
 export { ProfessionalForm as ProfessionalEditForm } from './specific/ProfessionalForm';
 export { InstitutionForm as InstitutionEditForm } from './specific/InstitutionForm';
 
+// Institution Service Management Components
+export { InstitutionServiceManagement } from './specific/InstitutionServiceManagement';
+export { default as ServiceForm } from './specific/ServiceForm';
+export { default as ServiceCard } from './specific/ServiceCard';
+export { default as ServiceFilters } from './specific/ServiceFilters';
+
 // Auth components
 export { default as UserTypeSelector } from './auth/UserTypeSelector';
 export { default as ProfessionalForm } from './auth/ProfessionalForm';

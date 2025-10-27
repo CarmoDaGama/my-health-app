@@ -180,7 +180,7 @@ export const ProfessionalDashboard: React.FC = () => {
         <Text style={styles.quickActionTitle}>{title}</Text>
         <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -349,7 +349,7 @@ export const ProfessionalDashboard: React.FC = () => {
           appointmentRequests.slice(0, 3).map(renderAppointmentRequest)
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={48} color={Colors.text.secondary} />
+            <Ionicons name="calendar-outline" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>
               {t('professional.noPendingRequests') || 'Nenhuma solicitação pendente'}
             </Text>
@@ -418,12 +418,12 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   userName: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   profileButton: {
     padding: spacing.xs,
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   },
   serviceSpecialty: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: spacing.xs,
   },
   createServicePrompt: {
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   statsContainer: {
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   quickActionsSection: {
     paddingHorizontal: spacing.lg,
@@ -550,12 +550,12 @@ const styles = StyleSheet.create({
   quickActionTitle: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
   },
   quickActionSubtitle: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   appointmentsSection: {
     paddingHorizontal: spacing.lg,
@@ -592,11 +592,11 @@ const styles = StyleSheet.create({
   patientName: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   appointmentDateTime: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: spacing.xs,
   },
   appointmentActions: {
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
   },
   performanceLabel: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   performanceDivider: {
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.md,
   },

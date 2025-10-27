@@ -16,11 +16,12 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useAuth } from '../../hooks/useAuth-firebase';
 import { HealthService } from '../../types';
 import { HealthServiceAPIFirebase } from '../../services/api-firebase';
+import { NavigationProp } from '../../types/navigation';
 
 const { width } = Dimensions.get('window');
 
 export const GuestDashboard: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { continueAsGuest } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,24 +34,114 @@ export const GuestDashboard: React.FC = () => {
 
     const loadFeaturedServices = async () => {
     try {
+      console.log('🔄 Iniciando carregamento dos serviços em destaque...');
       setLoading(true);
       const result = await HealthServiceAPIFirebase.getAllServices(6); // Get 6 featured services
-      if (result.services) {
-        setFeaturedServices(result.services.slice(0, 6)); // Take first 6 as featured
+      console.log('📊 Resultado da API:', result);
+      
+      if (result.services && result.services.length > 0) {
+        const featured = result.services.slice(0, 6);
+        setFeaturedServices(featured); // Take first 6 as featured
+        console.log('✅ Serviços em destaque carregados:', featured.length);
+      } else {
+        console.log('⚠️ Nenhum serviço retornado pela API, usando dados mock');
+        // Fallback para dados mock quando não há serviços na API
+        const mockServices = [
+          {
+            id: 'mock-1',
+            name: 'Hospital Américo Boavida',
+            type: 'hospital',
+            address: 'Rua Amílcar Cabral, 105, Maianga, Luanda',
+            coordinates: { latitude: -8.8383, longitude: 13.2344 },
+            rating: 4.2,
+            specialty: 'Geral',
+            verified: true
+          },
+          {
+            id: 'mock-2',
+            name: 'Clínica Girassol',
+            type: 'clinic',
+            address: 'Avenida 4 de Fevereiro, 321, Ingombota, Luanda',
+            coordinates: { latitude: -8.8368, longitude: 13.2343 },
+            rating: 4.5,
+            specialty: 'Clínica Geral',
+            verified: true
+          },
+          {
+            id: 'mock-3',
+            name: 'Hospital Josina Machel',
+            type: 'hospital',
+            address: 'Rua Major Kanhangulo, 100, Ingombota, Luanda',
+            coordinates: { latitude: -8.8300, longitude: 13.2400 },
+            rating: 4.0,
+            specialty: 'Emergência',
+            verified: true
+          }
+        ];
+        setFeaturedServices(mockServices);
+        console.log('✅ Usando serviços mock:', mockServices.length);
       }
     } catch (error) {
-      console.error('Erro ao carregar serviços em destaque:', error);
+      console.error('❌ Erro ao carregar serviços em destaque:', error);
+      // Em caso de erro, usar dados mock como fallback
+      const mockServices = [
+        {
+          id: 'mock-1',
+          name: 'Hospital Américo Boavida',
+          type: 'hospital',
+          address: 'Rua Amílcar Cabral, 105, Maianga, Luanda',
+          coordinates: { latitude: -8.8383, longitude: 13.2344 },
+          rating: 4.2,
+          specialty: 'Geral',
+          verified: true
+        },
+        {
+          id: 'mock-2',
+          name: 'Clínica Girassol',
+          type: 'clinic',
+          address: 'Avenida 4 de Fevereiro, 321, Ingombota, Luanda',
+          coordinates: { latitude: -8.8368, longitude: 13.2343 },
+          rating: 4.5,
+          specialty: 'Clínica Geral',
+          verified: true
+        }
+      ];
+      setFeaturedServices(mockServices);
+      console.log('✅ Fallback para serviços mock devido a erro');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSearch = () => {
+    console.log('🔍 handleSearch chamado:', {
+      searchQuery: searchQuery.trim(),
+      featuredServicesLength: featuredServices.length,
+      featuredServices: featuredServices.slice(0, 2) // Log apenas os primeiros 2 para não sobrecarregar
+    });
+    
     if (searchQuery.trim()) {
-      navigation.navigate('Map', { 
+      console.log('✅ Navegando para Map com parâmetros:', {
         services: featuredServices,
         searchQuery: searchQuery.trim()
       });
+      
+      try {
+        // Garantir que services é sempre um array válido
+        const servicesToSend = Array.isArray(featuredServices) ? featuredServices : [];
+        
+        navigation.navigate('Map', { 
+          services: servicesToSend,
+          searchQuery: searchQuery.trim()
+        });
+        console.log('✅ Navegação iniciada com sucesso');
+      } catch (error) {
+        console.error('❌ Erro na navegação:', error);
+        Alert.alert('Erro', 'Não foi possível abrir o mapa. Tente novamente.');
+      }
+    } else {
+      console.log('⚠️ Query de busca vazia');
+      Alert.alert('Aviso', 'Digite algo para buscar');
     }
   };
 
@@ -77,7 +168,7 @@ export const GuestDashboard: React.FC = () => {
         <Ionicons 
           name={icon as any} 
           size={24} 
-          color={isPremium ? Colors.primary : Colors.text.secondary} 
+          color={isPremium ? Colors.primary : Colors.textSecondary} 
         />
       </View>
       <Text style={[styles.featureTitle, isPremium && styles.premiumTitle]}>
@@ -121,7 +212,7 @@ export const GuestDashboard: React.FC = () => {
         <Text style={styles.serviceAddress} numberOfLines={1}>
           {service.address}
         </Text>
-        <Ionicons name="chevron-forward" size={16} color={Colors.text.secondary} />
+        <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
       </View>
     </TouchableOpacity>
   );
@@ -147,11 +238,11 @@ export const GuestDashboard: React.FC = () => {
       {/* Barra de Busca */}
       <View style={styles.searchSection}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={Colors.text.secondary} />
+          <Ionicons name="search" size={20} color={Colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder={t('app.searchPlaceholder') || 'Buscar serviços de saúde...'}
-            placeholderTextColor={Colors.text.secondary}
+            placeholderTextColor={Colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
@@ -302,7 +393,7 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: fontSize.lg,
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
   },
   searchSection: {
@@ -323,7 +414,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: spacing.sm,
     fontSize: fontSize.md,
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   searchButton: {
     backgroundColor: Colors.primary,
@@ -345,13 +436,13 @@ const styles = StyleSheet.create({
   ctaTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
   ctaDescription: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
@@ -375,7 +466,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.lg,
   },
   featuresGrid: {
@@ -410,7 +501,7 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
@@ -419,7 +510,7 @@ const styles = StyleSheet.create({
   },
   featureDescription: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   premiumBadge: {
@@ -446,7 +537,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     fontSize: fontSize.md,
   },
   servicesContainer: {
@@ -469,13 +560,13 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.sm,
     flex: 1,
   },
   serviceType: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginBottom: spacing.sm,
   },
   ratingContainer: {
@@ -485,7 +576,7 @@ const styles = StyleSheet.create({
   },
   rating: {
     fontSize: fontSize.sm,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.xs,
     fontWeight: '600',
   },
@@ -496,7 +587,7 @@ const styles = StyleSheet.create({
   },
   serviceAddress: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     flex: 1,
   },
   finalCta: {
@@ -509,12 +600,12 @@ const styles = StyleSheet.create({
   finalCtaTitle: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   finalCtaDescription: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },

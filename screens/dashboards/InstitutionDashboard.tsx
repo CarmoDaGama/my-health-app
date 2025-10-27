@@ -16,13 +16,21 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useAuth } from '../../hooks/useAuth-firebase';
 import { HealthService } from '../../types';
 import { HealthServiceAPIFirebase } from '../../services/api-firebase';
+import { useInstitutionServices } from '../../hooks/useInstitutionServices';
+import { InstitutionServiceManagement } from '../../components/specific/InstitutionServiceManagement';
+import { InstitutionService } from '../../types/institutionService';
+import { UserDebugInfo } from '../../components/debug/UserDebugInfo';
 
 const { width } = Dimensions.get('window');
 
 export const InstitutionDashboard: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, loading: authLoading } = useAuth();
+  
+  // Aguardar o carregamento do usuário antes de inicializar o hook de serviços
+  const shouldInitializeServices = isAuthenticated && user && !authLoading;
+  const { services: institutionServices, stats: serviceStats, error: servicesError } = useInstitutionServices();
   
   const [myServices, setMyServices] = useState<HealthService[]>([]);
   const [institutionStats, setInstitutionStats] = useState({
@@ -36,10 +44,50 @@ export const InstitutionDashboard: React.FC = () => {
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showServiceManagement, setShowServiceManagement] = useState(false);
 
   useEffect(() => {
     loadInstitutionData();
   }, []);
+
+  // Debug: mostrar erro dos serviços se houver
+  useEffect(() => {
+    if (servicesError) {
+      console.log('🚨 Erro nos serviços da instituição:', servicesError);
+      console.log('👤 Estado do usuário:', {
+        authenticated: isAuthenticated,
+        userType: user?.userType,
+        userId: user?.id,
+        userName: user?.name,
+        authLoading
+      });
+    }
+  }, [servicesError, user, isAuthenticated, authLoading]);
+
+  // Handlers para gerenciamento de serviços
+  const handleServiceCreated = (service: InstitutionService) => {
+    Alert.alert(
+      'Sucesso!',
+      `Serviço "${service.name}" foi criado com sucesso.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleServiceUpdated = (service: InstitutionService) => {
+    Alert.alert(
+      'Atualizado!',
+      `Serviço "${service.name}" foi atualizado com sucesso.`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleServiceDeleted = (serviceId: string) => {
+    Alert.alert(
+      'Excluído!',
+      'Serviço foi excluído com sucesso.',
+      [{ text: 'OK' }]
+    );
+  };
 
   const loadInstitutionData = async () => {
     try {
@@ -57,17 +105,8 @@ export const InstitutionDashboard: React.FC = () => {
   };
 
   const loadMyServices = async () => {
-    try {
-      const servicesResult = await HealthServiceAPIFirebase.getAllServices();
-      const services = servicesResult.services || servicesResult;
-      // Filtrar serviços da instituição atual
-      const institutionServices = services.filter((service: HealthService) => 
-        service.institutionId === user?.id
-      );
-      setMyServices(institutionServices);
-    } catch (error) {
-      console.error('Erro ao carregar serviços:', error);
-    }
+    // Usar os serviços do hook ao invés de carregar novamente
+    // Os serviços já são carregados pelo useInstitutionServices
   };
 
   const loadInstitutionStats = async () => {
@@ -155,7 +194,7 @@ export const InstitutionDashboard: React.FC = () => {
         <Text style={styles.quickActionTitle}>{title}</Text>
         <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -239,13 +278,14 @@ export const InstitutionDashboard: React.FC = () => {
   );
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -264,6 +304,9 @@ export const InstitutionDashboard: React.FC = () => {
           {t('institution.subtitle') || 'Gerencie sua instituição e serviços'}
         </Text>
       </View>
+
+      {/* Debug Info - apenas em desenvolvimento */}
+      <UserDebugInfo />
 
       {/* Estatísticas principais */}
       <View style={styles.statsSection}>
@@ -309,10 +352,9 @@ export const InstitutionDashboard: React.FC = () => {
         {renderQuickAction(
           'medical-outline',
           t('institution.manageServices') || 'Gerenciar Serviços',
-          `${myServices.length} serviços cadastrados`,
+          `${serviceStats.total} serviços cadastrados`,
           () => {
-            // TODO: Implementar tela ManageServices
-            console.log('Funcionalidade de gerenciamento de serviços em desenvolvimento');
+            setShowServiceManagement(true);
           },
           Colors.primary
         )}
@@ -347,7 +389,7 @@ export const InstitutionDashboard: React.FC = () => {
           t('institution.settings') || 'Configurações',
           'Configurar política e permissões',
           () => navigation.navigate('InstitutionSettings'),
-          Colors.text.secondary
+          Colors.textSecondary
         )}
       </View>
 
@@ -368,7 +410,7 @@ export const InstitutionDashboard: React.FC = () => {
           pendingRequests.slice(0, 3).map(renderPendingRequest)
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="checkmark-done" size={48} color={Colors.text.secondary} />
+            <Ionicons name="checkmark-done" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>
               {t('institution.noPendingRequests') || 'Nenhuma solicitação pendente'}
             </Text>
@@ -383,8 +425,7 @@ export const InstitutionDashboard: React.FC = () => {
             {t('institution.myServices') || 'Meus Serviços'}
           </Text>
           <TouchableOpacity onPress={() => {
-            // TODO: Implementar navegação para gerenciamento de serviços
-            console.log('Navegação para gerenciamento de serviços em desenvolvimento');
+            setShowServiceManagement(true);
           }}>
             <Text style={styles.seeAllText}>
               {t('common.seeAll') || 'Ver todos'}
@@ -406,7 +447,7 @@ export const InstitutionDashboard: React.FC = () => {
           </ScrollView>
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons name="medical-outline" size={48} color={Colors.text.secondary} />
+            <Ionicons name="medical-outline" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>
               {t('institution.noServices') || 'Nenhum serviço cadastrado'}
             </Text>
@@ -462,7 +503,27 @@ export const InstitutionDashboard: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+
+      {/* Modal de Gerenciamento de Serviços */}
+      {showServiceManagement && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Gerenciamento de Serviços</Text>
+              <TouchableOpacity onPress={() => setShowServiceManagement(false)}>
+                <Ionicons name="close" size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+            <InstitutionServiceManagement
+              onServiceCreated={handleServiceCreated}
+              onServiceUpdated={handleServiceUpdated}
+              onServiceDeleted={handleServiceDeleted}
+            />
+          </View>
+        </View>
+      )}
+    </View>
   );
 };
 
@@ -470,6 +531,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  scrollContainer: {
+    flex: 1,
   },
   header: {
     backgroundColor: Colors.surface,
@@ -486,19 +550,19 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   institutionName: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   profileButton: {
     padding: spacing.xs,
   },
   subtitle: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   statsSection: {
     padding: spacing.lg,
@@ -506,7 +570,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   statsContainer: {
@@ -531,13 +595,13 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: fontSize.sm,
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
     fontWeight: '600',
   },
   statSubtitle: {
     fontSize: fontSize.xs,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -586,12 +650,12 @@ const styles = StyleSheet.create({
   quickActionTitle: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
   },
   quickActionSubtitle: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   pendingSection: {
     paddingHorizontal: spacing.lg,
@@ -628,11 +692,11 @@ const styles = StyleSheet.create({
   requestTitle: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   requestDescription: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: spacing.xs,
   },
   requestActions: {
@@ -677,7 +741,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     fontSize: fontSize.md,
   },
   servicesContainer: {
@@ -712,11 +776,11 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   serviceType: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   statusBadge: {
     paddingHorizontal: spacing.sm,
@@ -733,13 +797,13 @@ const styles = StyleSheet.create({
   },
   rating: {
     fontSize: fontSize.sm,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.xs,
     fontWeight: '600',
   },
   ratingCount: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: spacing.xs,
   },
   emptyContainer: {
@@ -752,7 +816,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.md,
     marginBottom: spacing.md,
@@ -793,7 +857,7 @@ const styles = StyleSheet.create({
   },
   performanceLabel: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   performanceDivider: {
@@ -820,5 +884,37 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: '600',
     marginLeft: spacing.sm,
+  },
+  // Estilos do modal
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: Colors.background,
+    width: '95%',
+    height: '90%',
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  modalTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: 'bold',
+    color: Colors.text,
   },
 });

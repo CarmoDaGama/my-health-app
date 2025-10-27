@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 2,
   },
   type: {
@@ -96,17 +96,17 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   address: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginBottom: spacing.sm,
   },
   description: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: spacing.md,
   },

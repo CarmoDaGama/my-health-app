@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 16,
   },
   languageOptions: {
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   languageText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 4,
   },
   selectedLanguageText: {
@@ -113,14 +113,14 @@ const styles = StyleSheet.create({
   },
   languageSubtext: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   selectedLanguageSubtext: {
     color: Colors.primary,
   },
   guestNote: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 12,
     textAlign: 'center',
     fontStyle: 'italic',

@@ -131,7 +131,7 @@ export default function UserProfileScreen() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator size="small" color={Colors.text.onPrimary} />
+                  <ActivityIndicator size="small" color={Colors.textOnPrimary} />
                 ) : (
                   <Text style={styles.saveButtonText}>
                     {t('common.save') || 'Salvar'}
@@ -152,7 +152,7 @@ export default function UserProfileScreen() {
               value={formData.name}
               onChangeText={(text) => handleInputChange('name', text)}
               placeholder={t('profile.namePlaceholder') || 'Digite seu nome'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
             />
           ) : (
             <Text style={styles.fieldValue}>{user.name}</Text>
@@ -183,7 +183,7 @@ export default function UserProfileScreen() {
               value={formData.phone}
               onChangeText={(text) => handleInputChange('phone', text)}
               placeholder={t('profile.phonePlaceholder') || 'Digite seu telefone'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
             />
           ) : (
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   header: {
     alignItems: 'center',
@@ -265,17 +265,17 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
   },
   userEmail: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   section: {
     backgroundColor: Colors.surface,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   editButton: {
     paddingHorizontal: spacing.md,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   saveButton: {
     backgroundColor: Colors.primary,
@@ -324,11 +324,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonDisabled: {
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
   },
   saveButtonText: {
     fontSize: 14,
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontWeight: '500',
   },
   fieldContainer: {
@@ -337,20 +337,20 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.xs,
   },
   fieldValue: {
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     paddingVertical: spacing.xs,
   },
   fieldDisabled: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   fieldNote: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: spacing.xs,
     fontStyle: 'italic',
   },
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.background,
   },
   textAreaInput: {
@@ -379,11 +379,11 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   infoValue: {
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     fontWeight: '500',
   },
   actions: {
@@ -398,6 +398,6 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
 });

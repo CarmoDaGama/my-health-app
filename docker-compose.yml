@@ -10,6 +10,7 @@ services:
         COPY package*.json ./
         RUN npm install -g @expo/cli@latest
         RUN npm install
+        RUN npm install -g firebase-tools
         COPY . .
         EXPOSE 8081
         CMD ["npx", "expo", "start", "--tunnel"]

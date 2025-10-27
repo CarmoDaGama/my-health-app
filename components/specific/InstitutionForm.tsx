@@ -177,12 +177,12 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
           .filter(service => service.length > 0),
         acceptsInsurance: formData.institutionInfo.acceptsInsurance,
         emergencyService: formData.institutionInfo.emergencyService,
+        coordinates: user.institutionInfo?.coordinates, // Manter coordenadas existentes
         address: {
           street: formData.institutionInfo.address.street.trim(),
           city: formData.institutionInfo.address.city.trim(),
           state: formData.institutionInfo.address.state.trim(),
           zipCode: formData.institutionInfo.address.zipCode.trim(),
-          coordinates: user.institutionInfo?.address?.coordinates, // Manter coordenadas existentes
         },
         contactInfo: {
           phone: formData.institutionInfo.contactInfo.phone.trim(),
@@ -240,7 +240,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
               value={formData.name}
               onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
               placeholder={t('profile.institutionNamePlaceholder') || 'Nome da instituição de saúde'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -289,7 +289,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 institutionInfo: { ...prev.institutionInfo, description: text }
               }))}
               placeholder={t('profile.descriptionPlaceholder') || 'Descreva os serviços e diferenciais da instituição'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={4}
               editable={!isLoading}
@@ -308,7 +308,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 institutionInfo: { ...prev.institutionInfo, services: text }
               }))}
               placeholder={t('profile.servicesPlaceholder') || 'Separe os serviços por vírgula (Ex: Consultas, Exames, Cirurgias)'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={3}
               editable={!isLoading}
@@ -337,7 +337,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 }
               }))}
               placeholder={t('profile.streetPlaceholder') || 'Rua, número, bairro'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -358,7 +358,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                   }
                 }))}
                 placeholder={t('profile.cityPlaceholder') || 'Cidade'}
-                placeholderTextColor={Colors.text.secondary}
+                placeholderTextColor={Colors.textSecondary}
                 editable={!isLoading}
               />
             </View>
@@ -378,7 +378,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                   }
                 }))}
                 placeholder={t('profile.statePlaceholder') || 'Província'}
-                placeholderTextColor={Colors.text.secondary}
+                placeholderTextColor={Colors.textSecondary}
                 editable={!isLoading}
               />
             </View>
@@ -399,7 +399,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 }
               }))}
               placeholder={t('profile.zipCodePlaceholder') || 'Código postal'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -426,7 +426,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 }
               }))}
               placeholder={t('profile.phonePlaceholder') || 'Telefone principal'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
               editable={!isLoading}
             />
@@ -447,7 +447,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 }
               }))}
               placeholder={t('profile.emailPlaceholder') || 'Email para contato'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="email-address"
               editable={!isLoading}
             />
@@ -468,7 +468,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 }
               }))}
               placeholder={t('profile.websitePlaceholder') || 'https://www.example.com'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="url"
               editable={!isLoading}
             />
@@ -492,7 +492,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 institutionInfo: { ...prev.institutionInfo, acceptsInsurance: value }
               }))}
               trackColor={{ false: Colors.border, true: Colors.accent }}
-              thumbColor={formData.institutionInfo.acceptsInsurance ? Colors.primary : Colors.text.secondary}
+              thumbColor={formData.institutionInfo.acceptsInsurance ? Colors.primary : Colors.textSecondary}
               disabled={isLoading}
             />
           </View>
@@ -508,7 +508,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 institutionInfo: { ...prev.institutionInfo, emergencyService: value }
               }))}
               trackColor={{ false: Colors.border, true: Colors.accent }}
-              thumbColor={formData.institutionInfo.emergencyService ? Colors.primary : Colors.text.secondary}
+              thumbColor={formData.institutionInfo.emergencyService ? Colors.primary : Colors.textSecondary}
               disabled={isLoading}
             />
           </View>
@@ -528,7 +528,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                   value={formData.institutionInfo.workingHours[key]?.available || false}
                   onValueChange={(value) => updateWorkingHours(key, 'available', value)}
                   trackColor={{ false: Colors.border, true: Colors.accent }}
-                  thumbColor={formData.institutionInfo.workingHours[key]?.available ? Colors.primary : Colors.text.secondary}
+                  thumbColor={formData.institutionInfo.workingHours[key]?.available ? Colors.primary : Colors.textSecondary}
                   disabled={isLoading}
                 />
               </View>
@@ -544,7 +544,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                       value={formData.institutionInfo.workingHours[key]?.start || ''}
                       onChangeText={(text) => updateWorkingHours(key, 'start', text)}
                       placeholder="08:00"
-                      placeholderTextColor={Colors.text.secondary}
+                      placeholderTextColor={Colors.textSecondary}
                       editable={!isLoading}
                     />
                   </View>
@@ -557,7 +557,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                       value={formData.institutionInfo.workingHours[key]?.end || ''}
                       onChangeText={(text) => updateWorkingHours(key, 'end', text)}
                       placeholder="17:00"
-                      placeholderTextColor={Colors.text.secondary}
+                      placeholderTextColor={Colors.textSecondary}
                       editable={!isLoading}
                     />
                   </View>
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   inputGroup: {
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   input: {
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: spacing.md,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   textArea: {
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
   },
   typeText: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   typeTextSelected: {
     color: Colors.primary,
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   timeInputs: {
     flexDirection: 'row',
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginBottom: spacing.sm,
   },
   timeField: {
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: spacing.sm,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
   },
   saveButton: {
@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   saveButtonDisabled: {
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
   },
   saveButtonText: {
     color: Colors.surface,
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: 50,
   },

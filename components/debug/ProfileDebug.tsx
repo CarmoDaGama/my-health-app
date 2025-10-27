@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   subtitle: {
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   item: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginBottom: spacing.xs,
   },
   typeSection: {

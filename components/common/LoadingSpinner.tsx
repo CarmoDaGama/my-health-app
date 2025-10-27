@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 12,
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
 });

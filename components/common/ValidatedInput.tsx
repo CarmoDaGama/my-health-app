@@ -62,7 +62,7 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
         onChangeText={handleChangeText}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        placeholderTextColor={Colors.text.secondary}
+        placeholderTextColor={Colors.textSecondary}
         {...props}
       />
       
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 8,
   },
   required: {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   inputFocused: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   inputValid: {
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   inputError: {
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   errorText: {
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 4,
   },
 });

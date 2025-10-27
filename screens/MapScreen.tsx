@@ -12,7 +12,20 @@ interface MapScreenProps {
 }
 
 export const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
-  const { services, userLocation } = route.params;
+  console.log('🗺️ MapScreen carregado com parâmetros:', route.params);
+  
+  const { services, userLocation, searchQuery } = route.params;
+  
+  // Validação dos parâmetros
+  if (!services || !Array.isArray(services)) {
+    console.error('❌ Parâmetro services inválido:', services);
+  } else {
+    console.log('✅ Services válidos:', services.length, 'serviços');
+  }
+  
+  if (searchQuery) {
+    console.log('🔍 Query de busca:', searchQuery);
+  }
 
   // Calcular região inicial baseada nos serviços ou localização do usuário
   const getInitialRegion = (): Region => {

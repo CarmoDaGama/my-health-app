@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 22,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -205,7 +205,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               value={formData.name}
               onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
               placeholder={t('profile.namePlaceholder') || 'Digite seu nome completo'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -219,7 +219,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               value={formData.phone}
               onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
               placeholder={t('profile.phonePlaceholder') || 'Digite seu telefone'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
               editable={!isLoading}
             />
@@ -263,7 +263,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 professionalInfo: { ...prev.professionalInfo, license: text }
               }))}
               placeholder={t('profile.licensePlaceholder') || 'Número do registro profissional'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -280,7 +280,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 professionalInfo: { ...prev.professionalInfo, experience: text }
               }))}
               placeholder="0"
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="numeric"
               editable={!isLoading}
             />
@@ -298,7 +298,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 professionalInfo: { ...prev.professionalInfo, bio: text }
               }))}
               placeholder={t('profile.bioPlaceholder') || 'Descreva sua experiência e abordagem profissional'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={4}
               editable={!isLoading}
@@ -317,7 +317,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 professionalInfo: { ...prev.professionalInfo, certifications: text }
               }))}
               placeholder={t('profile.certificationsPlaceholder') || 'Separe as certificações por vírgula'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={3}
               editable={!isLoading}
@@ -336,7 +336,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 professionalInfo: { ...prev.professionalInfo, consultationFee: text }
               }))}
               placeholder="0.00"
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="decimal-pad"
               editable={!isLoading}
             />
@@ -353,7 +353,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 professionalInfo: { ...prev.professionalInfo, acceptsInsurance: value }
               }))}
               trackColor={{ false: Colors.border, true: Colors.accent }}
-              thumbColor={formData.professionalInfo.acceptsInsurance ? Colors.primary : Colors.text.secondary}
+              thumbColor={formData.professionalInfo.acceptsInsurance ? Colors.primary : Colors.textSecondary}
               disabled={isLoading}
             />
           </View>
@@ -373,7 +373,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                   value={formData.professionalInfo.workingHours[key]?.available || false}
                   onValueChange={(value) => updateWorkingHours(key, 'available', value)}
                   trackColor={{ false: Colors.border, true: Colors.accent }}
-                  thumbColor={formData.professionalInfo.workingHours[key]?.available ? Colors.primary : Colors.text.secondary}
+                  thumbColor={formData.professionalInfo.workingHours[key]?.available ? Colors.primary : Colors.textSecondary}
                   disabled={isLoading}
                 />
               </View>
@@ -389,7 +389,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                       value={formData.professionalInfo.workingHours[key]?.start || ''}
                       onChangeText={(text) => updateWorkingHours(key, 'start', text)}
                       placeholder="08:00"
-                      placeholderTextColor={Colors.text.secondary}
+                      placeholderTextColor={Colors.textSecondary}
                       editable={!isLoading}
                     />
                   </View>
@@ -402,7 +402,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                       value={formData.professionalInfo.workingHours[key]?.end || ''}
                       onChangeText={(text) => updateWorkingHours(key, 'end', text)}
                       placeholder="17:00"
-                      placeholderTextColor={Colors.text.secondary}
+                      placeholderTextColor={Colors.textSecondary}
                       editable={!isLoading}
                     />
                   </View>
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   inputGroup: {
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   input: {
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: spacing.md,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   textArea: {
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   timeInputs: {
     flexDirection: 'row',
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginBottom: spacing.sm,
   },
   timeField: {
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: spacing.sm,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
   },
   saveButton: {
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   saveButtonDisabled: {
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
   },
   saveButtonText: {
     color: Colors.surface,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: 50,
   },
@@ -606,10 +606,10 @@ const styles = StyleSheet.create({
   },
   specialtyButtonText: {
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   placeholder: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   // Estilos do modal
   modalOverlay: {
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
   },
   specialtyOptionText: {
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     flex: 1,
   },
   selectedSpecialtyOptionText: {

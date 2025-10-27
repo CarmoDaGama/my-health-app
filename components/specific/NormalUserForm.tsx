@@ -125,7 +125,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
               value={formData.name}
               onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
               placeholder={t('profile.namePlaceholder') || 'Digite seu nome completo'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -139,7 +139,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
               value={formData.phone}
               onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
               placeholder={t('profile.phonePlaceholder') || 'Digite seu telefone'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
               editable={!isLoading}
             />
@@ -154,7 +154,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
               value={formData.dateOfBirth}
               onChangeText={(text) => setFormData(prev => ({ ...prev, dateOfBirth: text }))}
               placeholder="DD/MM/AAAA"
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -196,7 +196,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
               value={formData.address}
               onChangeText={(text) => setFormData(prev => ({ ...prev, address: text }))}
               placeholder={t('profile.addressPlaceholder') || 'Digite seu endereço completo'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               multiline
               numberOfLines={3}
               editable={!isLoading}
@@ -222,7 +222,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
                 emergencyContact: { ...prev.emergencyContact, name: text }
               }))}
               placeholder={t('profile.emergencyNamePlaceholder') || 'Nome da pessoa de contato'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -239,7 +239,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
                 emergencyContact: { ...prev.emergencyContact, phone: text }
               }))}
               placeholder={t('profile.emergencyPhonePlaceholder') || 'Telefone da pessoa de contato'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
               editable={!isLoading}
             />
@@ -257,7 +257,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
                 emergencyContact: { ...prev.emergencyContact, relationship: text }
               }))}
               placeholder={t('profile.emergencyRelationshipPlaceholder') || 'Ex: Pai/Mãe, Cônjuge, Irmão(ã)'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
           </View>
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   inputGroup: {
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   input: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: spacing.md,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   textArea: {
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   genderText: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   genderTextSelected: {
     color: Colors.primary,
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   saveButtonDisabled: {
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
   },
   saveButtonText: {
     color: Colors.surface,

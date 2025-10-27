@@ -32,7 +32,7 @@ export const ProtectedComponent: React.FC<ProtectedComponentProps> = ({
     if (!isAuthenticated) {
       return (
         <View style={styles.permissionDeniedContainer}>
-          <Ionicons name="lock-closed" size={48} color={Colors.text.secondary} />
+          <Ionicons name="lock-closed" size={48} color={Colors.textSecondary} />
           <Text style={styles.permissionDeniedTitle}>
             {t('permissions.loginRequired') || 'Login Necessário'}
           </Text>
@@ -154,14 +154,14 @@ const styles = StyleSheet.create({
   permissionDeniedTitle: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
     marginTop: spacing.lg,
     marginBottom: spacing.md,
   },
   permissionDeniedMessage: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.xl,

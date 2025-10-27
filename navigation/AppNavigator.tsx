@@ -47,7 +47,7 @@ const AppNavigatorContent: React.FC = () => {
         headerStyle: {
           backgroundColor: Colors.primary,
         },
-        headerTintColor: Colors.text.onPrimary,
+        headerTintColor: Colors.textOnPrimary,
         headerTitleStyle: {
           fontWeight: 'bold',
         },

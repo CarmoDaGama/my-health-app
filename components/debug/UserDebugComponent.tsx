@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   debugText: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     fontFamily: 'monospace',
     marginBottom: spacing.xs,
   },

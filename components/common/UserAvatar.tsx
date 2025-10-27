@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   initials: {
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontWeight: 'bold',
   },
 });

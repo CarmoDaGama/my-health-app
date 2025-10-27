@@ -330,7 +330,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
+          <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {service.type === 'professional' ? t('serviceDetail.professionalDetails') : t('serviceDetail.institutionDetails')}
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   content: {
     flex: 1,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: fontSize.xxl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
@@ -524,12 +524,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   sectionContent: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     lineHeight: 22,
   },
   ratingSection: {
@@ -543,12 +543,12 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.sm,
   },
   reviewsText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: spacing.sm,
   },
   ratingStars: {
@@ -565,13 +565,13 @@ const styles = StyleSheet.create({
   },
   serviceItemText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: spacing.sm,
     flex: 1,
   },
   scheduleText: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     lineHeight: 22,
   },
   contactCard: {
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
   },
   contactItem: {
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: fontSize.md,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.md,
   },
   actionsContainer: {
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   modalPlaceholder: {
     width: 40,

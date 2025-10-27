@@ -251,6 +251,7 @@ const translations = {
       success: 'Success',
       back: 'Back',
       notAvailable: 'Not available',
+      seeAll: 'See All',
     },
     
     // Validation
@@ -845,6 +846,7 @@ const translations = {
       success: 'Sucesso',
       back: 'Voltar',
       notAvailable: 'Não disponível',
+      seeAll: 'Ver Todas',
     },
     
     // Validation

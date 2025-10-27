@@ -125,7 +125,7 @@ export default function ForgotPasswordScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               placeholder={t('auth.emailPlaceholder') || 'Digite seu email'}
-              placeholderTextColor={Colors.text.secondary}
+              placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
             {emailError && (
@@ -139,7 +139,7 @@ export default function ForgotPasswordScreen() {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color={Colors.text.onPrimary} />
+              <ActivityIndicator size="small" color={Colors.textOnPrimary} />
             ) : (
               <Text style={styles.resetButtonText}>
                 {t('auth.sendResetLink') || 'Enviar Link de Recuperação'}
@@ -180,13 +180,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: spacing.md,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.sm,
   },
   textInput: {
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 16,
-    color: Colors.text.primary,
+    color: Colors.text,
     backgroundColor: Colors.surface,
   },
   inputError: {
@@ -231,12 +231,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonDisabled: {
-    backgroundColor: Colors.text.secondary,
+    backgroundColor: Colors.textSecondary,
   },
   resetButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
   loginContainer: {
     flexDirection: 'row',
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   loginLink: {
     fontSize: 14,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   linkDisabled: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   
   // Success screen styles
@@ -272,13 +272,13 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
   successMessage: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.xxl,
@@ -294,6 +294,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
 });

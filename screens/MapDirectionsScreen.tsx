@@ -291,7 +291,7 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
       
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
+          <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle}>{t('directions.title')}</Text>
@@ -328,9 +328,9 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
               size={20} 
               color={
                 isLoadingRoute 
-                  ? Colors.text.secondary 
+                  ? Colors.textSecondary 
                   : selectedMode === mode.id 
-                    ? Colors.text.onPrimary 
+                    ? Colors.textOnPrimary 
                     : Colors.primary
               } 
             />
@@ -420,11 +420,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
   },
   headerSubtitle: {
     fontSize: fontSize.md,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   mapContainer: {
     flex: 1,
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: fontSize.md,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: spacing.sm,
   },
   directionsButton: {
@@ -509,19 +509,19 @@ const styles = StyleSheet.create({
   stepNumberText: {
     fontSize: fontSize.sm,
     fontWeight: 'bold',
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
   stepInfo: {
     flex: 1,
   },
   stepInstruction: {
     fontSize: fontSize.md,
-    color: Colors.text.primary,
+    color: Colors.text,
     fontWeight: '500',
   },
   stepDistance: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: spacing.xs,
   },
   transportModes: {
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   modeButtonTextActive: {
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: fontSize.sm,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginLeft: spacing.sm,
   },
   modeButtonDisabled: {
@@ -574,6 +574,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   modeButtonTextDisabled: {
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
 });

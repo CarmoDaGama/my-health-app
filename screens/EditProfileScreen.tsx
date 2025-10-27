@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   errorContainer: {
     flex: 1,

@@ -26,8 +26,8 @@ const colors = {
   background: Colors.background,
   surface: Colors.surface,
   surfaceVariant: '#F8F9FA',
-  text: Colors.text.primary,
-  textSecondary: Colors.text.secondary,
+  text: Colors.text,
+  textSecondary: Colors.textSecondary,
   border: Colors.border,
 };
 

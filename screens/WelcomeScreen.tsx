@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   healthIcon: {
     width: 40,
     height: 40,
-    backgroundColor: Colors.text.onPrimary,
+    backgroundColor: Colors.textOnPrimary,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -117,13 +117,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryButtonText: {
-    color: Colors.text.onPrimary,
+    color: Colors.textOnPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

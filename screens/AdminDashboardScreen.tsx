@@ -218,7 +218,7 @@ export default function AdminDashboardScreen() {
         <Text style={styles.actionTitle}>{title}</Text>
         <Text style={styles.actionDescription}>{description}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.text.secondary} />
+      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -258,7 +258,7 @@ export default function AdminDashboardScreen() {
       case 'service_approval': return Colors.success;
       case 'service_rejection': return Colors.error;
       case 'review_posted': return '#FFD700';
-      default: return Colors.text.secondary;
+      default: return Colors.textSecondary;
     }
   };
 
@@ -278,7 +278,7 @@ export default function AdminDashboardScreen() {
       case 'good': return Colors.info;
       case 'warning': return Colors.warning;
       case 'critical': return Colors.error;
-      default: return Colors.text.secondary;
+      default: return Colors.textSecondary;
     }
   };
 
@@ -386,7 +386,7 @@ export default function AdminDashboardScreen() {
           t('admin.systemSettings') || 'Configurações',
           'Configurar sistema e políticas',
           () => Alert.alert('Em Desenvolvimento', 'Configurações avançadas em breve'),
-          Colors.text.secondary
+          Colors.textSecondary
         )}
       </View>
 
@@ -408,7 +408,7 @@ export default function AdminDashboardScreen() {
             recentActivities.map(renderActivityItem)
           ) : (
             <View style={styles.emptyActivities}>
-              <Ionicons name="information-circle-outline" size={48} color={Colors.text.secondary} />
+              <Ionicons name="information-circle-outline" size={48} color={Colors.textSecondary} />
               <Text style={styles.emptyActivitiesText}>
                 Nenhuma atividade recente
               </Text>
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   accessDeniedContainer: {
     flex: 1,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   accessDeniedMessage: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 12,
     textAlign: 'center',
     lineHeight: 24,
@@ -518,12 +518,12 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginTop: 4,
   },
   profileButton: {
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   },
   systemStatusText: {
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     fontWeight: '500',
   },
   statsSection: {
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 16,
   },
   statsContainer: {
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   actionsSection: {
@@ -656,12 +656,12 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 2,
   },
   actionDescription: {
     fontSize: 14,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   activitiesSection: {
     padding: 16,
@@ -705,12 +705,12 @@ const styles = StyleSheet.create({
   },
   activityMessage: {
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginBottom: 2,
   },
   activityTime: {
     fontSize: 12,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
   },
   emptyActivities: {
     alignItems: 'center',
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   emptyActivitiesText: {
     fontSize: 16,
-    color: Colors.text.secondary,
+    color: Colors.textSecondary,
     marginTop: 12,
   },
   infoSection: {
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text.primary,
+    color: Colors.text,
     marginLeft: 12,
     lineHeight: 20,
   },
