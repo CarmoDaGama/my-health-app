@@ -581,6 +581,8 @@ const translations = {
       pendingRequests: 'Pending Requests',
       noPendingRequests: 'No pending requests',
       weeklyPerformance: 'Weekly Performance',
+      addServiceType: 'Add Service Type',
+      removeServiceType: 'Remove Service Type',
     },
     
     // Institution dashboard translations
@@ -599,6 +601,8 @@ const translations = {
       myServices: 'My Services',
       noServices: 'No registered services',
       monthlyPerformance: 'Monthly Performance',
+      addServiceType: 'Add Service Type',
+      removeServiceType: 'Remove Service Type',
     }
   },
   pt: {
@@ -1175,6 +1179,8 @@ const translations = {
       pendingRequests: 'Solicitações Pendentes',
       noPendingRequests: 'Nenhuma solicitação pendente',
       weeklyPerformance: 'Desempenho da Semana',
+      addServiceType: 'Adicionar Tipo de Serviço',
+      removeServiceType: 'Remover Tipo de Serviço',
     },
     
     // Institution dashboard translations
@@ -1193,6 +1199,8 @@ const translations = {
       myServices: 'Meus Serviços',
       noServices: 'Nenhum serviço cadastrado',
       monthlyPerformance: 'Desempenho Mensal',
+      addServiceType: 'Adicionar Tipo de Serviço',
+      removeServiceType: 'Remover Tipo de Serviço',
     }
   }
 };

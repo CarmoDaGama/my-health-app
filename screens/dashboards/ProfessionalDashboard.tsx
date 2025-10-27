@@ -27,12 +27,11 @@ export const ProfessionalDashboard: React.FC = () => {
   const { reviews, loadReviews } = useReviews();
   
   const [myService, setMyService] = useState<HealthService | null>(null);
-  const [appointmentRequests, setAppointmentRequests] = useState<any[]>([]);
   const [monthlyStats, setMonthlyStats] = useState({
-    appointments: 0,
-    newPatients: 0,
-    reviews: 0,
-    rating: 0
+    totalServiceTypes: 0,
+    totalSearches: 0,
+    totalReviews: 0,
+    rating: 4.5
   });
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,7 +45,6 @@ export const ProfessionalDashboard: React.FC = () => {
       setLoading(true);
       await Promise.all([
         loadMyService(),
-        loadAppointmentRequests(),
         loadMonthlyStats(),
         // Load reviews if we have a service
         myService ? loadReviews(myService.id) : Promise.resolve()
@@ -72,28 +70,14 @@ export const ProfessionalDashboard: React.FC = () => {
     }
   };
 
-  const loadAppointmentRequests = async () => {
-    try {
-      // Simular solicitações de agendamento
-      // Em produção, buscar do banco de dados
-      setAppointmentRequests([
-        { id: '1', patientName: 'João Silva', time: '14:00', date: '2024-01-20' },
-        { id: '2', patientName: 'Maria Santos', time: '15:30', date: '2024-01-20' },
-        { id: '3', patientName: 'Pedro Costa', time: '09:00', date: '2024-01-21' },
-      ]);
-    } catch (error) {
-      console.error('Erro ao carregar solicitações:', error);
-    }
-  };
-
   const loadMonthlyStats = async () => {
     try {
       // Simular estatísticas mensais
       // Em produção, calcular do banco de dados
       setMonthlyStats({
-        appointments: 45,
-        newPatients: 12,
-        reviews: 8,
+        totalServiceTypes: 3,
+        totalSearches: 156,
+        totalReviews: 8,
         rating: 4.7
       });
     } catch (error) {
@@ -116,26 +100,6 @@ export const ProfessionalDashboard: React.FC = () => {
         { text: t('auth.logout'), onPress: logout, style: 'destructive' }
       ]
     );
-  };
-
-  const handleCreateService = () => {
-    // TODO: Implementar navegação para criação de serviços
-    console.log('Navegação para criação de serviços em desenvolvimento');
-  };
-
-  const handleEditService = () => {
-    if (myService) {
-      // TODO: Implementar navegação para edição de serviços  
-      console.log('Navegação para edição de serviços em desenvolvimento', myService);
-    }
-  };
-
-  const handleManageAppointments = () => {
-    navigation.navigate('ManageAppointments');
-  };
-
-  const handleViewAnalytics = () => {
-    navigation.navigate('Analytics');
   };
 
   const renderStatCard = (
@@ -184,32 +148,6 @@ export const ProfessionalDashboard: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const renderAppointmentRequest = (request: any) => (
-    <View key={request.id} style={styles.appointmentCard}>
-      <View style={styles.appointmentHeader}>
-        <Ionicons name="person-circle" size={32} color={Colors.primary} />
-        <View style={styles.appointmentInfo}>
-          <Text style={styles.patientName}>{request.patientName}</Text>
-          <Text style={styles.appointmentDateTime}>
-            {request.date} às {request.time}
-          </Text>
-        </View>
-      </View>
-      
-      <View style={styles.appointmentActions}>
-        <TouchableOpacity style={styles.acceptButton}>
-          <Ionicons name="checkmark" size={16} color={Colors.surface} />
-          <Text style={styles.acceptButtonText}>Aceitar</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.declineButton}>
-          <Ionicons name="close" size={16} color={Colors.error} />
-          <Text style={styles.declineButtonText}>Recusar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   return (
     <ScrollView 
       style={styles.container}
@@ -225,7 +163,7 @@ export const ProfessionalDashboard: React.FC = () => {
             <Text style={styles.greetingText}>
               {t('professional.welcome') || 'Bem-vindo, Dr(a).'}
             </Text>
-            <Text style={styles.userName}>{user?.displayName || 'Profissional'}</Text>
+            <Text style={styles.userName}>{user?.name || 'Profissional'}</Text>
           </View>
           <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
             <Ionicons name="person-circle" size={32} color={Colors.primary} />
@@ -238,7 +176,9 @@ export const ProfessionalDashboard: React.FC = () => {
             <Text style={styles.serviceSpecialty}>{myService.specialty}</Text>
           </View>
         ) : (
-          <TouchableOpacity style={styles.createServicePrompt} onPress={handleCreateService}>
+          <TouchableOpacity style={styles.createServicePrompt} onPress={() => {
+            Alert.alert('Em Desenvolvimento', 'Funcionalidade de criar serviço em breve');
+          }}>
             <Ionicons name="add-circle" size={24} color={Colors.primary} />
             <Text style={styles.createServiceText}>
               {t('professional.createService') || 'Criar meu serviço'}
@@ -254,18 +194,16 @@ export const ProfessionalDashboard: React.FC = () => {
         </Text>
         <View style={styles.statsContainer}>
           {renderStatCard(
-            'calendar', 
-            monthlyStats.appointments, 
-            'Consultas', 
-            Colors.primary,
-            '+12%'
+            'list', 
+            monthlyStats.totalServiceTypes, 
+            'Tipos de Serviços', 
+            Colors.primary
           )}
           {renderStatCard(
-            'person-add', 
-            monthlyStats.newPatients, 
-            'Novos Pacientes', 
-            Colors.success,
-            '+8%'
+            'search', 
+            monthlyStats.totalSearches, 
+            'Procuras pelo Profissional', 
+            Colors.success
           )}
           {renderStatCard(
             'star', 
@@ -275,7 +213,7 @@ export const ProfessionalDashboard: React.FC = () => {
           )}
           {renderStatCard(
             'chatbubble', 
-            monthlyStats.reviews, 
+            monthlyStats.totalReviews, 
             'Avaliações', 
             Colors.info
           )}
@@ -285,104 +223,28 @@ export const ProfessionalDashboard: React.FC = () => {
       {/* Ações rápidas */}
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
-          {t('professional.quickActions') || 'Ações Rápidas'}
+          {t('professional.quickActions') || 'Gestão de Serviços'}
         </Text>
         
         {renderQuickAction(
-          'calendar-outline',
-          t('professional.manageSchedule') || 'Gerenciar Agenda',
-          t('professional.manageScheduleDesc') || 'Visualize e organize horários',
-          handleManageAppointments,
-          Colors.primary,
-          appointmentRequests.length.toString()
-        )}
-        
-        {myService ? (
-          renderQuickAction(
-            'medical',
-            t('professional.editService') || 'Editar Serviço',
-            t('professional.editServiceDesc') || 'Atualize informações do seu serviço',
-            handleEditService,
-            Colors.info
-          )
-        ) : (
-          renderQuickAction(
-            'add-circle',
-            t('professional.createService') || 'Criar Serviço',
-            t('professional.createServiceDesc') || 'Configure seu perfil profissional',
-            handleCreateService,
-            Colors.success
-          )
+          'add-circle-outline',
+          t('professional.addServiceType') || 'Adicionar Tipo de Serviço',
+          t('professional.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
+          () => {
+            Alert.alert('Em Desenvolvimento', 'Funcionalidade de adicionar tipo de serviço em breve');
+          },
+          Colors.success
         )}
         
         {renderQuickAction(
-          'bar-chart',
-          t('professional.analytics') || 'Relatórios',
-          t('professional.analyticsDesc') || 'Veja suas métricas de desempenho',
-          handleViewAnalytics,
-          '#8B5CF6'
+          'remove-circle-outline',
+          t('professional.removeServiceType') || 'Remover Tipo de Serviço',
+          t('professional.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
+          () => {
+            Alert.alert('Em Desenvolvimento', 'Funcionalidade de remover tipo de serviço em breve');
+          },
+          Colors.error
         )}
-        
-        {renderQuickAction(
-          'star-outline',
-          t('professional.reviews') || 'Avaliações',
-          `${reviews.length} ${t('professional.newReviews') || 'novas avaliações'}`,
-          () => navigation.navigate('Reviews'),
-          '#FFD700'
-        )}
-      </View>
-
-      {/* Solicitações de agendamento pendentes */}
-      <View style={styles.appointmentsSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {t('professional.pendingRequests') || 'Solicitações Pendentes'}
-          </Text>
-          <TouchableOpacity onPress={handleManageAppointments}>
-            <Text style={styles.seeAllText}>
-              {t('common.seeAll') || 'Ver todos'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        {appointmentRequests.length > 0 ? (
-          appointmentRequests.slice(0, 3).map(renderAppointmentRequest)
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={48} color={Colors.textSecondary} />
-            <Text style={styles.emptyText}>
-              {t('professional.noPendingRequests') || 'Nenhuma solicitação pendente'}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Desempenho da semana */}
-      <View style={styles.performanceSection}>
-        <Text style={styles.sectionTitle}>
-          {t('professional.weeklyPerformance') || 'Desempenho da Semana'}
-        </Text>
-        
-        <View style={styles.performanceCard}>
-          <View style={styles.performanceItem}>
-            <Text style={styles.performanceValue}>32</Text>
-            <Text style={styles.performanceLabel}>Consultas Realizadas</Text>
-          </View>
-          
-          <View style={styles.performanceDivider} />
-          
-          <View style={styles.performanceItem}>
-            <Text style={styles.performanceValue}>4.8</Text>
-            <Text style={styles.performanceLabel}>Avaliação Média</Text>
-          </View>
-          
-          <View style={styles.performanceDivider} />
-          
-          <View style={styles.performanceItem}>
-            <Text style={styles.performanceValue}>95%</Text>
-            <Text style={styles.performanceLabel}>Taxa de Comparecimento</Text>
-          </View>
-        </View>
       </View>
 
       {/* Botão de logout */}

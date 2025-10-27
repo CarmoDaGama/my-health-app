@@ -34,14 +34,11 @@ export const InstitutionDashboard: React.FC = () => {
   
   const [myServices, setMyServices] = useState<HealthService[]>([]);
   const [institutionStats, setInstitutionStats] = useState({
-    totalServices: 0,
-    activeServices: 0,
+    totalServiceTypes: 0,
+    totalSearches: 0,
     totalReviews: 0,
-    averageRating: 0,
-    monthlyAppointments: 0,
-    newPatients: 0
+    averageRating: 4.5
   });
-  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showServiceManagement, setShowServiceManagement] = useState(false);
@@ -64,38 +61,12 @@ export const InstitutionDashboard: React.FC = () => {
     }
   }, [servicesError, user, isAuthenticated, authLoading]);
 
-  // Handlers para gerenciamento de serviços
-  const handleServiceCreated = (service: InstitutionService) => {
-    Alert.alert(
-      'Sucesso!',
-      `Serviço "${service.name}" foi criado com sucesso.`,
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handleServiceUpdated = (service: InstitutionService) => {
-    Alert.alert(
-      'Atualizado!',
-      `Serviço "${service.name}" foi atualizado com sucesso.`,
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handleServiceDeleted = (serviceId: string) => {
-    Alert.alert(
-      'Excluído!',
-      'Serviço foi excluído com sucesso.',
-      [{ text: 'OK' }]
-    );
-  };
-
   const loadInstitutionData = async () => {
     try {
       setLoading(true);
       await Promise.all([
         loadMyServices(),
-        loadInstitutionStats(),
-        loadPendingRequests()
+        loadInstitutionStats()
       ]);
     } catch (error) {
       console.error('Erro ao carregar dados da instituição:', error);
@@ -114,28 +85,13 @@ export const InstitutionDashboard: React.FC = () => {
       // Simular estatísticas da instituição
       // Em produção, calcular do banco de dados
       setInstitutionStats({
-        totalServices: 15,
-        activeServices: 12,
+        totalServiceTypes: 8,
+        totalSearches: 1247,
         totalReviews: 245,
-        averageRating: 4.6,
-        monthlyAppointments: 320,
-        newPatients: 89
+        averageRating: 4.6
       });
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
-    }
-  };
-
-  const loadPendingRequests = async () => {
-    try {
-      // Simular solicitações pendentes
-      setPendingRequests([
-        { id: '1', type: 'service_approval', professional: 'Dr. João Silva', specialty: 'Cardiologia' },
-        { id: '2', type: 'schedule_change', professional: 'Dra. Maria Santos', reason: 'Emergência' },
-        { id: '3', type: 'new_professional', name: 'Dr. Pedro Costa', specialty: 'Neurologia' },
-      ]);
-    } catch (error) {
-      console.error('Erro ao carregar solicitações:', error);
     }
   };
 
@@ -243,40 +199,6 @@ export const InstitutionDashboard: React.FC = () => {
     </TouchableOpacity>
   );
 
-  const renderPendingRequest = (request: any) => (
-    <View key={request.id} style={styles.requestCard}>
-      <View style={styles.requestHeader}>
-        <Ionicons 
-          name={
-            request.type === 'service_approval' ? 'checkmark-circle' :
-            request.type === 'schedule_change' ? 'time' : 'person-add'
-          } 
-          size={24} 
-          color={Colors.warning} 
-        />
-        <View style={styles.requestInfo}>
-          <Text style={styles.requestTitle}>
-            {request.type === 'service_approval' && 'Aprovação de Serviço'}
-            {request.type === 'schedule_change' && 'Mudança de Agenda'}
-            {request.type === 'new_professional' && 'Novo Profissional'}
-          </Text>
-          <Text style={styles.requestDescription}>
-            {request.professional || request.name} - {request.specialty || request.reason}
-          </Text>
-        </View>
-      </View>
-      
-      <View style={styles.requestActions}>
-        <TouchableOpacity style={styles.approveButton}>
-          <Text style={styles.approveButtonText}>Aprovar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.rejectButton}>
-          <Text style={styles.rejectButtonText}>Rejeitar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -315,16 +237,15 @@ export const InstitutionDashboard: React.FC = () => {
         </Text>
         <View style={styles.statsContainer}>
           {renderStatCard(
-            'medical', 
-            institutionStats.totalServices, 
-            'Total de Serviços', 
-            Colors.primary,
-            `${institutionStats.activeServices} ativos`
+            'list', 
+            institutionStats.totalServiceTypes, 
+            'Tipos de Serviços', 
+            Colors.primary
           )}
           {renderStatCard(
-            'people', 
-            institutionStats.monthlyAppointments, 
-            'Consultas/Mês', 
+            'search', 
+            institutionStats.totalSearches, 
+            'Procuras pela Instituição', 
             Colors.success
           )}
           {renderStatCard(
@@ -334,87 +255,33 @@ export const InstitutionDashboard: React.FC = () => {
             '#FFD700',
             `${institutionStats.totalReviews} avaliações`
           )}
-          {renderStatCard(
-            'person-add', 
-            institutionStats.newPatients, 
-            'Novos Pacientes', 
-            Colors.info
-          )}
         </View>
       </View>
 
       {/* Ações rápidas */}
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
-          {t('institution.quickActions') || 'Gestão Rápida'}
+          {t('institution.quickActions') || 'Gestão de Serviços'}
         </Text>
         
         {renderQuickAction(
-          'medical-outline',
-          t('institution.manageServices') || 'Gerenciar Serviços',
-          `${serviceStats.total} serviços cadastrados`,
+          'add-circle-outline',
+          t('institution.addServiceType') || 'Adicionar Tipo de Serviço',
+          'Cadastrar novo tipo de serviço',
           () => {
-            setShowServiceManagement(true);
+            Alert.alert('Em Desenvolvimento', 'Funcionalidade de adicionar tipo de serviço em breve');
           },
-          Colors.primary
+          Colors.success
         )}
         
         {renderQuickAction(
-          'people-outline',
-          t('institution.manageProfessionals') || 'Profissionais',
-          'Cadastrar e gerenciar equipe',
-          () => navigation.navigate('ManageProfessionals'),
-          Colors.success,
-          pendingRequests.filter(r => r.type === 'new_professional').length.toString()
-        )}
-        
-        {renderQuickAction(
-          'calendar-outline',
-          t('institution.scheduleManagement') || 'Agenda Geral',
-          'Visualizar agendas dos profissionais',
-          () => navigation.navigate('InstitutionSchedule'),
-          Colors.info
-        )}
-        
-        {renderQuickAction(
-          'bar-chart-outline',
-          t('institution.reports') || 'Relatórios',
-          'Métricas e análises detalhadas',
-          () => navigation.navigate('InstitutionReports'),
-          '#8B5CF6'
-        )}
-        
-        {renderQuickAction(
-          'settings-outline',
-          t('institution.settings') || 'Configurações',
-          'Configurar política e permissões',
-          () => navigation.navigate('InstitutionSettings'),
-          Colors.textSecondary
-        )}
-      </View>
-
-      {/* Solicitações pendentes */}
-      <View style={styles.pendingSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {t('institution.pendingRequests') || 'Solicitações Pendentes'}
-          </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('AllRequests')}>
-            <Text style={styles.seeAllText}>
-              {t('common.seeAll') || 'Ver todas'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        {pendingRequests.length > 0 ? (
-          pendingRequests.slice(0, 3).map(renderPendingRequest)
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="checkmark-done" size={48} color={Colors.textSecondary} />
-            <Text style={styles.emptyText}>
-              {t('institution.noPendingRequests') || 'Nenhuma solicitação pendente'}
-            </Text>
-          </View>
+          'remove-circle-outline',
+          t('institution.removeServiceType') || 'Remover Tipo de Serviço',
+          'Excluir tipo de serviço existente',
+          () => {
+            Alert.alert('Em Desenvolvimento', 'Funcionalidade de remover tipo de serviço em breve');
+          },
+          Colors.error
         )}
       </View>
 
@@ -466,34 +333,6 @@ export const InstitutionDashboard: React.FC = () => {
         )}
       </View>
 
-      {/* Desempenho mensal */}
-      <View style={styles.performanceSection}>
-        <Text style={styles.sectionTitle}>
-          {t('institution.monthlyPerformance') || 'Desempenho Mensal'}
-        </Text>
-        
-        <View style={styles.performanceCard}>
-          <View style={styles.performanceItem}>
-            <Text style={styles.performanceValue}>95%</Text>
-            <Text style={styles.performanceLabel}>Taxa de Ocupação</Text>
-          </View>
-          
-          <View style={styles.performanceDivider} />
-          
-          <View style={styles.performanceItem}>
-            <Text style={styles.performanceValue}>4.6</Text>
-            <Text style={styles.performanceLabel}>Satisfação Média</Text>
-          </View>
-          
-          <View style={styles.performanceDivider} />
-          
-          <View style={styles.performanceItem}>
-            <Text style={styles.performanceValue}>12</Text>
-            <Text style={styles.performanceLabel}>Novos Profissionais</Text>
-          </View>
-        </View>
-      </View>
-
       {/* Botão de logout */}
       <View style={styles.logoutSection}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -510,16 +349,16 @@ export const InstitutionDashboard: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Gerenciamento de Serviços</Text>
+              <Text style={styles.modalTitle}>Gerenciamento de Tipos de Serviços</Text>
               <TouchableOpacity onPress={() => setShowServiceManagement(false)}>
                 <Ionicons name="close" size={24} color={Colors.text} />
               </TouchableOpacity>
             </View>
-            <InstitutionServiceManagement
-              onServiceCreated={handleServiceCreated}
-              onServiceUpdated={handleServiceUpdated}
-              onServiceDeleted={handleServiceDeleted}
-            />
+            <View style={styles.modalContent}>
+              <Text style={styles.modalText}>
+                Funcionalidade de gerenciamento de tipos de serviços em desenvolvimento.
+              </Text>
+            </View>
           </View>
         </View>
       )}
@@ -916,5 +755,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: 'bold',
     color: Colors.text,
+  },
+  modalContent: {
+    padding: spacing.lg,
+  },
+  modalText: {
+    fontSize: fontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
 });
