@@ -177,7 +177,7 @@ export const ProfessionalDashboard: React.FC = () => {
           </View>
         ) : (
           <TouchableOpacity style={styles.createServicePrompt} onPress={() => {
-            Alert.alert('Em Desenvolvimento', 'Funcionalidade de criar serviço em breve');
+            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
           }}>
             <Ionicons name="add-circle" size={24} color={Colors.primary} />
             <Text style={styles.createServiceText}>
@@ -231,7 +231,7 @@ export const ProfessionalDashboard: React.FC = () => {
           t('professional.addServiceType') || 'Adicionar Tipo de Serviço',
           t('professional.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
           () => {
-            Alert.alert('Em Desenvolvimento', 'Funcionalidade de adicionar tipo de serviço em breve');
+            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
           },
           Colors.success
         )}
@@ -241,7 +241,7 @@ export const ProfessionalDashboard: React.FC = () => {
           t('professional.removeServiceType') || 'Remover Tipo de Serviço',
           t('professional.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
           () => {
-            Alert.alert('Em Desenvolvimento', 'Funcionalidade de remover tipo de serviço em breve');
+            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
           },
           Colors.error
         )}

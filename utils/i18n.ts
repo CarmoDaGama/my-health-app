@@ -236,6 +236,8 @@ const translations = {
     common: {
       ok: 'OK',
       cancel: 'Cancel',
+      comingSoon: 'Coming soon',
+      featureSoon: 'This feature will be available soon',
       save: 'Save',
       edit: 'Edit',
       delete: 'Delete',
@@ -582,6 +584,8 @@ const translations = {
       noPendingRequests: 'No pending requests',
       weeklyPerformance: 'Weekly Performance',
       addServiceType: 'Add Service Type',
+      addServiceTypeDesc: 'Register a new service type',
+      removeServiceTypeDesc: 'Remove an existing service type',
       removeServiceType: 'Remove Service Type',
     },
     
@@ -602,6 +606,11 @@ const translations = {
       noServices: 'No registered services',
       monthlyPerformance: 'Monthly Performance',
       addServiceType: 'Add Service Type',
+      addServiceTypeDesc: 'Register a new service type',
+      removeServiceTypeDesc: 'Remove an existing service type',
+      addFirstService: 'Register First Service',
+      addFirstServiceLog: 'Navigation to create service in development',
+      manageServicesDescription: 'Service type management feature is under development',
       removeServiceType: 'Remove Service Type',
     }
   },
@@ -835,6 +844,8 @@ const translations = {
     common: {
       ok: 'OK',
       cancel: 'Cancelar',
+      comingSoon: 'Em Desenvolvimento',
+      featureSoon: 'Funcionalidade disponível em breve',
       save: 'Salvar',
       edit: 'Editar',
       delete: 'Excluir',
@@ -1180,6 +1191,8 @@ const translations = {
       noPendingRequests: 'Nenhuma solicitação pendente',
       weeklyPerformance: 'Desempenho da Semana',
       addServiceType: 'Adicionar Tipo de Serviço',
+      addServiceTypeDesc: 'Cadastrar novo tipo de serviço',
+      removeServiceTypeDesc: 'Excluir tipo de serviço existente',
       removeServiceType: 'Remover Tipo de Serviço',
     },
     
@@ -1200,6 +1213,11 @@ const translations = {
       noServices: 'Nenhum serviço cadastrado',
       monthlyPerformance: 'Desempenho Mensal',
       addServiceType: 'Adicionar Tipo de Serviço',
+      addServiceTypeDesc: 'Cadastrar novo tipo de serviço',
+      removeServiceTypeDesc: 'Excluir tipo de serviço existente',
+      addFirstService: 'Cadastrar Primeiro Serviço',
+      addFirstServiceLog: 'Navegação para criação de serviços em desenvolvimento',
+      manageServicesDescription: 'Funcionalidade de gerenciamento de tipos de serviços em desenvolvimento.',
       removeServiceType: 'Remover Tipo de Serviço',
     }
   }

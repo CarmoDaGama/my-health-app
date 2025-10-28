@@ -385,7 +385,7 @@ export default function AdminDashboardScreen() {
           'settings-outline',
           t('admin.systemSettings') || 'Configurações',
           'Configurar sistema e políticas',
-          () => Alert.alert('Em Desenvolvimento', 'Configurações avançadas em breve'),
+          () => Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve'),
           Colors.textSecondary
         )}
       </View>
@@ -396,7 +396,7 @@ export default function AdminDashboardScreen() {
           <Text style={styles.sectionTitle}>
             {t('admin.recentActivities') || 'Atividades Recentes'}
           </Text>
-          <TouchableOpacity onPress={() => Alert.alert('Em Desenvolvimento', 'Logs completos em breve')}>
+          <TouchableOpacity onPress={() => Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve')}>
             <Text style={styles.seeAllText}>
               {t('common.seeAll') || 'Ver todas'}
             </Text>

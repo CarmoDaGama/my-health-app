@@ -184,7 +184,7 @@ export const InstitutionDashboard: React.FC = () => {
             styles.statusText,
             { color: service.isActive ? Colors.success : Colors.warning }
           ]}>
-            {service.isActive ? 'Ativo' : 'Inativo'}
+            {service.isActive ? t('status.active') : t('status.inactive')}
           </Text>
         </View>
       </View>
@@ -267,9 +267,9 @@ export const InstitutionDashboard: React.FC = () => {
         {renderQuickAction(
           'add-circle-outline',
           t('institution.addServiceType') || 'Adicionar Tipo de Serviço',
-          'Cadastrar novo tipo de serviço',
+          t('institution.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
           () => {
-            Alert.alert('Em Desenvolvimento', 'Funcionalidade de adicionar tipo de serviço em breve');
+            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
           },
           Colors.success
         )}
@@ -277,9 +277,9 @@ export const InstitutionDashboard: React.FC = () => {
         {renderQuickAction(
           'remove-circle-outline',
           t('institution.removeServiceType') || 'Remover Tipo de Serviço',
-          'Excluir tipo de serviço existente',
+          t('institution.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
           () => {
-            Alert.alert('Em Desenvolvimento', 'Funcionalidade de remover tipo de serviço em breve');
+            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
           },
           Colors.error
         )}
@@ -300,9 +300,9 @@ export const InstitutionDashboard: React.FC = () => {
           </TouchableOpacity>
         </View>
         
-        {loading ? (
+          {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Carregando...</Text>
+            <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
           </View>
         ) : myServices.length > 0 ? (
           <ScrollView 
@@ -322,11 +322,11 @@ export const InstitutionDashboard: React.FC = () => {
               style={styles.addServiceButton}
               onPress={() => {
                 // TODO: Implementar navegação para criação de serviços
-                console.log('Navegação para criação de serviços em desenvolvimento');
+                console.log(t('institution.addFirstServiceLog') || 'Navegação para criação de serviços em desenvolvimento');
               }}
             >
               <Text style={styles.addServiceButtonText}>
-                Cadastrar Primeiro Serviço
+                {t('institution.addFirstService') || 'Cadastrar Primeiro Serviço'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -349,14 +349,14 @@ export const InstitutionDashboard: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Gerenciamento de Tipos de Serviços</Text>
+                <Text style={styles.modalTitle}>{t('institution.manageServices') || 'Gerenciar Serviços'}</Text>
               <TouchableOpacity onPress={() => setShowServiceManagement(false)}>
                 <Ionicons name="close" size={24} color={Colors.text} />
               </TouchableOpacity>
             </View>
             <View style={styles.modalContent}>
               <Text style={styles.modalText}>
-                Funcionalidade de gerenciamento de tipos de serviços em desenvolvimento.
+                {t('institution.manageServicesDescription') || 'Funcionalidade de gerenciamento de tipos de serviços em desenvolvimento.'}
               </Text>
             </View>
           </View>

@@ -316,7 +316,7 @@ export const GuestDashboard: React.FC = () => {
         
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Carregando...</Text>
+            <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
           </View>
         ) : (
           <ScrollView 
