@@ -17,6 +17,7 @@ import { useAuth } from '../../hooks/useAuth-firebase';
 import { useReviews } from '../../hooks/useReviews';
 import { HealthService } from '../../types';
 import { HealthServiceAPIFirebase } from '../../services/api-firebase';
+import ServiceTypeManager from '../../components/specific/ServiceTypeManager';
 
 const { width } = Dimensions.get('window');
 
@@ -35,6 +36,7 @@ export const ProfessionalDashboard: React.FC = () => {
   });
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showServiceTypeManager, setShowServiceTypeManager] = useState(false);
 
   useEffect(() => {
     loadProfessionalData();
@@ -72,16 +74,24 @@ export const ProfessionalDashboard: React.FC = () => {
 
   const loadMonthlyStats = async () => {
     try {
-      // Simular estatísticas mensais
-      // Em produção, calcular do banco de dados
+      // Get real service types count from Firebase
+      const totalServiceTypes = await HealthServiceAPIFirebase.getUserServicesCount();
+      
       setMonthlyStats({
-        totalServiceTypes: 3,
+        totalServiceTypes,
+        totalSearches: 156, // Keep simulated for now
+        totalReviews: 8,    // Keep simulated for now
+        rating: 4.7         // Keep simulated for now
+      });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+      // Fallback to default values
+      setMonthlyStats({
+        totalServiceTypes: 0,
         totalSearches: 156,
         totalReviews: 8,
         rating: 4.7
       });
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
     }
   };
 
@@ -149,13 +159,14 @@ export const ProfessionalDashboard: React.FC = () => {
   );
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -220,7 +231,7 @@ export const ProfessionalDashboard: React.FC = () => {
         </View>
       </View>
 
-      {/* Ações rápidas */}
+      {/* Ações rápidas
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
           {t('professional.quickActions') || 'Gestão de Serviços'}
@@ -231,7 +242,7 @@ export const ProfessionalDashboard: React.FC = () => {
           t('professional.addServiceType') || 'Adicionar Tipo de Serviço',
           t('professional.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
           () => {
-            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+            setShowServiceTypeManager(true);
           },
           Colors.success
         )}
@@ -241,11 +252,11 @@ export const ProfessionalDashboard: React.FC = () => {
           t('professional.removeServiceType') || 'Remover Tipo de Serviço',
           t('professional.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
           () => {
-            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+            setShowServiceTypeManager(true);
           },
           Colors.error
         )}
-      </View>
+      </View> */}
 
       {/* Botão de logout */}
       <View style={styles.logoutSection}>
@@ -257,6 +268,17 @@ export const ProfessionalDashboard: React.FC = () => {
         </TouchableOpacity>
       </View>
     </ScrollView>
+
+      {/* Service Type Manager Modal */}
+      <ServiceTypeManager
+        visible={showServiceTypeManager}
+        onClose={() => {
+          setShowServiceTypeManager(false);
+          loadMonthlyStats(); // Refresh stats when modal closes
+        }}
+        userType="professional"
+      />
+    </View>
   );
 };
 

@@ -160,7 +160,158 @@ export class HealthServiceAPIFirebase {
       return { services, lastDoc: newLastDoc };
     } catch (error) {
       console.error('❌ Error fetching services:', error);
-      throw new Error('Erro ao buscar serviços de saúde');
+      throw new Error('Erro ao buscar serviços próximos');
+    }
+  }
+
+  /**
+   * Add service type to user's health service record
+   */
+  static async addServiceType(serviceType: string, userType: 'professional' | 'institution'): Promise<boolean> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Find user's health service record
+      const q = query(
+        collection(db, 'healthServices'),
+        where('createdBy', '==', user.uid)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        // Create new health service record if doesn't exist
+        const newServiceData = {
+          name: `Serviços ${userType === 'professional' ? 'Profissionais' : 'Institucionais'}`,
+          type: userType,
+          address: '',
+          city: '',
+          state: '',
+          coordinates: new GeoPoint(0, 0),
+          phone: '',
+          description: '',
+          services: [serviceType],
+          status: 'active',
+          createdBy: user.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        await addDoc(collection(db, 'healthServices'), newServiceData);
+        return true;
+      } else {
+        // Update existing record
+        const doc = querySnapshot.docs[0];
+        const currentData = doc.data();
+        const currentServices = currentData.services || [];
+        
+        // Check if service type already exists
+        if (currentServices.includes(serviceType)) {
+          throw new Error('Tipo de serviço já existe');
+        }
+        
+        const updatedServices = [...currentServices, serviceType];
+        
+        await updateDoc(doc.ref, {
+          services: updatedServices,
+          updatedAt: serverTimestamp()
+        });
+        
+        return true;
+      }
+    } catch (error) {
+      console.error('Error adding service type:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove service type from user's health service record
+   */
+  static async removeServiceType(serviceType: string): Promise<boolean> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const q = query(
+        collection(db, 'healthServices'),
+        where('createdBy', '==', user.uid)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        throw new Error('Nenhum registro de serviços encontrado');
+      }
+      
+      const doc = querySnapshot.docs[0];
+      const currentData = doc.data();
+      const currentServices = currentData.services || [];
+      
+      // Check if service type exists
+      if (!currentServices.includes(serviceType)) {
+        throw new Error('Tipo de serviço não encontrado');
+      }
+      
+      const updatedServices = currentServices.filter((service: string) => service !== serviceType);
+      
+      await updateDoc(doc.ref, {
+        services: updatedServices,
+        updatedAt: serverTimestamp()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error removing service type:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's service types
+   */
+  static async getUserServiceTypes(): Promise<string[]> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const q = query(
+        collection(db, 'healthServices'),
+        where('createdBy', '==', user.uid)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return [];
+      }
+      
+      const doc = querySnapshot.docs[0];
+      const data = doc.data();
+      return data.services || [];
+    } catch (error) {
+      console.error('Error getting user service types:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get total count of user's services
+   */
+  static async getUserServicesCount(): Promise<number> {
+    try {
+      const services = await this.getUserServiceTypes();
+      return services.length;
+    } catch (error) {
+      console.error('Error getting user services count:', error);
+      return 0;
     }
   }
 

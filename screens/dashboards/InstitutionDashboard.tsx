@@ -20,6 +20,7 @@ import { useInstitutionServices } from '../../hooks/useInstitutionServices';
 import { InstitutionServiceManagement } from '../../components/specific/InstitutionServiceManagement';
 import { InstitutionService } from '../../types/institutionService';
 import { UserDebugInfo } from '../../components/debug/UserDebugInfo';
+import ServiceTypeManager from '../../components/specific/ServiceTypeManager';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +43,7 @@ export const InstitutionDashboard: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showServiceManagement, setShowServiceManagement] = useState(false);
+  const [showServiceTypeManager, setShowServiceTypeManager] = useState(false);
 
   useEffect(() => {
     loadInstitutionData();
@@ -82,16 +84,24 @@ export const InstitutionDashboard: React.FC = () => {
 
   const loadInstitutionStats = async () => {
     try {
-      // Simular estatísticas da instituição
-      // Em produção, calcular do banco de dados
+      // Get real service types count from Firebase
+      const totalServiceTypes = await HealthServiceAPIFirebase.getUserServicesCount();
+      
       setInstitutionStats({
-        totalServiceTypes: 8,
+        totalServiceTypes,
+        totalSearches: 1247, // Keep simulated for now
+        totalReviews: 245,   // Keep simulated for now
+        averageRating: 4.6   // Keep simulated for now
+      });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+      // Fallback to default values
+      setInstitutionStats({
+        totalServiceTypes: 0,
         totalSearches: 1247,
         totalReviews: 245,
         averageRating: 4.6
       });
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
     }
   };
 
@@ -227,8 +237,8 @@ export const InstitutionDashboard: React.FC = () => {
         </Text>
       </View>
 
-      {/* Debug Info - apenas em desenvolvimento */}
-      <UserDebugInfo />
+      {/* Debug Info - apenas em desenvolvimento 
+      <UserDebugInfo />*/}
 
       {/* Estatísticas principais */}
       <View style={styles.statsSection}>
@@ -258,7 +268,7 @@ export const InstitutionDashboard: React.FC = () => {
         </View>
       </View>
 
-      {/* Ações rápidas */}
+      {/* Ações rápidas
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
           {t('institution.quickActions') || 'Gestão de Serviços'}
@@ -269,7 +279,7 @@ export const InstitutionDashboard: React.FC = () => {
           t('institution.addServiceType') || 'Adicionar Tipo de Serviço',
           t('institution.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
           () => {
-            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+            setShowServiceTypeManager(true);
           },
           Colors.success
         )}
@@ -279,11 +289,11 @@ export const InstitutionDashboard: React.FC = () => {
           t('institution.removeServiceType') || 'Remover Tipo de Serviço',
           t('institution.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
           () => {
-            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+            setShowServiceTypeManager(true);
           },
           Colors.error
         )}
-      </View>
+      </View> */}
 
       {/* Meus serviços */}
       <View style={styles.servicesSection}>
@@ -362,6 +372,16 @@ export const InstitutionDashboard: React.FC = () => {
           </View>
         </View>
       )}
+
+      {/* Service Type Manager Modal */}
+      <ServiceTypeManager
+        visible={showServiceTypeManager}
+        onClose={() => {
+          setShowServiceTypeManager(false);
+          loadInstitutionStats(); // Refresh stats when modal closes
+        }}
+        userType="institution"
+      />
     </View>
   );
 };

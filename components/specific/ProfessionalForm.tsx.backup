@@ -36,42 +36,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Lista de serviços disponíveis (mesma do registro)
-  const AVAILABLE_SERVICES = [
-    'Consultas Gerais',
-    'Cardiologia',
-    'Pediatria',
-    'Ginecologia',
-    'Dermatologia',
-    'Ortopedia',
-    'Neurologia',
-    'Psiquiatria',
-    'Oftalmologia',
-    'Otorrinolaringologia',
-    'Urologia',
-    'Endocrinologia',
-    'Reumatologia',
-    'Gastroenterologia',
-    'Pneumologia',
-    'Oncologia',
-    'Fisioterapia',
-    'Nutrição',
-    'Psicologia',
-    'Emergência',
-    'Cirurgia Geral'
-  ];
-
-  // Estados para coordenadas e localização
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(user.professionalInfo?.coordinates || null);
-  
-  // Estados para serviços
-  const [showServicesPicker, setShowServicesPicker] = useState(false);
-  const [selectedServices, setSelectedServices] = useState<string[]>(user.professionalInfo?.services || []);
-
-  // Aguardar dados completos do usuário
+  // Aguardar dados completos do usuário (temporariamente relaxado para debug)
   if (!user) {
     console.log('⏳ ProfessionalForm - Aguardando usuário...', {
       hasUser: !!user
@@ -79,7 +44,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
     return (
       <View style={styles.container}>
         <Text style={styles.loadingText}>
-          {t('common.loading') || 'Carregando dados do perfil...'}
+          {t('common.loading') || 'Carregando dados do usuário...'}
         </Text>
       </View>
     );
@@ -102,9 +67,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
       license: user.professionalInfo?.license || '',
       experience: user.professionalInfo?.experience?.toString() || '',
       bio: user.professionalInfo?.bio || '',
-      address: user.professionalInfo?.address || '', // Novo campo
-      services: user.professionalInfo?.services || [], // Novo campo
-      coordinates: user.professionalInfo?.coordinates || null, // Novo campo
       certifications: user.professionalInfo?.certifications?.join(', ') || '',
       consultationFee: user.professionalInfo?.consultationFee?.toString() || '',
       acceptsInsurance: user.professionalInfo?.acceptsInsurance || false,
@@ -139,9 +101,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         license: user.professionalInfo?.license || '',
         experience: user.professionalInfo?.experience?.toString() || '',
         bio: user.professionalInfo?.bio || '',
-        address: user.professionalInfo?.address || '', // Novo campo
-        services: user.professionalInfo?.services || [], // Novo campo
-        coordinates: user.professionalInfo?.coordinates || null, // Novo campo
         certifications: user.professionalInfo?.certifications?.join(', ') || '',
         consultationFee: user.professionalInfo?.consultationFee?.toString() || '',
         acceptsInsurance: user.professionalInfo?.acceptsInsurance || false,
@@ -156,10 +115,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         }
       }
     });
-
-    // Atualizar estados locais
-    setCoordinates(user.professionalInfo?.coordinates || null);
-    setSelectedServices(user.professionalInfo?.services || []);
   }, [user]);
 
   const weekDays = [
@@ -171,114 +126,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
     { key: 'saturday', name: t('profile.saturday') || 'Sábado' },
     { key: 'sunday', name: t('profile.sunday') || 'Domingo' },
   ];
-
-  // Handlers para os novos campos
-  const handleServiceToggle = (service: string) => {
-    const updatedServices = selectedServices.includes(service)
-      ? selectedServices.filter(s => s !== service)
-      : [...selectedServices, service];
-    
-    setSelectedServices(updatedServices);
-    setFormData(prev => ({
-      ...prev,
-      professionalInfo: {
-        ...prev.professionalInfo,
-        services: updatedServices
-      }
-    }));
-  };
-
-  const handleAddressChange = async (address: string) => {
-    setFormData(prev => ({
-      ...prev,
-      professionalInfo: {
-        ...prev.professionalInfo,
-        address
-      }
-    }));
-    
-    // Geocoding automático quando o endereço é alterado
-    if (address.length > 10) {
-      setIsGeocodingAddress(true);
-      try {
-        const result = await GeocodingService.getCoordinatesFromAddress(address);
-        if (result) {
-          setCoordinates(result.coordinates);
-          setFormData(prev => ({
-            ...prev,
-            professionalInfo: {
-              ...prev.professionalInfo,
-              coordinates: result.coordinates
-            }
-          }));
-          console.log('✅ Coordenadas obtidas automaticamente:', result.coordinates);
-        }
-      } catch (error) {
-        console.log('⚠️ Geocoding automático falhou, usuário pode usar GPS ou mapa');
-      } finally {
-        setIsGeocodingAddress(false);
-      }
-    }
-  };
-
-  const handleUseGPS = async () => {
-    setIsGettingLocation(true);
-    try {
-      const location = await LocationService.getCurrentLocation();
-      if (location) {
-        setCoordinates(location.coordinates);
-        setFormData(prev => ({
-          ...prev,
-          professionalInfo: {
-            ...prev.professionalInfo,
-            coordinates: location.coordinates
-          }
-        }));
-        
-        // Se obtivemos um endereço do GPS, atualizar também
-        if (location.address) {
-          setFormData(prev => ({
-            ...prev,
-            professionalInfo: {
-              ...prev.professionalInfo,
-              address: location.address!
-            }
-          }));
-        }
-        
-        Alert.alert(
-          t('common.success') || 'Localização Obtida!',
-          `Sua localização foi capturada com precisão de ${location.accuracy.toFixed(0)} metros.`,
-          [{ text: t('common.ok') || 'OK' }]
-        );
-      }
-    } catch (error) {
-      Alert.alert(
-        t('app.locationError'),
-        t('app.locationGpsError')
-      );
-    } finally {
-      setIsGettingLocation(false);
-    }
-  };
-
-  const handleLocationSelect = (coords: Coordinates, address?: string) => {
-    setCoordinates(coords);
-    setFormData(prev => ({
-      ...prev,
-      professionalInfo: {
-        ...prev.professionalInfo,
-        coordinates: coords,
-        ...(address && { address })
-      }
-    }));
-    
-    console.log('✅ Localização selecionada manualmente:', coords);
-  };
-
-  const formatCoordinates = (coords: Coordinates): string => {
-    return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
-  };
 
   const handleSave = () => {
     // Validações básicas
@@ -308,9 +155,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         license: formData.professionalInfo.license.trim(),
         experience: parseInt(formData.professionalInfo.experience) || 0,
         bio: formData.professionalInfo.bio.trim() || undefined,
-        address: formData.professionalInfo.address.trim(), // Novo campo
-        services: selectedServices, // Novo campo
-        coordinates: coordinates || undefined, // Novo campo
         certifications: formData.professionalInfo.certifications
           .split(',')
           .map(cert => cert.trim())
@@ -483,131 +327,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               editable={!isLoading}
             />
           </View>
-        </View>
 
-        {/* Serviços Oferecidos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.availableServices') || 'Serviços Oferecidos'}
-          </Text>
-          
-          <View style={styles.inputGroup}>
-            <TouchableOpacity
-              style={styles.servicesButton}
-              onPress={() => setShowServicesPicker(true)}
-              disabled={isLoading}
-            >
-              <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
-                {selectedServices.length > 0 
-                  ? `${selectedServices.length} serviço(s) selecionado(s)`
-                  : 'Selecionar serviços oferecidos'
-                }
-              </Text>
-            </TouchableOpacity>
-            
-            {selectedServices.length > 0 && (
-              <View style={styles.selectedServices}>
-                {selectedServices.map((service, index) => (
-                  <View key={index} style={styles.serviceTag}>
-                    <Text style={styles.serviceTagText}>{service}</Text>
-                    <TouchableOpacity
-                      onPress={() => handleServiceToggle(service)}
-                      style={styles.removeServiceButton}
-                    >
-                      <Text style={styles.removeServiceText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Localização do Consultório */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.officeLocation') || 'Localização do Consultório'}
-          </Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {t('profile.address') || 'Endereço'}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={formData.professionalInfo.address}
-              onChangeText={handleAddressChange}
-              placeholder={t('profile.addressPlaceholder') || 'Endereço do consultório'}
-              placeholderTextColor={Colors.textSecondary}
-              editable={!isLoading}
-            />
-            {isGeocodingAddress && (
-              <View style={styles.geocodingIndicator}>
-                <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.geocodingText}>Obtendo coordenadas...</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Seção de Coordenadas */}
-          <View style={styles.coordinatesSection}>
-            <Text style={styles.label}>Localização Exata</Text>
-            <Text style={styles.coordinatesHelp}>
-              Para melhor precisão no mapa, forneça as coordenadas exatas do consultório
-            </Text>
-            
-            {coordinates ? (
-              <View style={styles.coordinatesDisplay}>
-                <Text style={styles.coordinatesTitle}>📍 Coordenadas capturadas:</Text>
-                <Text style={styles.coordinatesText}>
-                  {formatCoordinates(coordinates)}
-                </Text>
-                <TouchableOpacity
-                  style={styles.updateLocationButton}
-                  onPress={() => setShowLocationPicker(true)}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.updateLocationButtonText}>
-                    Ajustar no Mapa
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.locationOptions}>
-                <TouchableOpacity
-                  style={styles.locationOption}
-                  onPress={handleUseGPS}
-                  disabled={isGettingLocation || isLoading}
-                >
-                  {isGettingLocation ? (
-                    <ActivityIndicator size="small" color={Colors.primary} />
-                  ) : (
-                    <Text style={styles.locationOptionText}>
-                      🎯 Usar GPS
-                    </Text>
-                  )}
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.locationOption}
-                  onPress={() => setShowLocationPicker(true)}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.locationOptionText}>
-                    📍 Selecionar no Mapa
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Configurações de Atendimento */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.consultationSettings') || 'Configurações de Atendimento'}
-          </Text>
-          
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               {t('profile.consultationFee') || 'Taxa de Consulta (AOA)'}
@@ -710,58 +430,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
           </Text>
         </TouchableOpacity>
       </ScrollView>
-      
-      {/* Modal de Seleção de Serviços */}
-      <Modal
-        visible={showServicesPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowServicesPicker(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Selecionar Serviços</Text>
-            <FlatList
-              data={AVAILABLE_SERVICES}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.serviceOption,
-                    selectedServices.includes(item) && styles.selectedServiceOption
-                  ]}
-                  onPress={() => handleServiceToggle(item)}
-                >
-                  <Text style={[
-                    styles.serviceOptionText,
-                    selectedServices.includes(item) && styles.selectedServiceOptionText
-                  ]}>
-                    {item}
-                  </Text>
-                  {selectedServices.includes(item) && (
-                    <Text style={styles.checkmark}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowServicesPicker(false)}
-            >
-              <Text style={styles.modalCloseText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal do LocationPicker */}
-      <LocationPicker
-        visible={showLocationPicker}
-        onClose={() => setShowLocationPicker(false)}
-        onLocationSelect={handleLocationSelect}
-        initialCoordinates={coordinates || undefined}
-        title="Selecionar Localização do Consultório"
-      />
       
       {/* Modal de Seleção de Especialidade */}
       <Modal
@@ -929,151 +597,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: 50,
-  },
-  // Novos estilos para serviços
-  servicesButton: {
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: spacing.md,
-    minHeight: 50,
-    justifyContent: 'center',
-  },
-  servicesButtonText: {
-    fontSize: 16,
-    color: Colors.text,
-  },
-  selectedServices: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: spacing.sm,
-  },
-  serviceTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    margin: 2,
-  },
-  serviceTagText: {
-    color: Colors.surface,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  removeServiceButton: {
-    marginLeft: 6,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeServiceText: {
-    color: Colors.surface,
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  // Novos estilos para coordenadas
-  geocodingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    padding: spacing.sm,
-    backgroundColor: Colors.accent + '20',
-    borderRadius: 6,
-  },
-  geocodingText: {
-    marginLeft: spacing.sm,
-    fontSize: 12,
-    color: Colors.primary,
-  },
-  coordinatesSection: {
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  coordinatesHelp: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginBottom: spacing.md,
-    lineHeight: 16,
-  },
-  coordinatesDisplay: {
-    backgroundColor: Colors.accent + '20',
-    padding: spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.accent + '40',
-  },
-  coordinatesTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary,
-    marginBottom: 4,
-  },
-  coordinatesText: {
-    fontSize: 12,
-    color: Colors.primary,
-    fontFamily: 'monospace',
-    marginBottom: spacing.sm,
-  },
-  updateLocationButton: {
-    backgroundColor: Colors.primary,
-    padding: spacing.sm,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  updateLocationButtonText: {
-    color: Colors.surface,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  locationOptions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  locationOption: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    padding: spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    minHeight: 50,
-    justifyContent: 'center',
-  },
-  locationOptionText: {
-    fontSize: 14,
-    color: Colors.text,
-    fontWeight: '500',
-  },
-  // Estilos para o modal de serviços
-  serviceOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border + '40',
-  },
-  selectedServiceOption: {
-    backgroundColor: Colors.accent + '20',
-  },
-  serviceOptionText: {
-    fontSize: 16,
-    color: Colors.text,
-  },
-  selectedServiceOptionText: {
-    color: Colors.primary,
-    fontWeight: '500',
   },
   // Estilos para seleção de especialidade
   specialtyButton: {

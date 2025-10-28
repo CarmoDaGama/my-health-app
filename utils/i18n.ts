@@ -236,6 +236,8 @@ const translations = {
     common: {
       ok: 'OK',
       cancel: 'Cancel',
+      add: 'Add',
+      manage: 'Manage',
       comingSoon: 'Coming soon',
       featureSoon: 'This feature will be available soon',
       save: 'Save',
@@ -612,6 +614,16 @@ const translations = {
       addFirstServiceLog: 'Navigation to create service in development',
       manageServicesDescription: 'Service type management feature is under development',
       removeServiceType: 'Remove Service Type',
+    },
+    
+    // Service Type Management translations
+    serviceType: {
+      management: 'Service Type Management',
+      addNew: 'Add New Service Type',
+      manageExisting: 'Manage Service Types',
+      addedSuccessfully: 'Service type added successfully!',
+      removedSuccessfully: 'Service type removed successfully!',
+      removeConfirm: 'Are you sure you want to remove',
     }
   },
   pt: {
@@ -844,6 +856,8 @@ const translations = {
     common: {
       ok: 'OK',
       cancel: 'Cancelar',
+      add: 'Adicionar',
+      manage: 'Gerenciar',
       comingSoon: 'Em Desenvolvimento',
       featureSoon: 'Funcionalidade disponível em breve',
       save: 'Salvar',
@@ -1219,6 +1233,16 @@ const translations = {
       addFirstServiceLog: 'Navegação para criação de serviços em desenvolvimento',
       manageServicesDescription: 'Funcionalidade de gerenciamento de tipos de serviços em desenvolvimento.',
       removeServiceType: 'Remover Tipo de Serviço',
+    },
+    
+    // Service Type Management translations
+    serviceType: {
+      management: 'Gestão de Tipos de Serviço',
+      addNew: 'Adicionar Novo Tipo de Serviço',
+      manageExisting: 'Gerenciar Tipos de Serviço',
+      addedSuccessfully: 'Tipo de serviço adicionado com sucesso!',
+      removedSuccessfully: 'Tipo de serviço removido com sucesso!',
+      removeConfirm: 'Tem certeza que deseja remover',
     }
   }
 };

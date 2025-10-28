@@ -350,7 +350,7 @@ export default function AdminDashboardScreen() {
         </View>
       </View>
 
-      {/* Quick Actions */}
+      {/* Quick Actions 
       <View style={styles.actionsSection}>
         <Text style={styles.sectionTitle}>
           {t('admin.quickActions') || 'Ações Administrativas'}
@@ -389,7 +389,7 @@ export default function AdminDashboardScreen() {
           Colors.textSecondary
         )}
       </View>
-
+*/}
       {/* Recent Activities */}
       <View style={styles.activitiesSection}>
         <View style={styles.sectionHeader}>

@@ -106,6 +106,7 @@ export interface Professional extends BaseUser {
     experience: number;
     bio?: string;
     certifications: string[];
+    services?: string[]; // Adicionar campo services
     coordinates?: Coordinates; // Padronizado: usar interface Coordinates
     address?: string; // Adicionar campo address separado
     workingHours: {
