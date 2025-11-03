@@ -92,10 +92,10 @@ export interface ProfessionalSpecific {
   license: string;
   experience: number;
   bio?: string;
-  certifications: string[];
-  workingHours: WorkingHours;
+  certifications?: string[]; // Opcional - não editável no formulário
+  workingHours?: WorkingHours; // Opcional - não editável no formulário
   consultationFee?: number;
-  acceptsInsurance: boolean;
+  acceptsInsurance?: boolean; // Opcional - não editável no formulário
   institutionId?: string;
   favoriteInstitutions: string[];
   services?: string[];

@@ -84,11 +84,11 @@ export const InstitutionDashboard: React.FC = () => {
 
   const loadInstitutionStats = async () => {
     try {
-      // Get real service types count from Firebase
-      const totalServiceTypes = await HealthServiceAPIFirebase.getUserServicesCount();
+      // Get count of offered services from institution info
+      const offeredServicesCount = (user as any)?.institutionInfo?.services?.length || 0;
       
       setInstitutionStats({
-        totalServiceTypes,
+        totalServiceTypes: offeredServicesCount,
         totalSearches: 1247, // Keep simulated for now
         totalReviews: 245,   // Keep simulated for now
         averageRating: 4.6   // Keep simulated for now
@@ -249,7 +249,7 @@ export const InstitutionDashboard: React.FC = () => {
           {renderStatCard(
             'list', 
             institutionStats.totalServiceTypes, 
-            'Tipos de Serviços', 
+            'Serviços Oferecidos', 
             Colors.primary
           )}
           {renderStatCard(
@@ -268,32 +268,20 @@ export const InstitutionDashboard: React.FC = () => {
         </View>
       </View>
 
-      {/* Ações rápidas
+      {/* Ações rápidas */}
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
-          {t('institution.quickActions') || 'Gestão de Serviços'}
+          {t('institution.quickActions') || 'Ações Rápidas'}
         </Text>
         
         {renderQuickAction(
-          'add-circle-outline',
-          t('institution.addServiceType') || 'Adicionar Tipo de Serviço',
-          t('institution.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
-          () => {
-            setShowServiceTypeManager(true);
-          },
-          Colors.success
+          'search',
+          t('dashboard.findServices') || 'Buscar Serviços',
+          t('dashboard.findServicesDesc') || 'Encontre profissionais próximos',
+          () => navigation.navigate('Map'),
+          Colors.info
         )}
-        
-        {renderQuickAction(
-          'remove-circle-outline',
-          t('institution.removeServiceType') || 'Remover Tipo de Serviço',
-          t('institution.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
-          () => {
-            setShowServiceTypeManager(true);
-          },
-          Colors.error
-        )}
-      </View> */}
+      </View>
 
       {/* Meus serviços */}
       <View style={styles.servicesSection}>

@@ -262,10 +262,15 @@ export class AuthServiceFirebase {
       
       return { success: true };
     } catch (error: any) {
-      console.error('Profile update error:', error);
+      console.error('❌ Profile update error detalhado:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        fullError: error
+      });
       return {
         success: false,
-        error: 'Erro ao atualizar perfil'
+        error: error.message || 'Erro ao atualizar perfil'
       };
     }
   }

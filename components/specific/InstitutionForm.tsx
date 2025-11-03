@@ -204,27 +204,27 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
   };
 
   const AVAILABLE_SERVICES = [
-    'Consultas Gerais',
-    'Cardiologia',
-    'Pediatria',
-    'Ginecologia',
-    'Dermatologia',
-    'Ortopedia',
-    'Neurologia',
-    'Psiquiatria',
-    'Oftalmologia',
-    'Otorrinolaringologia',
-    'Urologia',
-    'Endocrinologia',
-    'Reumatologia',
-    'Gastroenterologia',
-    'Pneumologia',
-    'Oncologia',
-    'Fisioterapia',
-    'Nutrição',
-    'Psicologia',
-    'Emergência',
-    'Cirurgia Geral'
+    { key: 'generalConsultations', label: t('medicalServices.generalConsultations') || 'Consultas Gerais' },
+    { key: 'cardiology', label: t('medicalServices.cardiology') || 'Cardiologia' },
+    { key: 'pediatrics', label: t('medicalServices.pediatrics') || 'Pediatria' },
+    { key: 'gynecology', label: t('medicalServices.gynecology') || 'Ginecologia' },
+    { key: 'dermatology', label: t('medicalServices.dermatology') || 'Dermatologia' },
+    { key: 'orthopedics', label: t('medicalServices.orthopedics') || 'Ortopedia' },
+    { key: 'neurology', label: t('medicalServices.neurology') || 'Neurologia' },
+    { key: 'psychiatry', label: t('medicalServices.psychiatry') || 'Psiquiatria' },
+    { key: 'ophthalmology', label: t('medicalServices.ophthalmology') || 'Oftalmologia' },
+    { key: 'otolaryngology', label: t('medicalServices.otolaryngology') || 'Otorrinolaringologia' },
+    { key: 'urology', label: t('medicalServices.urology') || 'Urologia' },
+    { key: 'endocrinology', label: t('medicalServices.endocrinology') || 'Endocrinologia' },
+    { key: 'rheumatology', label: t('medicalServices.rheumatology') || 'Reumatologia' },
+    { key: 'gastroenterology', label: t('medicalServices.gastroenterology') || 'Gastroenterologia' },
+    { key: 'pneumology', label: t('medicalServices.pneumology') || 'Pneumologia' },
+    { key: 'oncology', label: t('medicalServices.oncology') || 'Oncologia' },
+    { key: 'physiotherapy', label: t('medicalServices.physiotherapy') || 'Fisioterapia' },
+    { key: 'nutrition', label: t('medicalServices.nutrition') || 'Nutrição' },
+    { key: 'psychology', label: t('medicalServices.psychology') || 'Psicologia' },
+    { key: 'emergency', label: t('medicalServices.emergency') || 'Emergência' },
+    { key: 'generalSurgery', label: t('medicalServices.generalSurgery') || 'Cirurgia Geral' }
   ];
 
   const handleServiceToggle = (service: string) => {
@@ -472,7 +472,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
             >
               <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
                 {selectedServices.length > 0
-                  ? `${selectedServices.length} serviço(s) selecionado(s)`
+                  ? `${selectedServices.length} ${t('forms.servicesSelected') || 'serviço(s) selecionado(s)'}`
                   : (t('profile.selectServices') || 'Selecionar serviços oferecidos')}
               </Text>
             </TouchableOpacity>
@@ -672,22 +672,22 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
             <Text style={styles.modalTitle}>{t('profile.selectServices') || 'Selecionar Serviços'}</Text>
             <FlatList
               data={AVAILABLE_SERVICES}
-              keyExtractor={(item) => item}
+              keyExtractor={(item) => item.key}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[
                     styles.serviceOption,
-                    selectedServices.includes(item) && styles.selectedServiceOption
+                    selectedServices.includes(item.label) && styles.selectedServiceOption
                   ]}
-                  onPress={() => handleServiceToggle(item)}
+                  onPress={() => handleServiceToggle(item.label)}
                 >
                   <Text style={[
                     styles.serviceOptionText,
-                    selectedServices.includes(item) && styles.selectedServiceOptionText
+                    selectedServices.includes(item.label) && styles.selectedServiceOptionText
                   ]}>
-                    {item}
+                    {item.label}
                   </Text>
-                  {selectedServices.includes(item) && (
+                  {selectedServices.includes(item.label) && (
                     <Text style={styles.checkmark}>✓</Text>
                   )}
                 </TouchableOpacity>

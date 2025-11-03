@@ -132,22 +132,45 @@ export const EditProfileScreen: React.FC = () => {
   });
   console.log('🔍 EditProfileScreen - Dados RAW do usuário authUser:', JSON.stringify(authUser, null, 2));
   
-  // Se for profissional sem professionalInfo, criar um objeto básico temporário
+  // Se for profissional, garantir que professionalInfo existe (mesmo que vazio)
   let userForForm = authUser;
-  if (isProfessional(authUser) && !authUser.professionalInfo) {
-    console.log('⚠️ Profissional sem professionalInfo - criando objeto temporário');
-    userForForm = {
-      ...authUser,
-      professionalInfo: {
-        specialty: '',
-        license: '',
-        experience: 0,
-        bio: '',
-        certifications: [],
-        workingHours: {},
-        acceptsInsurance: false
-      }
-    } as Professional;
+  if (isProfessional(authUser)) {
+    console.log('👨‍⚕️ EditProfileScreen - É profissional');
+    console.log('📋 EditProfileScreen - professionalInfo atual:', authUser.professionalInfo);
+    
+    if (!authUser.professionalInfo) {
+      console.log('⚠️ EditProfileScreen - Profissional sem professionalInfo - criando objeto básico');
+      userForForm = {
+        ...authUser,
+        professionalInfo: {
+          specialty: '',
+          license: '',
+          experience: 0,
+          bio: '',
+          address: '',
+          services: [],
+          coordinates: undefined,
+        }
+      } as Professional;
+    } else {
+      console.log('✅ EditProfileScreen - Profissional com professionalInfo existente');
+      // Manter os dados existentes e garantir campos obrigatórios do formulário
+      userForForm = {
+        ...authUser,
+        professionalInfo: {
+          ...authUser.professionalInfo,
+          // Garantir valores padrão para campos obrigatórios do formulário
+          specialty: authUser.professionalInfo.specialty || '',
+          license: authUser.professionalInfo.license || '',
+          experience: authUser.professionalInfo.experience || 0,
+          bio: authUser.professionalInfo.bio || '',
+          address: authUser.professionalInfo.address || '',
+          services: authUser.professionalInfo.services || [],
+        }
+      } as Professional;
+    }
+    
+    console.log('📤 EditProfileScreen - userForForm.professionalInfo final:', userForForm.professionalInfo);
   }
   
   // Se for instituição sem institutionInfo, criar um objeto básico temporário

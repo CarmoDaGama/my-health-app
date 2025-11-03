@@ -74,11 +74,11 @@ export const ProfessionalDashboard: React.FC = () => {
 
   const loadMonthlyStats = async () => {
     try {
-      // Get real service types count from Firebase
-      const totalServiceTypes = await HealthServiceAPIFirebase.getUserServicesCount();
+      // Get count of offered services from professional info
+      const offeredServicesCount = (user as any)?.professionalInfo?.services?.length || 0;
       
       setMonthlyStats({
-        totalServiceTypes,
+        totalServiceTypes: offeredServicesCount,
         totalSearches: 156, // Keep simulated for now
         totalReviews: 8,    // Keep simulated for now
         rating: 4.7         // Keep simulated for now
@@ -117,19 +117,15 @@ export const ProfessionalDashboard: React.FC = () => {
     value: string | number, 
     label: string, 
     color: string,
-    trend?: string
+    subtitle?: string
   ) => (
     <View style={[styles.statCard, { borderColor: color + '30' }]}>
-      <View style={styles.statHeader}>
-        <Ionicons name={icon as any} size={24} color={color} />
-        {trend && (
-          <View style={[styles.trendBadge, { backgroundColor: color + '15' }]}>
-            <Text style={[styles.trendText, { color }]}>{trend}</Text>
-          </View>
-        )}
-      </View>
+      <Ionicons name={icon as any} size={24} color={color} />
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+      {subtitle && (
+        <Text style={styles.statSubtitle}>{subtitle}</Text>
+      )}
     </View>
   );
 
@@ -207,7 +203,7 @@ export const ProfessionalDashboard: React.FC = () => {
           {renderStatCard(
             'list', 
             monthlyStats.totalServiceTypes, 
-            'Tipos de Serviços', 
+            'Serviços Oferecidos', 
             Colors.primary
           )}
           {renderStatCard(
@@ -219,44 +215,27 @@ export const ProfessionalDashboard: React.FC = () => {
           {renderStatCard(
             'star', 
             monthlyStats.rating, 
-            'Avaliação', 
-            '#FFD700'
-          )}
-          {renderStatCard(
-            'chatbubble', 
-            monthlyStats.totalReviews, 
-            'Avaliações', 
-            Colors.info
+            'Avaliação Média', 
+            '#FFD700',
+            `${monthlyStats.totalReviews} avaliações`
           )}
         </View>
       </View>
 
-      {/* Ações rápidas
+      {/* Ações rápidas */}
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
-          {t('professional.quickActions') || 'Gestão de Serviços'}
+          {t('professional.quickActions') || 'Ações Rápidas'}
         </Text>
         
         {renderQuickAction(
-          'add-circle-outline',
-          t('professional.addServiceType') || 'Adicionar Tipo de Serviço',
-          t('professional.addServiceTypeDesc') || 'Cadastrar novo tipo de serviço',
-          () => {
-            setShowServiceTypeManager(true);
-          },
-          Colors.success
+          'search',
+          t('dashboard.findServices') || 'Buscar Serviços',
+          t('dashboard.findServicesDesc') || 'Encontre profissionais próximos',
+          () => navigation.navigate('Map'),
+          Colors.info
         )}
-        
-        {renderQuickAction(
-          'remove-circle-outline',
-          t('professional.removeServiceType') || 'Remover Tipo de Serviço',
-          t('professional.removeServiceTypeDesc') || 'Excluir tipo de serviço existente',
-          () => {
-            setShowServiceTypeManager(true);
-          },
-          Colors.error
-        )}
-      </View> */}
+      </View>
 
       {/* Botão de logout */}
       <View style={styles.logoutSection}>
@@ -363,6 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
+    alignItems: 'center',
     borderWidth: 1,
   },
   statHeader: {
@@ -383,11 +363,20 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: fontSize.xl,
     fontWeight: 'bold',
+    marginTop: spacing.xs,
     marginBottom: spacing.xs,
   },
   statLabel: {
     fontSize: fontSize.sm,
+    color: Colors.text,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  statSubtitle: {
+    fontSize: fontSize.xs,
     color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
   },
   quickActionsSection: {
     paddingHorizontal: spacing.lg,

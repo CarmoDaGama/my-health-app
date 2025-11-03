@@ -241,13 +241,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { success: false, error: 'Usuário não autenticado' };
       }
 
+      console.log('🔄 useAuth.updateProfile - Iniciando atualização para:', user.id);
+      console.log('📝 useAuth.updateProfile - Updates recebidos:', JSON.stringify(updates, null, 2));
+
       const response = await AuthServiceFirebase.updateProfile(user.id, updates);
       
+      console.log('📥 useAuth.updateProfile - Resposta do AuthServiceFirebase:', response);
+      
       if (response.success) {
+        console.log('✅ useAuth.updateProfile - Sucesso! Buscando dados atualizados...');
         // Buscar dados atualizados do Firestore para garantir sincronização completa
         const updatedUserData = await AuthServiceFirebase.getUserData(user.id);
         
         if (updatedUserData) {
+          console.log('📊 useAuth.updateProfile - Dados atualizados do Firestore:', JSON.stringify(updatedUserData, null, 2));
           // Usar a função utilitária para normalizar preferences
           const normalizedPreferences = normalizePreferences(updatedUserData.preferences);
           
@@ -289,17 +296,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
             })
           };
           
+          console.log('✅ useAuth.updateProfile - Atualizando estado local com dados completos');
           setUser(completeUpdatedUser as any);
         } else {
+          console.log('⚠️ useAuth.updateProfile - Não foi possível buscar dados atualizados, usando fallback');
           // Fallback: atualizar apenas localmente se não conseguir buscar do Firestore
           setUser(current => current ? { ...current, ...updates } as any : null);
         }
+      } else {
+        console.error('❌ useAuth.updateProfile - Falha na atualização:', response.error);
       }
       
       return response;
     } catch (error) {
-      console.error('Update profile error:', error);
-      return { success: false, error: 'Erro ao atualizar perfil' };
+      console.error('❌ useAuth.updateProfile - Exception capturada:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : undefined,
+        fullError: error
+      });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro ao atualizar perfil'
+      };
     }
   };
 

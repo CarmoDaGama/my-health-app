@@ -105,15 +105,15 @@ export interface Professional extends BaseUser {
     license: string;
     experience: number;
     bio?: string;
-    certifications: string[];
-    services?: string[]; // Adicionar campo services
-    coordinates?: Coordinates; // Padronizado: usar interface Coordinates
-    address?: string; // Adicionar campo address separado
-    workingHours: {
+    certifications?: string[]; // Opcional - não editável no formulário
+    services?: string[];
+    coordinates?: Coordinates;
+    address?: string;
+    workingHours?: { // Opcional - não editável no formulário
       [key: string]: { start: string; end: string; available: boolean };
     };
     consultationFee?: number;
-    acceptsInsurance: boolean;
+    acceptsInsurance?: boolean; // Opcional - não editável no formulário
   };
   institutionId?: string;
   favoriteInstitutions: string[];

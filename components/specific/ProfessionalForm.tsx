@@ -18,7 +18,7 @@ import { Colors } from '../../constants/colors';
 import { spacing } from '../../constants/dimensions';
 import { useTranslation } from '../../hooks/useTranslation';
 import { Professional, Coordinates } from '../../types';
-import { MEDICAL_SPECIALTIES } from '../../constants/specialties';
+import { getTranslatedSpecialties, getTranslatedServices } from '../../constants/specialties';
 import { LocationPicker } from '../common/LocationPicker';
 import { GeocodingService } from '../../services/geocoding';
 import { LocationServiceExpo as LocationService } from '../../services/location-expo';
@@ -36,30 +36,9 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Lista de serviços disponíveis (mesma do registro)
-  const AVAILABLE_SERVICES = [
-    'Consultas Gerais',
-    'Cardiologia',
-    'Pediatria',
-    'Ginecologia',
-    'Dermatologia',
-    'Ortopedia',
-    'Neurologia',
-    'Psiquiatria',
-    'Oftalmologia',
-    'Otorrinolaringologia',
-    'Urologia',
-    'Endocrinologia',
-    'Reumatologia',
-    'Gastroenterologia',
-    'Pneumologia',
-    'Oncologia',
-    'Fisioterapia',
-    'Nutrição',
-    'Psicologia',
-    'Emergência',
-    'Cirurgia Geral'
-  ];
+  // Obter especialidades e serviços traduzidos
+  const translatedSpecialties = getTranslatedSpecialties(t);
+  const translatedServices = getTranslatedServices(t);
 
   // Estados para coordenadas e localização
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -85,18 +64,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
       address: user?.professionalInfo?.address || '',
       services: user?.professionalInfo?.services || [],
       coordinates: user?.professionalInfo?.coordinates || null,
-      certifications: user?.professionalInfo?.certifications?.join(', ') || '',
-      consultationFee: user?.professionalInfo?.consultationFee?.toString() || '',
-      acceptsInsurance: user?.professionalInfo?.acceptsInsurance || false,
-      workingHours: user?.professionalInfo?.workingHours || {
-        monday: { start: '', end: '', available: false },
-        tuesday: { start: '', end: '', available: false },
-        wednesday: { start: '', end: '', available: false },
-        thursday: { start: '', end: '', available: false },
-        friday: { start: '', end: '', available: false },
-        saturday: { start: '', end: '', available: false },
-        sunday: { start: '', end: '', available: false },
-      }
     }
   });
 
@@ -104,15 +71,21 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   useEffect(() => {
     if (!user) return;
     
-    console.log('🔄 ProfessionalForm - Atualizando dados do formulário:', {
-      userId: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      professionalInfo: user.professionalInfo
+    console.log('🔄 ProfessionalForm - useEffect disparado');
+    console.log('🔍 ProfessionalForm - User completo:', JSON.stringify(user, null, 2));
+    console.log('🔍 ProfessionalForm - professionalInfo detalhado:', {
+      exists: !!user.professionalInfo,
+      specialty: user.professionalInfo?.specialty,
+      license: user.professionalInfo?.license,
+      experience: user.professionalInfo?.experience,
+      bio: user.professionalInfo?.bio,
+      address: user.professionalInfo?.address,
+      services: user.professionalInfo?.services,
+      coordinates: user.professionalInfo?.coordinates,
+      allKeys: user.professionalInfo ? Object.keys(user.professionalInfo) : []
     });
     
-    setFormData({
+    const newFormData = {
       name: user.name || '',
       email: user.email || '',
       phone: user.phone || '',
@@ -124,24 +97,21 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         address: user.professionalInfo?.address || '',
         services: user.professionalInfo?.services || [],
         coordinates: user.professionalInfo?.coordinates || null,
-        certifications: user.professionalInfo?.certifications?.join(', ') || '',
-        consultationFee: user.professionalInfo?.consultationFee?.toString() || '',
-        acceptsInsurance: user.professionalInfo?.acceptsInsurance || false,
-        workingHours: user.professionalInfo?.workingHours || {
-          monday: { start: '', end: '', available: false },
-          tuesday: { start: '', end: '', available: false },
-          wednesday: { start: '', end: '', available: false },
-          thursday: { start: '', end: '', available: false },
-          friday: { start: '', end: '', available: false },
-          saturday: { start: '', end: '', available: false },
-          sunday: { start: '', end: '', available: false },
-        }
       }
-    });
+    };
+    
+    console.log('📝 ProfessionalForm - Novo formData:', JSON.stringify(newFormData, null, 2));
+    setFormData(newFormData);
 
     // Atualizar estados locais
-    setCoordinates(user.professionalInfo?.coordinates || null);
-    setSelectedServices(user.professionalInfo?.services || []);
+    const newCoordinates = user.professionalInfo?.coordinates || null;
+    const newServices = user.professionalInfo?.services || [];
+    
+    console.log('📍 ProfessionalForm - Atualizando coordenadas:', newCoordinates);
+    console.log('🔧 ProfessionalForm - Atualizando serviços:', newServices);
+    
+    setCoordinates(newCoordinates);
+    setSelectedServices(newServices);
   }, [user]);
 
   // Aguardar dados completos do usuário
@@ -164,16 +134,6 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
     userKeys: Object.keys(user || {}),
     userData: JSON.stringify(user, null, 2)
   });
-
-  const weekDays = [
-    { key: 'monday', name: t('profile.monday') || 'Segunda-feira' },
-    { key: 'tuesday', name: t('profile.tuesday') || 'Terça-feira' },
-    { key: 'wednesday', name: t('profile.wednesday') || 'Quarta-feira' },
-    { key: 'thursday', name: t('profile.thursday') || 'Quinta-feira' },
-    { key: 'friday', name: t('profile.friday') || 'Sexta-feira' },
-    { key: 'saturday', name: t('profile.saturday') || 'Sábado' },
-    { key: 'sunday', name: t('profile.sunday') || 'Domingo' },
-  ];
 
   // Handlers para os novos campos
   const handleServiceToggle = (service: string) => {
@@ -284,11 +244,16 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   };
 
   const handleSave = () => {
-    // Validações básicas
+    console.log('💾 ProfessionalForm.handleSave - Iniciando salvamento...');
+    console.log('📊 Estado atual do formData:', JSON.stringify(formData, null, 2));
+    console.log('📊 Serviços selecionados:', selectedServices);
+    console.log('📊 Coordenadas:', coordinates);
+    
+    // Validações básicas - alinhadas com RegisterScreen
     if (!formData.name.trim()) {
       Alert.alert(
         t('errors.title') || 'Erro',
-        t('profile.errors.nameRequired') || 'Nome é obrigatório'
+        t('validation.nameRequired') || 'Nome é obrigatório'
       );
       return;
     }
@@ -296,12 +261,20 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
     if (!formData.professionalInfo.specialty.trim()) {
       Alert.alert(
         t('errors.title') || 'Erro',
-        t('profile.errors.specialtyRequired') || 'Especialidade é obrigatória'
+        t('validation.specialtyRequired') || 'Especialidade é obrigatória'
       );
       return;
     }
 
-    // Preparar dados para salvar
+    if (!formData.professionalInfo.license.trim()) {
+      Alert.alert(
+        t('errors.title') || 'Erro',
+        t('validation.licenseRequired') || 'Número da licença é obrigatório'
+      );
+      return;
+    }
+
+    // Preparar dados para salvar - apenas os campos do RegisterScreen
     const updateData: Partial<Professional> = {
       name: formData.name.trim(),
       phone: formData.phone.trim() || undefined,
@@ -311,36 +284,16 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         license: formData.professionalInfo.license.trim(),
         experience: parseInt(formData.professionalInfo.experience) || 0,
         bio: formData.professionalInfo.bio.trim() || undefined,
-        address: formData.professionalInfo.address.trim(), // Novo campo
-        services: selectedServices, // Novo campo
-        coordinates: coordinates || undefined, // Novo campo
-        certifications: formData.professionalInfo.certifications
-          .split(',')
-          .map(cert => cert.trim())
-          .filter(cert => cert.length > 0),
-        consultationFee: parseFloat(formData.professionalInfo.consultationFee) || undefined,
-        acceptsInsurance: formData.professionalInfo.acceptsInsurance,
-        workingHours: formData.professionalInfo.workingHours
+        address: formData.professionalInfo.address.trim(),
+        services: selectedServices,
+        coordinates: coordinates || undefined,
       }
     };
 
+    console.log('📤 ProfessionalForm.handleSave - Dados preparados para envio:', JSON.stringify(updateData, null, 2));
+    console.log('📤 ProfessionalForm.handleSave - Chamando onSave...');
+    
     onSave(updateData);
-  };
-
-  const updateWorkingHours = (day: string, field: string, value: string | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      professionalInfo: {
-        ...prev.professionalInfo,
-        workingHours: {
-          ...prev.professionalInfo.workingHours,
-          [day]: {
-            ...prev.professionalInfo.workingHours[day],
-            [field]: value
-          }
-        }
-      }
-    }));
   };
 
   return (
@@ -404,15 +357,15 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
           </View>
         </View>
 
-        {/* Informações Profissionais */}
+        {/* Informações Profissionais - Alinhado com RegisterScreen */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {t('profile.professionalInfo') || 'Informações Profissionais'}
+            {t('forms.professionalInfo') || 'Informações Profissionais'}
           </Text>
           
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
-              {t('profile.specialty') || 'Especialidade'} *
+              {t('forms.specialty') || 'Especialidade'} *
             </Text>
             <TouchableOpacity
               style={styles.specialtyButton}
@@ -424,14 +377,14 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 !formData.professionalInfo.specialty && styles.placeholder
               ]}>
                 {formData.professionalInfo.specialty || 
-                 (t('profile.selectSpecialty') || 'Selecione uma especialidade')}
+                 (t('forms.specialtyPlaceholder') || 'Ex: Cardiologia, Pediatria...')}
               </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
-              {t('profile.license') || 'Número da Licença'}
+              {t('forms.licenseNumber') || 'Número da Licença'} *
             </Text>
             <TextInput
               style={styles.input}
@@ -440,7 +393,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 ...prev,
                 professionalInfo: { ...prev.professionalInfo, license: text }
               }))}
-              placeholder={t('profile.licensePlaceholder') || 'Número do registro profissional'}
+              placeholder={t('forms.licenseNumberPlaceholder') || 'Número do registro profissional'}
               placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
@@ -448,68 +401,8 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
-              {t('profile.experience') || 'Anos de Experiência'}
+              {t('forms.availableServices') || 'Serviços Disponíveis'} *
             </Text>
-            <TextInput
-              style={styles.input}
-              value={formData.professionalInfo.experience}
-              onChangeText={(text) => setFormData(prev => ({
-                ...prev,
-                professionalInfo: { ...prev.professionalInfo, experience: text }
-              }))}
-              placeholder="0"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="numeric"
-              editable={!isLoading}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {t('profile.bio') || 'Biografia/Descrição'}
-            </Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.professionalInfo.bio}
-              onChangeText={(text) => setFormData(prev => ({
-                ...prev,
-                professionalInfo: { ...prev.professionalInfo, bio: text }
-              }))}
-              placeholder={t('profile.bioPlaceholder') || 'Descreva sua experiência e abordagem profissional'}
-              placeholderTextColor={Colors.textSecondary}
-              multiline
-              numberOfLines={4}
-              editable={!isLoading}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {t('profile.certifications') || 'Certificações'}
-            </Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.professionalInfo.certifications}
-              onChangeText={(text) => setFormData(prev => ({
-                ...prev,
-                professionalInfo: { ...prev.professionalInfo, certifications: text }
-              }))}
-              placeholder={t('profile.certificationsPlaceholder') || 'Separe as certificações por vírgula'}
-              placeholderTextColor={Colors.textSecondary}
-              multiline
-              numberOfLines={3}
-              editable={!isLoading}
-            />
-          </View>
-        </View>
-
-        {/* Serviços Oferecidos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.availableServices') || 'Serviços Oferecidos'}
-          </Text>
-          
-          <View style={styles.inputGroup}>
             <TouchableOpacity
               style={styles.servicesButton}
               onPress={() => setShowServicesPicker(true)}
@@ -517,8 +410,8 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
             >
               <Text style={[styles.servicesButtonText, selectedServices.length === 0 && styles.placeholder]}>
                 {selectedServices.length > 0 
-                  ? `${selectedServices.length} serviço(s) selecionado(s)`
-                  : 'Selecionar serviços oferecidos'
+                  ? `${selectedServices.length} ${t('forms.servicesSelected') || 'serviço(s) selecionado(s)'}`
+                  : t('forms.selectServices') || 'Selecionar serviços'
                 }
               </Text>
             </TouchableOpacity>
@@ -539,44 +432,74 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               </View>
             )}
           </View>
-        </View>
 
-        {/* Localização do Consultório */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.officeLocation') || 'Localização do Consultório'}
-          </Text>
-          
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
-              {t('profile.address') || 'Endereço'}
+              {t('forms.yearsOfExperience') || 'Anos de Experiência'}
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={formData.professionalInfo.experience}
+              onChangeText={(text) => setFormData(prev => ({
+                ...prev,
+                professionalInfo: { ...prev.professionalInfo, experience: text }
+              }))}
+              placeholder={t('forms.yearsPlaceholder') || 'Ex: 5'}
+              placeholderTextColor={Colors.textSecondary}
+              keyboardType="numeric"
+              editable={!isLoading}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t('forms.address') || 'Endereço'} *
             </Text>
             <TextInput
               style={styles.input}
               value={formData.professionalInfo.address}
               onChangeText={handleAddressChange}
-              placeholder={t('profile.addressPlaceholder') || 'Endereço do consultório'}
+              placeholder={t('forms.officeAddress') || 'Endereço do consultório'}
               placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
             {isGeocodingAddress && (
               <View style={styles.geocodingIndicator}>
                 <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={styles.geocodingText}>Obtendo coordenadas...</Text>
+                <Text style={styles.geocodingText}>{t('forms.gettingCoordinates') || 'Obtendo coordenadas...'}</Text>
               </View>
             )}
           </View>
 
-          {/* Seção de Coordenadas */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t('forms.descriptionBiography') || 'Descrição/Biografia'} *
+            </Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.professionalInfo.bio}
+              onChangeText={(text) => setFormData(prev => ({
+                ...prev,
+                professionalInfo: { ...prev.professionalInfo, bio: text }
+              }))}
+              placeholder={t('forms.descriptionPlaceholder') || 'Descreva seus serviços...'}
+              placeholderTextColor={Colors.textSecondary}
+              multiline
+              numberOfLines={3}
+              editable={!isLoading}
+            />
+          </View>
+
+          {/* Seção de Coordenadas - Alinhado com RegisterScreen */}
           <View style={styles.coordinatesSection}>
-            <Text style={styles.label}>Localização Exata</Text>
+            <Text style={styles.label}>{t('forms.exactLocation') || 'Localização Exata'}</Text>
             <Text style={styles.coordinatesHelp}>
-              Para melhor precisão no mapa, forneça as coordenadas exatas do consultório
+              {t('app.locationPrecisionProfessional') || 'Para melhor precisão no mapa, capture sua localização exata:'}
             </Text>
             
             {coordinates ? (
               <View style={styles.coordinatesDisplay}>
-                <Text style={styles.coordinatesTitle}>📍 Coordenadas capturadas:</Text>
+                <Text style={styles.coordinatesTitle}>📍 {t('forms.coordinatesCaptured') || 'Coordenadas capturadas'}:</Text>
                 <Text style={styles.coordinatesText}>
                   {formatCoordinates(coordinates)}
                 </Text>
@@ -586,7 +509,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                   disabled={isLoading}
                 >
                   <Text style={styles.updateLocationButtonText}>
-                    Ajustar no Mapa
+                    {t('app.adjustOnMap') || 'Ajustar no Mapa'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -601,7 +524,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                     <ActivityIndicator size="small" color={Colors.primary} />
                   ) : (
                     <Text style={styles.locationOptionText}>
-                      🎯 Usar GPS
+                      🎯 {t('forms.useGPS') || 'Usar GPS'}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -612,106 +535,12 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                   disabled={isLoading}
                 >
                   <Text style={styles.locationOptionText}>
-                    📍 Selecionar no Mapa
+                    {t('app.selectOnMap') || '📍 Selecionar no Mapa'}
                   </Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
-        </View>
-
-        {/* Configurações de Atendimento */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.consultationSettings') || 'Configurações de Atendimento'}
-          </Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {t('profile.consultationFee') || 'Taxa de Consulta (AOA)'}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={formData.professionalInfo.consultationFee}
-              onChangeText={(text) => setFormData(prev => ({
-                ...prev,
-                professionalInfo: { ...prev.professionalInfo, consultationFee: text }
-              }))}
-              placeholder="0.00"
-              placeholderTextColor={Colors.textSecondary}
-              keyboardType="decimal-pad"
-              editable={!isLoading}
-            />
-          </View>
-
-          <View style={styles.switchGroup}>
-            <Text style={styles.label}>
-              {t('profile.acceptsInsurance') || 'Aceita Seguro'}
-            </Text>
-            <Switch
-              value={formData.professionalInfo.acceptsInsurance}
-              onValueChange={(value) => setFormData(prev => ({
-                ...prev,
-                professionalInfo: { ...prev.professionalInfo, acceptsInsurance: value }
-              }))}
-              trackColor={{ false: Colors.border, true: Colors.accent }}
-              thumbColor={formData.professionalInfo.acceptsInsurance ? Colors.primary : Colors.textSecondary}
-              disabled={isLoading}
-            />
-          </View>
-        </View>
-
-        {/* Horário de Atendimento */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('profile.workingHours') || 'Horário de Atendimento'}
-          </Text>
-          
-          {weekDays.map(({ key, name }) => (
-            <View key={key} style={styles.dayGroup}>
-              <View style={styles.dayHeader}>
-                <Text style={styles.dayName}>{name}</Text>
-                <Switch
-                  value={formData.professionalInfo.workingHours[key]?.available || false}
-                  onValueChange={(value) => updateWorkingHours(key, 'available', value)}
-                  trackColor={{ false: Colors.border, true: Colors.accent }}
-                  thumbColor={formData.professionalInfo.workingHours[key]?.available ? Colors.primary : Colors.textSecondary}
-                  disabled={isLoading}
-                />
-              </View>
-              
-              {formData.professionalInfo.workingHours[key]?.available && (
-                <View style={styles.timeInputs}>
-                  <View style={styles.timeInput}>
-                    <Text style={styles.timeLabel}>
-                      {t('profile.startTime') || 'Início'}
-                    </Text>
-                    <TextInput
-                      style={styles.timeField}
-                      value={formData.professionalInfo.workingHours[key]?.start || ''}
-                      onChangeText={(text) => updateWorkingHours(key, 'start', text)}
-                      placeholder="08:00"
-                      placeholderTextColor={Colors.textSecondary}
-                      editable={!isLoading}
-                    />
-                  </View>
-                  <View style={styles.timeInput}>
-                    <Text style={styles.timeLabel}>
-                      {t('profile.endTime') || 'Fim'}
-                    </Text>
-                    <TextInput
-                      style={styles.timeField}
-                      value={formData.professionalInfo.workingHours[key]?.end || ''}
-                      onChangeText={(text) => updateWorkingHours(key, 'end', text)}
-                      placeholder="17:00"
-                      placeholderTextColor={Colors.textSecondary}
-                      editable={!isLoading}
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          ))}
         </View>
 
         {/* Botão Salvar */}
@@ -738,9 +567,9 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Selecionar Serviços</Text>
+            <Text style={styles.modalTitle}>{t('forms.selectServicesTitle') || 'Selecionar Serviços'}</Text>
             <FlatList
-              data={AVAILABLE_SERVICES}
+              data={translatedServices}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -766,7 +595,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               style={styles.modalCloseButton}
               onPress={() => setShowServicesPicker(false)}
             >
-              <Text style={styles.modalCloseText}>Fechar</Text>
+              <Text style={styles.modalCloseText}>{t('forms.close') || 'Fechar'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -794,7 +623,7 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               {t('profile.selectSpecialty') || 'Selecione uma Especialidade'}
             </Text>
             <FlatList
-              data={MEDICAL_SPECIALTIES}
+              data={translatedSpecialties}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -861,13 +690,6 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: spacing.md,
   },
-  switchGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-  },
   label: {
     fontSize: 16,
     fontWeight: '500',
@@ -886,46 +708,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     textAlignVertical: 'top',
-  },
-  dayGroup: {
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    padding: spacing.md,
-    backgroundColor: Colors.surface,
-  },
-  dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dayName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.text,
-  },
-  timeInputs: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  timeInput: {
-    flex: 1,
-  },
-  timeLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  timeField: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 6,
-    padding: spacing.sm,
-    fontSize: 14,
-    color: Colors.text,
-    textAlign: 'center',
   },
   saveButton: {
     backgroundColor: Colors.primary,
@@ -948,7 +730,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 50,
   },
-  // Novos estilos para serviços
+  // Estilos para serviços
   servicesButton: {
     backgroundColor: Colors.surface,
     borderRadius: 8,
@@ -995,7 +777,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  // Novos estilos para coordenadas
+  // Estilos para coordenadas
   geocodingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',

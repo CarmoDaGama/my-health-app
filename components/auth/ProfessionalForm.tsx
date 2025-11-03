@@ -6,6 +6,7 @@ import { GeocodingService } from '../../services/geocoding';
 import { LocationServiceExpo as LocationService } from '../../services/location-expo';
 import { Coordinates } from '../../types';
 import { useTranslation } from '../../hooks/useTranslation';
+import { getTranslatedServices } from '../../constants/specialties';
 
 interface ProfessionalFormProps {
   data: any;
@@ -13,32 +14,12 @@ interface ProfessionalFormProps {
   errors: Record<string, string>;
 }
 
-const AVAILABLE_SERVICES = [
-  'Consultas Gerais',
-  'Cardiologia',
-  'Pediatria',
-  'Ginecologia',
-  'Dermatologia',
-  'Ortopedia',
-  'Neurologia',
-  'Psiquiatria',
-  'Oftalmologia',
-  'Otorrinolaringologia',
-  'Urologia',
-  'Endocrinologia',
-  'Reumatologia',
-  'Gastroenterologia',
-  'Pneumologia',
-  'Oncologia',
-  'Fisioterapia',
-  'Nutrição',
-  'Psicologia',
-  'Emergência',
-  'Cirurgia Geral'
-];
-
 export default function ProfessionalForm({ data, onChange, errors }: ProfessionalFormProps) {
   const { t } = useTranslation();
+  
+  // Obter serviços traduzidos
+  const translatedServices = getTranslatedServices(t);
+  
   const [showServicesPicker, setShowServicesPicker] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>(data.services || []);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -278,7 +259,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{t('forms.selectServicesTitle')}</Text>
             <FlatList
-              data={AVAILABLE_SERVICES}
+              data={translatedServices}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <TouchableOpacity
