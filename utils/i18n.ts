@@ -13,6 +13,7 @@ const translations = {
       login: 'Login',
       register: 'Register',
       logout: 'Logout',
+      logoutConfirm: 'Are you sure you want to log out?',
       email: 'Email',
       password: 'Password',
       confirmPassword: 'Confirm Password',
@@ -129,6 +130,7 @@ const translations = {
       phonePlaceholder: 'Enter your phone',
       addressPlaceholder: 'Enter your address',
       emailNote: 'Email cannot be changed',
+      emailNotEditable: 'Email cannot be changed',
       notProvided: 'Not provided',
       changeLanguage: 'Change Language',
       changeLanguageConfirmation: 'Change language to',
@@ -168,12 +170,17 @@ const translations = {
       institutionNamePlaceholder: 'Name of health institution',
       type: 'Institution Type',
       description: 'Description',
-      services: 'Services Offered',
+  services: 'Services Offered',
+  selectServices: 'Select offered services',
       street: 'Street/Avenue',
       city: 'City',
       state: 'Province',
       zipCode: 'Postal Code',
       contactInfo: 'Contact Information',
+      contactPhone: 'Additional Contact Phone',
+      contactPhonePlaceholder: 'Additional phone',
+      contactEmail: 'Additional Contact Email',
+      contactEmailPlaceholder: 'Additional email for contact',
       website: 'Website',
       serviceSettings: 'Service Settings',
       emergencyService: '24h Emergency Service',
@@ -205,11 +212,28 @@ const translations = {
       startTime: 'Start Time',
       endTime: 'End Time',
       
+      // Medical services
+      emergencyMedical: 'Emergency',
+      maternityService: 'Maternity',
+      rehabilitationService: 'Rehabilitation',
+      dentalService: 'Dental',
+      physiotherapyService: 'Physiotherapy',
+      psychologyService: 'Psychology',
+      
+      // Service types for institutions
+      emergency: 'Emergency',
+      maternity: 'Maternity',
+      rehabilitation: 'Rehabilitation',
+      dental: 'Dental',
+      physiotherapy: 'Physiotherapy',
+      psychology: 'Psychology',
+      
       // Errors
       errors: {
         nameRequired: 'Name is required',
         specialtyRequired: 'Specialty is required',
         addressRequired: 'Complete address is required',
+        unknownUserType: 'Unknown user type:',
       },
       
       // Success messages
@@ -236,6 +260,7 @@ const translations = {
     common: {
       ok: 'OK',
       cancel: 'Cancel',
+      close: 'Close',
       add: 'Add',
       manage: 'Manage',
       comingSoon: 'Coming soon',
@@ -368,6 +393,8 @@ const translations = {
       invalidPhone: 'Invalid phone number format',
       phoneRequired: 'Phone number is required',
       updatePreferences: 'Could not update preferences',
+      userNotFound: 'User not found',
+      updateProfile: 'Error updating profile',
     },
 
     cache: {
@@ -632,6 +659,7 @@ const translations = {
       login: 'Entrar',
       register: 'Registrar',
       logout: 'Sair',
+      logoutConfirm: 'Tem certeza que deseja sair?',
       email: 'Email',
       password: 'Senha',
       confirmPassword: 'Confirmar Senha',
@@ -748,7 +776,8 @@ const translations = {
       phonePlaceholder: 'Digite seu telefone',
       addressPlaceholder: 'Digite seu endereço',
       emailNote: 'Email não pode ser alterado',
-      notProvided: 'Não informado',
+      emailNotEditable: 'O email não pode ser alterado',
+      notProvided: 'Não fornecido',
       changeLanguage: 'Alterar Idioma',
       changeLanguageConfirmation: 'Alterar idioma para',
       
@@ -788,12 +817,17 @@ const translations = {
       institutionNamePlaceholder: 'Nome da instituição de saúde',
       type: 'Tipo de Instituição',
       description: 'Descrição',
-      services: 'Serviços Oferecidos',
+  services: 'Serviços Oferecidos',
+  selectServices: 'Selecione os serviços oferecidos',
       street: 'Rua/Avenida',
       city: 'Cidade',
       state: 'Província',
       zipCode: 'Código Postal',
       contactInfo: 'Informações de Contato',
+      contactPhone: 'Telefone de Contato Adicional',
+      contactPhonePlaceholder: 'Telefone adicional',
+      contactEmail: 'Email de Contato Adicional',
+      contactEmailPlaceholder: 'Email adicional para contato',
       website: 'Website',
       serviceSettings: 'Configurações de Serviço',
       emergencyService: 'Atendimento de Emergência 24h',
@@ -825,11 +859,28 @@ const translations = {
       startTime: 'Início',
       endTime: 'Fim',
       
+      // Serviços médicos
+      emergencyMedical: 'Emergência',
+      maternityService: 'Maternidade',
+      rehabilitationService: 'Reabilitação',
+      dentalService: 'Odontologia',
+      physiotherapyService: 'Fisioterapia',
+      psychologyService: 'Psicologia',
+      
+      // Tipos de serviço para instituições
+      emergency: 'Emergência',
+      maternity: 'Maternidade',
+      rehabilitation: 'Reabilitação',
+      dental: 'Odontologia',
+      physiotherapy: 'Fisioterapia',
+      psychology: 'Psicologia',
+      
       // Erros
       errors: {
         nameRequired: 'Nome é obrigatório',
         specialtyRequired: 'Especialidade é obrigatória',
         addressRequired: 'Endereço completo é obrigatório',
+        unknownUserType: 'Tipo de usuário não reconhecido:',
       },
       
       // Mensagens de sucesso
@@ -856,6 +907,7 @@ const translations = {
     common: {
       ok: 'OK',
       cancel: 'Cancelar',
+      close: 'Fechar',
       add: 'Adicionar',
       manage: 'Gerenciar',
       comingSoon: 'Em Desenvolvimento',
@@ -988,6 +1040,8 @@ const translations = {
       invalidPhone: 'Formato de telefone inválido',
       phoneRequired: 'Número de telefone é obrigatório',
       updatePreferences: 'Não foi possível atualizar as preferências',
+      userNotFound: 'Usuário não encontrado',
+      updateProfile: 'Erro ao atualizar perfil',
     },
     cache: {
       cleared: 'Cache limpo com sucesso',

@@ -65,19 +65,15 @@ export const EditProfileScreen: React.FC = () => {
     setIsSaving(true);
 
     try {
-      console.log('🔄 Atualizando perfil do usuário:', authUser.id);
+      console.log('🔄 Chamando updateProfile do contexto/auth para:', authUser.id);
       console.log('📝 Dados de atualização:', JSON.stringify(updateData, null, 2));
 
-      const response = await UserProfileService.updateProfile(authUser.id, updateData);
-      console.log('📥 Resposta do UserProfileService:', response);
+      // Usar o updateProfile do contexto que atualiza o Firestore via AuthServiceFirebase
+      const response = await updateUserProfile(updateData as any);
+      console.log('📥 Resposta do contexto Auth updateProfile:', response);
 
-      if (response.success && response.user) {
-        console.log('✅ Perfil atualizado com sucesso, atualizando contexto...');
-        console.log('👤 Dados atualizados do usuário:', JSON.stringify(response.user, null, 2));
-        
-        // Atualizar usuário no contexto de autenticação
-        await updateUserProfile(response.user);
-
+      if (response && response.success) {
+        console.log('✅ Perfil atualizado com sucesso via AuthServiceFirebase');
         Alert.alert(
           t('common.success') || 'Sucesso',
           t('profile.updateSuccess') || 'Perfil atualizado com sucesso!',
@@ -89,8 +85,8 @@ export const EditProfileScreen: React.FC = () => {
           ]
         );
       } else {
-        console.error('❌ Falha na atualização:', response.error);
-        throw new Error(response.error || 'Falha ao atualizar perfil');
+        console.error('❌ Falha na atualização via Auth:', response?.error);
+        throw new Error(response?.error || 'Falha ao atualizar perfil');
       }
     } catch (error) {
       console.error('❌ Erro ao atualizar perfil:', error);
@@ -152,6 +148,40 @@ export const EditProfileScreen: React.FC = () => {
         acceptsInsurance: false
       }
     } as Professional;
+  }
+  
+  // Se for instituição sem institutionInfo, criar um objeto básico temporário
+  if (isInstitution(authUser) && !authUser.institutionInfo) {
+    console.log('⚠️ Instituição sem institutionInfo - criando objeto temporário');
+    userForForm = {
+      ...authUser,
+      institutionInfo: {
+        type: 'clinic' as const,
+        description: '',
+        services: [],
+        acceptsInsurance: false,
+        emergencyService: false,
+        coordinates: undefined,
+        address: {
+          street: '',
+          city: '',
+          state: '',
+          zipCode: ''
+        },
+        workingHours: {
+          monday: { start: '', end: '', available: false },
+          tuesday: { start: '', end: '', available: false },
+          wednesday: { start: '', end: '', available: false },
+          thursday: { start: '', end: '', available: false },
+          friday: { start: '', end: '', available: false },
+          saturday: { start: '', end: '', available: false },
+          sunday: { start: '', end: '', available: false }
+        },
+        verified: false,
+        rating: 0,
+        totalReviews: 0
+      }
+    } as Institution;
   }
   
   console.log('🔍 EditProfileScreen - Análise dos tipos:', {
@@ -222,7 +252,7 @@ export const EditProfileScreen: React.FC = () => {
       {!isNormalUser(userForForm) && !isProfessional(userForForm) && !isInstitution(userForForm) && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
-            Tipo de usuário não reconhecido: {(userForForm as any).userType}
+            {t('profile.errors.unknownUserType') || 'Tipo de usuário não reconhecido:'} {(userForForm as any).userType}
           </Text>
         </View>
       )}

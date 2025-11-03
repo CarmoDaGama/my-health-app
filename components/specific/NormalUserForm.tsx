@@ -29,23 +29,27 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
   const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
-    name: user.name || '',
-    phone: user.phone || '',
-    dateOfBirth: user.dateOfBirth || '',
-    gender: user.gender || '',
-    address: user.address || '',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    dateOfBirth: user?.dateOfBirth || '',
+    gender: user?.gender || '',
+    address: user?.address || '',
     emergencyContact: {
-      name: user.emergencyContact?.name || '',
-      phone: user.emergencyContact?.phone || '',
-      relationship: user.emergencyContact?.relationship || ''
+      name: user?.emergencyContact?.name || '',
+      phone: user?.emergencyContact?.phone || '',
+      relationship: user?.emergencyContact?.relationship || ''
     }
   });
 
   // Atualizar formData quando user props mudar
   useEffect(() => {
+    if (!user) return;
+    
     console.log('🔄 NormalUserForm - Atualizando dados do formulário:', {
       userId: user.id,
       name: user.name,
+      email: user.email,
       phone: user.phone,
       dateOfBirth: user.dateOfBirth,
       gender: user.gender,
@@ -55,6 +59,7 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
     
     setFormData({
       name: user.name || '',
+      email: user.email || '',
       phone: user.phone || '',
       dateOfBirth: user.dateOfBirth || '',
       gender: user.gender || '',
@@ -128,6 +133,21 @@ export const NormalUserForm: React.FC<NormalUserFormProps> = ({
               placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t('profile.email') || 'Email'}
+            </Text>
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={formData.email}
+              editable={false}
+              placeholderTextColor={Colors.textSecondary}
+            />
+            <Text style={styles.helpText}>
+              {t('profile.emailNotEditable') || 'O email não pode ser alterado'}
+            </Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -363,5 +383,15 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledInput: {
+    backgroundColor: Colors.border + '30',
+    color: Colors.textSecondary,
+  },
+  helpText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });

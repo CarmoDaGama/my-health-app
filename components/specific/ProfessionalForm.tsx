@@ -65,50 +65,30 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(user.professionalInfo?.coordinates || null);
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(user?.professionalInfo?.coordinates || null);
   
   // Estados para serviços
   const [showServicesPicker, setShowServicesPicker] = useState(false);
-  const [selectedServices, setSelectedServices] = useState<string[]>(user.professionalInfo?.services || []);
+  const [selectedServices, setSelectedServices] = useState<string[]>(user?.professionalInfo?.services || []);
 
-  // Aguardar dados completos do usuário
-  if (!user) {
-    console.log('⏳ ProfessionalForm - Aguardando usuário...', {
-      hasUser: !!user
-    });
-    return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>
-          {t('common.loading') || 'Carregando dados do perfil...'}
-        </Text>
-      </View>
-    );
-  }
-  
-  // Log dos dados recebidos
-  console.log('🔍 ProfessionalForm - Dados recebidos:', {
-    hasUser: !!user,
-    hasProfessionalInfo: !!user?.professionalInfo,
-    professionalInfoContent: user?.professionalInfo,
-    userKeys: Object.keys(user || {}),
-    userData: JSON.stringify(user, null, 2)
-  });
-  
+  const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
+
   const [formData, setFormData] = useState({
-    name: user.name || '',
-    phone: user.phone || '',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     professionalInfo: {
-      specialty: user.professionalInfo?.specialty || '',
-      license: user.professionalInfo?.license || '',
-      experience: user.professionalInfo?.experience?.toString() || '',
-      bio: user.professionalInfo?.bio || '',
-      address: user.professionalInfo?.address || '', // Novo campo
-      services: user.professionalInfo?.services || [], // Novo campo
-      coordinates: user.professionalInfo?.coordinates || null, // Novo campo
-      certifications: user.professionalInfo?.certifications?.join(', ') || '',
-      consultationFee: user.professionalInfo?.consultationFee?.toString() || '',
-      acceptsInsurance: user.professionalInfo?.acceptsInsurance || false,
-      workingHours: user.professionalInfo?.workingHours || {
+      specialty: user?.professionalInfo?.specialty || '',
+      license: user?.professionalInfo?.license || '',
+      experience: user?.professionalInfo?.experience?.toString() || '',
+      bio: user?.professionalInfo?.bio || '',
+      address: user?.professionalInfo?.address || '',
+      services: user?.professionalInfo?.services || [],
+      coordinates: user?.professionalInfo?.coordinates || null,
+      certifications: user?.professionalInfo?.certifications?.join(', ') || '',
+      consultationFee: user?.professionalInfo?.consultationFee?.toString() || '',
+      acceptsInsurance: user?.professionalInfo?.acceptsInsurance || false,
+      workingHours: user?.professionalInfo?.workingHours || {
         monday: { start: '', end: '', available: false },
         tuesday: { start: '', end: '', available: false },
         wednesday: { start: '', end: '', available: false },
@@ -120,28 +100,30 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
     }
   });
 
-  const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
-
   // Atualizar formData quando user props mudar
   useEffect(() => {
+    if (!user) return;
+    
     console.log('🔄 ProfessionalForm - Atualizando dados do formulário:', {
       userId: user.id,
       name: user.name,
+      email: user.email,
       phone: user.phone,
       professionalInfo: user.professionalInfo
     });
     
     setFormData({
       name: user.name || '',
+      email: user.email || '',
       phone: user.phone || '',
       professionalInfo: {
         specialty: user.professionalInfo?.specialty || '',
         license: user.professionalInfo?.license || '',
         experience: user.professionalInfo?.experience?.toString() || '',
         bio: user.professionalInfo?.bio || '',
-        address: user.professionalInfo?.address || '', // Novo campo
-        services: user.professionalInfo?.services || [], // Novo campo
-        coordinates: user.professionalInfo?.coordinates || null, // Novo campo
+        address: user.professionalInfo?.address || '',
+        services: user.professionalInfo?.services || [],
+        coordinates: user.professionalInfo?.coordinates || null,
         certifications: user.professionalInfo?.certifications?.join(', ') || '',
         consultationFee: user.professionalInfo?.consultationFee?.toString() || '',
         acceptsInsurance: user.professionalInfo?.acceptsInsurance || false,
@@ -161,6 +143,27 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
     setCoordinates(user.professionalInfo?.coordinates || null);
     setSelectedServices(user.professionalInfo?.services || []);
   }, [user]);
+
+  // Aguardar dados completos do usuário
+  if (!user) {
+    console.log('⏳ ProfessionalForm - Aguardando usuário...');
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>
+          {t('common.loading') || 'Carregando dados do perfil...'}
+        </Text>
+      </View>
+    );
+  }
+  
+  // Log dos dados recebidos
+  console.log('🔍 ProfessionalForm - Dados recebidos:', {
+    hasUser: !!user,
+    hasProfessionalInfo: !!user?.professionalInfo,
+    professionalInfoContent: user?.professionalInfo,
+    userKeys: Object.keys(user || {}),
+    userData: JSON.stringify(user, null, 2)
+  });
 
   const weekDays = [
     { key: 'monday', name: t('profile.monday') || 'Segunda-feira' },
@@ -368,6 +371,21 @@ export const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              {t('profile.email') || 'Email'}
+            </Text>
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={formData.email}
+              editable={false}
+              placeholderTextColor={Colors.textSecondary}
+            />
+            <Text style={styles.helpText}>
+              {t('profile.emailNotEditable') || 'O email não pode ser alterado'}
+            </Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -1148,5 +1166,15 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledInput: {
+    backgroundColor: Colors.border + '30',
+    color: Colors.textSecondary,
+  },
+  helpText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });

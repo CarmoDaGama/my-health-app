@@ -136,7 +136,7 @@ export interface Institution extends BaseUser {
     workingHours: {
       [key: string]: { start: string; end: string; available: boolean };
     };
-    contactInfo: {
+    contactInfo?: {
       phone: string;
       email: string;
       website?: string;
