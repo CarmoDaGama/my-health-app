@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,14 @@ import {
   Dimensions,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, spacing, borderRadius, fontSize } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAuth } from '../../hooks/useAuth-firebase';
@@ -24,6 +29,7 @@ export const PatientDashboard: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const insets = useSafeAreaInsets();
   
   const [allServices, setAllServices] = useState<HealthService[]>([]);
   const [filteredServices, setFilteredServices] = useState<HealthService[]>([]);
@@ -31,11 +37,46 @@ export const PatientDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [mapRegion, setMapRegion] = useState<Region | null>(null);
+  const bottomPosition = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadServices();
     getUserLocation();
   }, []);
+
+  useEffect(() => {
+    // Listener para animar a barra de pesquisa baseado no teclado
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', 
+      (e) => {
+        const keyboardHeight = Platform.OS === 'ios' 
+          ? e.endCoordinates.height - insets.bottom
+          : e.endCoordinates.height;
+        
+        Animated.timing(bottomPosition, {
+          toValue: keyboardHeight,
+          duration: Platform.OS === 'ios' ? 250 : 200,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+    
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        Animated.timing(bottomPosition, {
+          toValue: 0,
+          duration: Platform.OS === 'ios' ? 250 : 200,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener?.remove();
+      keyboardDidShowListener?.remove();
+    };
+  }, [insets.bottom]);
 
   useEffect(() => {
     // Atualizar região do mapa quando os serviços filtrados ou pesquisa mudam
@@ -185,8 +226,14 @@ export const PatientDashboard: React.FC = () => {
         )}
       </View>
 
-      {/* Barra de pesquisa na parte inferior */}
-      <View style={styles.searchContainer}>
+      {/* Barra de pesquisa animada */}
+      <Animated.View style={[
+        styles.searchContainer, 
+        { 
+          bottom: bottomPosition,
+          paddingBottom: spacing.md + insets.bottom,
+        }
+      ]}>
         <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
           <TextInput
@@ -195,6 +242,9 @@ export const PatientDashboard: React.FC = () => {
             placeholderTextColor={Colors.textSecondary}
             value={searchQuery}
             onChangeText={handleSearch}
+            returnKeyType="search"
+            blurOnSubmit={true}
+            enablesReturnKeyAutomatically={true}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => handleSearch('')}>
@@ -212,7 +262,7 @@ export const PatientDashboard: React.FC = () => {
             <Ionicons name="person-circle" size={28} color={Colors.primary} />
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 };
@@ -253,6 +303,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+    zIndex: 1000,
   },
   searchBar: {
     flexDirection: 'row',
