@@ -292,6 +292,20 @@ const translations = {
       seeAll: 'See All',
     },
     
+    // Time
+    time: {
+      years: 'years',
+      year: 'year',
+      months: 'months',
+      month: 'month',
+      days: 'days',
+      day: 'day',
+      hours: 'hours',
+      hour: 'hour',
+      minutes: 'minutes',
+      minute: 'minute',
+    },
+    
     // Validation
     validation: {
       emailRequired: 'Email is required',
@@ -321,6 +335,7 @@ const translations = {
       search: 'Search health services...',
       searchPlaceholder: 'Search health services...',
       noResults: 'No services found',
+      servicesFound: 'services found',
       loading: 'Loading...',
       locationPermission: 'Location permission required',
       locationPermissionMessage: 'Please allow location access to find nearby services',
@@ -622,7 +637,9 @@ const translations = {
     
     // Professional dashboard translations
     professional: {
-      welcome: 'Welcome, Dr.',
+      welcome: 'Professional Panel',
+      subtitle: 'Manage your professional profile and services',
+      overview: 'Overview',
       createService: 'Create my service',
       monthlyStats: 'Monthly Statistics',
       quickActions: 'Quick Actions',
@@ -642,6 +659,9 @@ const translations = {
       addServiceTypeDesc: 'Register a new service type',
       removeServiceTypeDesc: 'Remove an existing service type',
       removeServiceType: 'Remove Service Type',
+      myServices: 'My Services',
+      noServices: 'No registered services',
+      addFirstService: 'Register First Service',
     },
     
     // Institution dashboard translations
@@ -1023,6 +1043,20 @@ const translations = {
       seeAll: 'Ver Todas',
     },
     
+    // Time
+    time: {
+      years: 'anos',
+      year: 'ano',
+      months: 'meses',
+      month: 'mês',
+      days: 'dias',
+      day: 'dia',
+      hours: 'horas',
+      hour: 'hora',
+      minutes: 'minutos',
+      minute: 'minuto',
+    },
+    
     // Validation
     validation: {
       emailRequired: 'Email é obrigatório',
@@ -1052,6 +1086,7 @@ const translations = {
       search: 'Buscar serviços de saúde...',
       searchPlaceholder: 'Pesquisar serviços de saúde...',
       noResults: 'Nenhum serviço encontrado',
+      servicesFound: 'serviços encontrados',
       loading: 'Carregando...',
       locationPermission: 'Permissão de localização necessária',
       locationPermissionMessage: 'Por favor, permita o acesso à localização para encontrar serviços próximos',
@@ -1352,7 +1387,9 @@ const translations = {
     
     // Professional dashboard translations
     professional: {
-      welcome: 'Bem-vindo, Dr(a).',
+      welcome: 'Painel Profissional',
+      subtitle: 'Gerencie seu perfil e serviços profissionais',
+      overview: 'Visão Geral',
       createService: 'Criar meu serviço',
       monthlyStats: 'Estatísticas do Mês',
       quickActions: 'Ações Rápidas',
@@ -1372,6 +1409,9 @@ const translations = {
       addServiceTypeDesc: 'Cadastrar novo tipo de serviço',
       removeServiceTypeDesc: 'Excluir tipo de serviço existente',
       removeServiceType: 'Remover Tipo de Serviço',
+      myServices: 'Meus Serviços',
+      noServices: 'Nenhum serviço cadastrado',
+      addFirstService: 'Cadastrar Primeiro Serviço',
     },
     
     // Institution dashboard translations

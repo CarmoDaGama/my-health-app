@@ -23,7 +23,27 @@ export const MapView: React.FC<MapViewProps> = ({
 }) => {
   const webViewRef = useRef<WebView>(null);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [mapKey, setMapKey] = useState(0);
   const { t } = useTranslation();
+
+  // Reconstruir mapa quando região muda significativamente
+  useEffect(() => {
+    setIsMapReady(false);
+    setMapKey(prev => prev + 1);
+  }, [region.latitude, region.longitude]);
+
+  // Função para calcular distância (Haversine formula)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Raio da Terra em km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   // Otimização: limitar número de serviços e ordenar por proximidade se houver localização do usuário
   const optimizedServices = useMemo(() => {
@@ -54,19 +74,6 @@ export const MapView: React.FC<MapViewProps> = ({
     // Limitar número de serviços para performance
     return processedServices.slice(0, maxServicesToShow);
   }, [services, userLocation, maxServicesToShow]);
-
-  // Função para calcular distância
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Raio da Terra em km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
 
   const getServiceIcon = (type: string) => {
     const icons = {
@@ -237,6 +244,7 @@ export const MapView: React.FC<MapViewProps> = ({
   return (
     <View style={styles.container}>
       <WebView
+        key={mapKey}
         ref={webViewRef}
         source={{ html: htmlContent }}
         style={styles.webview}

@@ -28,6 +28,7 @@ export const ProfessionalDashboard: React.FC = () => {
   const { reviews, loadReviews } = useReviews();
   
   const [myService, setMyService] = useState<HealthService | null>(null);
+  const [allServices, setAllServices] = useState<HealthService[]>([]);
   const [monthlyStats, setMonthlyStats] = useState({
     totalServiceTypes: 0,
     totalSearches: 0,
@@ -63,12 +64,17 @@ export const ProfessionalDashboard: React.FC = () => {
       // Buscar o serviço do profissional atual
       const servicesResult = await HealthServiceAPIFirebase.getAllServices();
       const services = servicesResult.services || servicesResult;
+      
+      // Armazenar todos os serviços
+      setAllServices(Array.isArray(services) ? services : []);
+      
       const myService = services.find((service: HealthService) => 
         service.createdBy === user?.id
       );
       setMyService(myService || null);
     } catch (error) {
       console.error('Erro ao carregar meu serviço:', error);
+      setAllServices([]);
     }
   };
 
@@ -110,6 +116,19 @@ export const ProfessionalDashboard: React.FC = () => {
         { text: t('auth.logout'), onPress: logout, style: 'destructive' }
       ]
     );
+  };
+
+  const navigateToMap = () => {
+    try {
+      console.log('🗺️ Navegando para Map com', allServices.length, 'serviços');
+      navigation.navigate('Map', { 
+        services: allServices,
+        searchQuery: ''
+      });
+    } catch (error) {
+      console.error('❌ Erro ao navegar para Map:', error);
+      Alert.alert('Erro', 'Não foi possível abrir o mapa. Tente novamente.');
+    }
   };
 
   const renderStatCard = (
@@ -168,7 +187,7 @@ export const ProfessionalDashboard: React.FC = () => {
         <View style={styles.headerTop}>
           <View style={styles.greeting}>
             <Text style={styles.greetingText}>
-              {t('professional.welcome') || 'Bem-vindo, Dr(a).'}
+              {t('professional.welcome') || 'Painel Profissional'}
             </Text>
             <Text style={styles.userName}>{user?.name || 'Profissional'}</Text>
           </View>
@@ -177,27 +196,15 @@ export const ProfessionalDashboard: React.FC = () => {
           </TouchableOpacity>
         </View>
         
-        {myService ? (
-          <View style={styles.serviceInfo}>
-            <Text style={styles.serviceName}>{myService.name}</Text>
-            <Text style={styles.serviceSpecialty}>{myService.specialty}</Text>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.createServicePrompt} onPress={() => {
-            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
-          }}>
-            <Ionicons name="add-circle" size={24} color={Colors.primary} />
-            <Text style={styles.createServiceText}>
-              {t('professional.createService') || 'Criar meu serviço'}
-            </Text>
-          </TouchableOpacity>
-        )}
+        <Text style={styles.subtitle}>
+          {t('professional.subtitle') || 'Gerencie seu perfil e serviços profissionais'}
+        </Text>
       </View>
 
-      {/* Estatísticas mensais */}
+      {/* Estatísticas principais */}
       <View style={styles.statsSection}>
         <Text style={styles.sectionTitle}>
-          {t('professional.monthlyStats') || 'Estatísticas do Mês'}
+          {t('professional.overview') || 'Visão Geral'}
         </Text>
         <View style={styles.statsContainer}>
           {renderStatCard(
@@ -232,8 +239,89 @@ export const ProfessionalDashboard: React.FC = () => {
           'search',
           t('dashboard.findServices') || 'Buscar Serviços',
           t('dashboard.findServicesDesc') || 'Encontre profissionais próximos',
-          () => navigation.navigate('Map'),
+          navigateToMap,
           Colors.info
+        )}
+      </View>
+
+      {/* Meus serviços */}
+      <View style={styles.servicesSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {t('professional.myServices') || 'Meus Serviços'}
+          </Text>
+          <TouchableOpacity onPress={() => {
+            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+          }}>
+            <Text style={styles.seeAllText}>
+              {t('common.seeAll') || 'Ver todos'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
+          </View>
+        ) : myService ? (
+          <View style={styles.servicesContainer}>
+            <TouchableOpacity 
+              style={styles.serviceCard}
+              onPress={() => {
+                Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+              }}
+            >
+              <View style={styles.serviceHeader}>
+                <View style={styles.serviceIcon}>
+                  <Ionicons name="person" size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.serviceInfo}>
+                  <Text style={styles.serviceName} numberOfLines={1}>
+                    {myService.name}
+                  </Text>
+                  <Text style={styles.serviceType}>
+                    {myService.specialty || myService.type}
+                  </Text>
+                </View>
+                <View style={[
+                  styles.statusBadge, 
+                  { backgroundColor: myService.isActive ? Colors.success + '15' : Colors.warning + '15' }
+                ]}>
+                  <Text style={[
+                    styles.statusText,
+                    { color: myService.isActive ? Colors.success : Colors.warning }
+                  ]}>
+                    {myService.isActive ? t('status.active') : t('status.inactive')}
+                  </Text>
+                </View>
+              </View>
+              
+              {myService.rating && (
+                <View style={styles.ratingContainer}>
+                  <Ionicons name="star" size={14} color="#FFD700" />
+                  <Text style={styles.rating}>{myService.rating}</Text>
+                  <Text style={styles.ratingCount}>({myService.reviewCount || 0})</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="medical-outline" size={48} color={Colors.textSecondary} />
+            <Text style={styles.emptyText}>
+              {t('professional.noServices') || 'Nenhum serviço cadastrado'}
+            </Text>
+            <TouchableOpacity 
+              style={styles.addServiceButton}
+              onPress={() => {
+                Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+              }}
+            >
+              <Text style={styles.addServiceButtonText}>
+                {t('professional.addFirstService') || 'Cadastrar Primeiro Serviço'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
@@ -290,6 +378,10 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: spacing.xs,
+  },
+  subtitle: {
+    fontSize: fontSize.md,
+    color: Colors.textSecondary,
   },
   serviceInfo: {
     backgroundColor: Colors.primary + '10',
@@ -557,6 +649,82 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  servicesSection: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  loadingContainer: {
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: Colors.textSecondary,
+    fontSize: fontSize.md,
+  },
+  servicesContainer: {
+    paddingRight: spacing.lg,
+  },
+  serviceCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  serviceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  serviceIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  serviceType: {
+    fontSize: fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  statusText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rating: {
+    fontSize: fontSize.sm,
+    color: Colors.text,
+    marginLeft: spacing.xs,
+    fontWeight: '600',
+  },
+  ratingCount: {
+    fontSize: fontSize.sm,
+    color: Colors.textSecondary,
+    marginLeft: spacing.xs,
+  },
+  addServiceButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  addServiceButtonText: {
+    color: Colors.surface,
+    fontSize: fontSize.md,
+    fontWeight: '600',
   },
   logoutSection: {
     padding: spacing.lg,

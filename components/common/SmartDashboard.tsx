@@ -39,9 +39,7 @@ export const SmartDashboard: React.FC<SmartDashboardProps> = ({
     
     case UserType.PROFESSIONAL:
       console.log('👨‍⚕️ Mostrando ProfessionalDashboard');
-      // Temporariamente, vamos testar o PatientDashboard
-      console.log('🧪 TESTE: Forçando PatientDashboard');
-      return <PatientDashboard />;
+      return <ProfessionalDashboard />;
     
     case UserType.INSTITUTION:
       console.log('🏥 Mostrando InstitutionDashboard');

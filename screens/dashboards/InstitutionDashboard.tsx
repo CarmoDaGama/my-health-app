@@ -34,6 +34,7 @@ export const InstitutionDashboard: React.FC = () => {
   const { services: institutionServices, stats: serviceStats, error: servicesError } = useInstitutionServices();
   
   const [myServices, setMyServices] = useState<HealthService[]>([]);
+  const [allServices, setAllServices] = useState<HealthService[]>([]);
   const [institutionStats, setInstitutionStats] = useState({
     totalServiceTypes: 0,
     totalSearches: 0,
@@ -78,8 +79,24 @@ export const InstitutionDashboard: React.FC = () => {
   };
 
   const loadMyServices = async () => {
-    // Usar os serviços do hook ao invés de carregar novamente
-    // Os serviços já são carregados pelo useInstitutionServices
+    try {
+      // Carregar todos os serviços
+      const servicesResult = await HealthServiceAPIFirebase.getAllServices();
+      const services = servicesResult.services || servicesResult;
+      
+      // Armazenar todos os serviços
+      setAllServices(Array.isArray(services) ? services : []);
+      
+      // Filtrar apenas os serviços da instituição
+      const institutionServices = services.filter((service: HealthService) => 
+        service.createdBy === user?.id
+      );
+      setMyServices(Array.isArray(institutionServices) ? institutionServices : []);
+    } catch (error) {
+      console.error('Erro ao carregar serviços:', error);
+      setAllServices([]);
+      setMyServices([]);
+    }
   };
 
   const loadInstitutionStats = async () => {
@@ -120,6 +137,19 @@ export const InstitutionDashboard: React.FC = () => {
         { text: t('auth.logout'), onPress: logout, style: 'destructive' }
       ]
     );
+  };
+
+  const navigateToMap = () => {
+    try {
+      console.log('🗺️ Navegando para Map com', allServices.length, 'serviços');
+      navigation.navigate('Map', { 
+        services: allServices,
+        searchQuery: ''
+      });
+    } catch (error) {
+      console.error('❌ Erro ao navegar para Map:', error);
+      Alert.alert('Erro', 'Não foi possível abrir o mapa. Tente novamente.');
+    }
   };
 
   const renderStatCard = (
@@ -278,7 +308,7 @@ export const InstitutionDashboard: React.FC = () => {
           'search',
           t('dashboard.findServices') || 'Buscar Serviços',
           t('dashboard.findServicesDesc') || 'Encontre profissionais próximos',
-          () => navigation.navigate('Map'),
+          navigateToMap,
           Colors.info
         )}
       </View>

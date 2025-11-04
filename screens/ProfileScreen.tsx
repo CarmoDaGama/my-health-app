@@ -15,7 +15,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { UserAvatar, LanguageSelector } from '../components';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
-import { UserType, isProfessional, isInstitution } from '../types';
+import { UserType, isProfessional, isInstitution, NormalUser } from '../types';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
@@ -24,6 +24,27 @@ export const ProfileScreen: React.FC = () => {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const { setLanguage } = usePreferences();
+
+  // Debug: Log user data
+  React.useEffect(() => {
+    if (user) {
+      console.log('👤 ProfileScreen - Dados do usuário:', {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        userType: user.userType,
+        ...(user.userType === UserType.NORMAL_USER && {
+          dateOfBirth: (user as NormalUser).dateOfBirth,
+          gender: (user as NormalUser).gender,
+          address: (user as NormalUser).address,
+          emergencyContact: (user as NormalUser).emergencyContact
+        })
+      });
+    } else {
+      console.log('👤 ProfileScreen - Usuário não autenticado ou dados não carregados');
+    }
+  }, [user]);
 
   const handleEditProfile = () => {
     if (isAuthenticated && user) {
@@ -273,67 +294,16 @@ export const ProfileScreen: React.FC = () => {
         )}
       </View>
 
-      {/* Card com informações específicas do tipo de usuário */}
+      {/* Card com informações específicas do tipo de usuário - Apenas para Profissional e Instituição */}
       {user && (
-        user.userType === UserType.NORMAL_USER ||
         (isProfessional(user) && (user as any).professionalInfo) ||
         (isInstitution(user) && (user as any).institutionInfo)
       ) && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             {isProfessional(user) ? (t('profile.professionalInfo') || 'Informações Profissionais') :
-             isInstitution(user) ? (t('profile.institutionInfo') || 'Informações da Instituição') :
-             (t('profile.personalInfo') || 'Informações Pessoais')}
+             (t('profile.institutionInfo') || 'Informações da Instituição')}
           </Text>
-          
-          {/* Informações específicas para usuário normal */}
-          {user.userType === UserType.NORMAL_USER && (
-            <>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {t('profile.dateOfBirth') || 'Data de Nascimento'}
-                </Text>
-                <Text style={styles.infoValue}>
-                  {(user as any).dateOfBirth || (t('common.notProvided') || 'Não informado')}
-                </Text>
-              </View>
-              
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {t('profile.gender') || 'Gênero'}
-                </Text>
-                <Text style={styles.infoValue}>
-                  {(user as any).gender ? 
-                    ((user as any).gender === 'male' ? (t('gender.male') || 'Masculino') :
-                     (user as any).gender === 'female' ? (t('gender.female') || 'Feminino') :
-                     (t('gender.other') || 'Outro')) :
-                    (t('common.notProvided') || 'Não informado')
-                  }
-                </Text>
-              </View>
-              
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {t('profile.address') || 'Endereço'}
-                </Text>
-                <Text style={styles.infoValue}>
-                  {(user as any).address || (t('common.notProvided') || 'Não informado')}
-                </Text>
-              </View>
-              
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {t('profile.emergencyContact') || 'Contato de Emergência'}
-                </Text>
-                <Text style={styles.infoValue}>
-                  {(user as any).emergencyContact ? 
-                    `${(user as any).emergencyContact.name} (${(user as any).emergencyContact.relationship})` :
-                    (t('common.notProvided') || 'Não informado')
-                  }
-                </Text>
-              </View>
-            </>
-          )}
           
           {/* Informações específicas para profissional */}
           {isProfessional(user) && (user as any).professionalInfo && (
