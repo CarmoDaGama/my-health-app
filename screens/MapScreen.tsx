@@ -62,10 +62,10 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
       };
     }
 
-    // Região padrão (São Paulo)
+    // Região padrão (Luanda, Angola)
     return {
-      latitude: -23.5505,
-      longitude: -46.6333,
+      latitude: -8.8383,
+      longitude: 13.2344,
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     };

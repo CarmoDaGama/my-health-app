@@ -29,10 +29,13 @@ export const useLocation = () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
+      console.log('🔍 Hook useLocation: Obtendo localização...');
+      
       // Usar o novo serviço de localização com fallbacks
       const locationResult = await LocationService.getLocationWithFallback();
       
-      if (locationResult) {
+      if (locationResult && LocationService.isValidCoordinates(locationResult.coordinates)) {
+        console.log('✅ Hook useLocation: Localização válida obtida:', locationResult.coordinates);
         setState({
           location: locationResult.coordinates,
           loading: false,
@@ -42,13 +45,15 @@ export const useLocation = () => {
           timestamp: locationResult.timestamp,
         });
       } else {
+        console.log('⚠️ Hook useLocation: Não foi possível obter localização válida');
         setState(prev => ({
           ...prev,
           loading: false,
-          error: 'Não foi possível obter localização',
+          error: 'Não foi possível obter localização válida',
         }));
       }
     } catch (error: any) {
+      console.error('❌ Hook useLocation: Erro ao obter localização:', error);
       setState(prev => ({
         ...prev,
         loading: false,
@@ -61,10 +66,13 @@ export const useLocation = () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
+      console.log('🎯 Hook useLocation: Obtendo localização precisa (sem fallbacks)...');
+      
       // Usar método direto para maior precisão (sem fallbacks)
       const locationResult = await LocationService.getCurrentLocation();
       
-      if (locationResult) {
+      if (locationResult && LocationService.isValidCoordinates(locationResult.coordinates)) {
+        console.log('✅ Hook useLocation: Localização precisa obtida:', locationResult.coordinates);
         setState({
           location: locationResult.coordinates,
           loading: false,
@@ -74,6 +82,7 @@ export const useLocation = () => {
           timestamp: locationResult.timestamp,
         });
       } else {
+        console.log('⚠️ Hook useLocation: Localização precisa não disponível');
         setState(prev => ({
           ...prev,
           loading: false,
@@ -81,6 +90,7 @@ export const useLocation = () => {
         }));
       }
     } catch (error: any) {
+      console.error('❌ Hook useLocation: Erro ao obter localização precisa:', error);
       setState(prev => ({
         ...prev,
         loading: false,

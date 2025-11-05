@@ -650,6 +650,9 @@ const translations = {
       nearbyServices: 'Nearby Services',
       recentServices: 'Recently Visited',
       noRecentServices: 'No recently visited services',
+      professionals: 'Professionals',
+      institutions: 'Institutions',
+      noResults: 'No results found',
     },
     
     // Professional dashboard translations
@@ -1417,6 +1420,9 @@ const translations = {
       nearbyServices: 'Serviços Próximos',
       recentServices: 'Visitados Recentemente',
       noRecentServices: 'Nenhum serviço visitado recentemente',
+      professionals: 'Profissionais',
+      institutions: 'Instituições',
+      noResults: 'Nenhum resultado encontrado',
     },
     
     // Professional dashboard translations

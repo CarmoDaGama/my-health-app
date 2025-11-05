@@ -88,11 +88,12 @@ export class LocationService {
         return null;
       }
 
-      // Obter localização atual com configuração otimizada
+      // Obter localização atual com configuração otimizada para maior precisão
       const locationData = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced, // Balanço entre precisão e velocidade
-        timeInterval: 5000, // Máximo 5 segundos para obter localização
+        accuracy: Location.Accuracy.BestForNavigation, // Máxima precisão disponível
+        timeInterval: 10000, // Aumentar timeout para 10 segundos
         distanceInterval: 0,
+        mayShowUserSettingsDialog: true, // Permitir que o usuário habilite GPS se necessário
       });
 
       const result: LocationResult = {
@@ -116,6 +117,25 @@ export class LocationService {
       }
 
       console.log('✅ Localização obtida:', result.coordinates);
+      
+      // Validar se as coordenadas estão em uma região razoável (não são (0,0) ou muito incorretas)
+      if (!this.isValidCoordinates(result.coordinates)) {
+        console.log('⚠️ Coordenadas inválidas recebidas:', result.coordinates);
+        throw new Error('Coordenadas inválidas');
+      }
+      
+      // Verificar se as coordenadas estão em Angola (para o contexto da aplicação)
+      if (!this.isLocationInAngola(result.coordinates)) {
+        console.log('⚠️ Localização fora de Angola:', result.coordinates);
+        
+        // Ainda retornamos a localização real, mas log da situação
+        Alert.alert(
+          'Localização Detectada',
+          'Você parece estar fora de Angola. Os serviços mostrados podem ser limitados.',
+          [{ text: 'OK' }]
+        );
+      }
+      
       return result;
     } catch (error: any) {
       console.error('❌ Erro ao obter localização:', error);
@@ -347,7 +367,11 @@ export class LocationService {
       longitude >= -180 &&
       longitude <= 180 &&
       !isNaN(latitude) &&
-      !isNaN(longitude)
+      !isNaN(longitude) &&
+      // Verificar se não são coordenadas "nulas" comuns
+      !(latitude === 0 && longitude === 0) &&
+      // Verificar se não são coordenadas obviamente incorretas
+      Math.abs(latitude) > 0.0001 && Math.abs(longitude) > 0.0001
     );
   }
 
@@ -379,22 +403,26 @@ export class LocationService {
    */
   static async getLocationWithFallback(): Promise<LocationResult | null> {
     try {
-      // Primeira tentativa: localização GPS
+      // Primeira tentativa: localização GPS de alta precisão
+      console.log('🎯 Tentativa 1: Localização GPS de alta precisão...');
       const location = await this.getCurrentLocation();
-      if (location) {
+      if (location && this.isValidCoordinates(location.coordinates)) {
+        console.log('✅ Localização GPS obtida com sucesso');
         return location;
       }
     } catch (error) {
-      console.log('⚠️ GPS falhou, tentando fallbacks...', error);
+      console.log('⚠️ GPS de alta precisão falhou, tentando fallbacks...', error);
     }
 
     try {
       // Fallback 1: Localização aproximada por rede (menos precisa)
+      console.log('🎯 Tentativa 2: Localização de rede...');
       const hasPermission = await this.requestLocationPermission();
       if (hasPermission) {
         const locationData = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Low, // Usar menor precisão
-          timeInterval: 10000, // Timeout maior
+          timeInterval: 15000, // Timeout maior
+          mayShowUserSettingsDialog: false, // Não mostrar dialog no fallback
         });
 
         const result: LocationResult = {
@@ -406,19 +434,21 @@ export class LocationService {
           timestamp: locationData.timestamp,
         };
 
-        console.log('✅ Localização obtida via rede (fallback 1)');
-        return result;
+        if (this.isValidCoordinates(result.coordinates)) {
+          console.log('✅ Localização de rede obtida (fallback 1)');
+          return result;
+        }
       }
     } catch (error) {
-      console.log('⚠️ Fallback 1 falhou, tentando fallback 2...', error);
+      console.log('⚠️ Fallback de rede falhou, usando localização padrão...', error);
     }
 
     // Fallback 2: Localização padrão (Luanda, Angola)
     console.log('📍 Usando localização padrão (Luanda, Angola)');
     return {
       coordinates: {
-        latitude: -8.8379,
-        longitude: 13.2894,
+        latitude: -8.8383, // Coordenadas mais precisas de Luanda
+        longitude: 13.2344,
       },
       accuracy: 50000, // 50km de precisão (muito baixa)
       timestamp: Date.now(),
