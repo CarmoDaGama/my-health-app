@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,104 +8,197 @@ import {
   TextInput,
   Alert,
   Dimensions,
+  Animated,
+  Keyboard,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, spacing, borderRadius, fontSize } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAuth } from '../../hooks/useAuth-firebase';
-import { HealthService } from '../../types';
+import { HealthService, Region } from '../../types';
 import { HealthServiceAPIFirebase } from '../../services/api-firebase';
 import { NavigationProp } from '../../types/navigation';
+import { MapView } from '../../components/specific/MapView';
+import { LocationService } from '../../services/location';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// Constantes para os estados da barra
+const SEARCH_BAR_HEIGHT = 80;
+const TABS_HEIGHT = 60;
+const EXPANDED_HEIGHT = height * 0.7;
+const DRAG_THRESHOLD = 50;
 
 export const GuestDashboard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { t } = useTranslation();
   const { continueAsGuest } = useAuth();
+  const insets = useSafeAreaInsets();
+  
+  const [allServices, setAllServices] = useState<HealthService[]>([]);
+  const [filteredServices, setFilteredServices] = useState<HealthService[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredServices, setFeaturedServices] = useState<HealthService[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [mapRegion, setMapRegion] = useState<Region | null>(null);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showTabs, setShowTabs] = useState(false);
+  
+  // Animações
+  const bottomPosition = useRef(new Animated.Value(0)).current;
+  const expandedHeight = useRef(new Animated.Value(SEARCH_BAR_HEIGHT)).current;
+  const dragY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     loadFeaturedServices();
+    getUserLocation();
   }, []);
+
+  useEffect(() => {
+    // Listener para animar a barra de pesquisa baseado no teclado
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', 
+      (e) => {
+        // Apenas adicionar padding suficiente para ficar acima do teclado
+        const keyboardHeight = Platform.OS === 'ios' 
+          ? e.endCoordinates.height - insets.bottom
+          : e.endCoordinates.height;
+        
+        Animated.timing(bottomPosition, {
+          toValue: Math.max(keyboardHeight - insets.bottom, 0), // Garantir que não seja negativo
+          duration: Platform.OS === 'ios' ? 250 : 200,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+    
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        Animated.timing(bottomPosition, {
+          toValue: 0,
+          duration: Platform.OS === 'ios' ? 250 : 200,
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener?.remove();
+      keyboardDidShowListener?.remove();
+    };
+  }, [insets.bottom]);
+
+  useEffect(() => {
+    // Atualizar região do mapa quando os serviços filtrados ou pesquisa mudam
+    const newRegion = getInitialRegion();
+    setMapRegion(newRegion);
+  }, [filteredServices, searchQuery, userLocation]);
 
     const loadFeaturedServices = async () => {
     try {
       console.log('🔄 Iniciando carregamento dos serviços em destaque...');
       setLoading(true);
-      const result = await HealthServiceAPIFirebase.getAllServices(6); // Get 6 featured services
+      const result = await HealthServiceAPIFirebase.getAllServices(); // Get all services
+      const services = result?.services || [];
+      
       console.log('📊 Resultado da API:', result);
       
-      if (result.services && result.services.length > 0) {
-        const featured = result.services.slice(0, 6);
-        setFeaturedServices(featured); // Take first 6 as featured
-        console.log('✅ Serviços em destaque carregados:', featured.length);
+      if (services && services.length > 0) {
+        setAllServices(Array.isArray(services) ? services : []);
+        setFilteredServices(Array.isArray(services) ? services : []);
+        const featured = services.slice(0, 6); // Take first 6 as featured
+        setFeaturedServices(featured); 
+        console.log('✅ Serviços carregados:', services.length);
       } else {
         console.log('⚠️ Nenhum serviço retornado pela API, usando dados mock');
         // Fallback para dados mock quando não há serviços na API
-        const mockServices = [
+        const mockServices: HealthService[] = [
           {
             id: 'mock-1',
             name: 'Hospital Américo Boavida',
-            type: 'hospital',
+            type: 'hospital' as const,
             address: 'Rua Amílcar Cabral, 105, Maianga, Luanda',
+            city: 'Luanda',
+            state: 'Luanda',
             coordinates: { latitude: -8.8383, longitude: 13.2344 },
+            phone: '+244 222 334 455',
+            description: 'Hospital público de referência',
             rating: 4.2,
-            specialty: 'Geral',
-            verified: true
+            specialty: 'Geral'
           },
           {
             id: 'mock-2',
             name: 'Clínica Girassol',
-            type: 'clinic',
+            type: 'clinic' as const,
             address: 'Avenida 4 de Fevereiro, 321, Ingombota, Luanda',
+            city: 'Luanda',
+            state: 'Luanda',
             coordinates: { latitude: -8.8368, longitude: 13.2343 },
+            phone: '+244 222 445 566',
+            description: 'Clínica geral com atendimento 24h',
             rating: 4.5,
-            specialty: 'Clínica Geral',
-            verified: true
+            specialty: 'Clínica Geral'
           },
           {
             id: 'mock-3',
             name: 'Hospital Josina Machel',
-            type: 'hospital',
+            type: 'hospital' as const,
             address: 'Rua Major Kanhangulo, 100, Ingombota, Luanda',
+            city: 'Luanda',
+            state: 'Luanda',
             coordinates: { latitude: -8.8300, longitude: 13.2400 },
+            phone: '+244 222 556 677',
+            description: 'Hospital especializado em emergências',
             rating: 4.0,
-            specialty: 'Emergência',
-            verified: true
+            specialty: 'Emergência'
           }
         ];
+        setAllServices(mockServices);
+        setFilteredServices(mockServices);
         setFeaturedServices(mockServices);
         console.log('✅ Usando serviços mock:', mockServices.length);
       }
     } catch (error) {
       console.error('❌ Erro ao carregar serviços em destaque:', error);
       // Em caso de erro, usar dados mock como fallback
-      const mockServices = [
+      const mockServices: HealthService[] = [
         {
           id: 'mock-1',
           name: 'Hospital Américo Boavida',
-          type: 'hospital',
+          type: 'hospital' as const,
           address: 'Rua Amílcar Cabral, 105, Maianga, Luanda',
+          city: 'Luanda',
+          state: 'Luanda',
           coordinates: { latitude: -8.8383, longitude: 13.2344 },
+          phone: '+244 222 334 455',
+          description: 'Hospital público de referência',
           rating: 4.2,
-          specialty: 'Geral',
-          verified: true
+          specialty: 'Geral'
         },
         {
           id: 'mock-2',
           name: 'Clínica Girassol',
-          type: 'clinic',
+          type: 'clinic' as const,
           address: 'Avenida 4 de Fevereiro, 321, Ingombota, Luanda',
+          city: 'Luanda',
+          state: 'Luanda',
           coordinates: { latitude: -8.8368, longitude: 13.2343 },
+          phone: '+244 222 445 566',
+          description: 'Clínica geral com atendimento 24h',
           rating: 4.5,
-          specialty: 'Clínica Geral',
-          verified: true
+          specialty: 'Clínica Geral'
         }
       ];
+      setAllServices(mockServices);
+      setFilteredServices(mockServices);
       setFeaturedServices(mockServices);
       console.log('✅ Fallback para serviços mock devido a erro');
     } finally {
@@ -113,40 +206,297 @@ export const GuestDashboard: React.FC = () => {
     }
   };
 
-  const handleSearch = () => {
-    console.log('🔍 handleSearch chamado:', {
-      searchQuery: searchQuery.trim(),
-      featuredServicesLength: featuredServices.length,
-      featuredServices: featuredServices.slice(0, 2) // Log apenas os primeiros 2 para não sobrecarregar
-    });
-    
-    if (searchQuery.trim()) {
-      console.log('✅ Navegando para Map com parâmetros:', {
-        services: featuredServices,
-        searchQuery: searchQuery.trim()
-      });
+  const getUserLocation = async () => {
+    try {
+      console.log('🔍 Obtendo localização do usuário no dashboard...');
       
-      try {
-        // Garantir que services é sempre um array válido
-        const servicesToSend = Array.isArray(featuredServices) ? featuredServices : [];
-        
-        navigation.navigate('Map', { 
-          services: servicesToSend,
-          searchQuery: searchQuery.trim()
+      // Usar o serviço de localização com fallbacks
+      const locationResult = await LocationService.getLocationWithFallback();
+      
+      if (locationResult) {
+        console.log('✅ Localização obtida:', locationResult.coordinates);
+        setUserLocation({
+          latitude: locationResult.coordinates.latitude,
+          longitude: locationResult.coordinates.longitude
         });
-        console.log('✅ Navegação iniciada com sucesso');
-      } catch (error) {
-        console.error('❌ Erro na navegação:', error);
-        Alert.alert('Erro', 'Não foi possível abrir o mapa. Tente novamente.');
+      } else {
+        console.log('⚠️ Não foi possível obter localização, usando padrão');
+        // Fallback para Luanda, Angola
+        setUserLocation({
+          latitude: -8.8383,
+          longitude: 13.2344
+        });
       }
-    } else {
-      console.log('⚠️ Query de busca vazia');
-      Alert.alert('Aviso', 'Digite algo para buscar');
+    } catch (error) {
+      console.error('❌ Erro ao obter localização:', error);
+      // Fallback para Luanda, Angola em caso de erro
+      setUserLocation({
+        latitude: -8.8383,
+        longitude: 13.2344
+      });
     }
+  };
+
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+    
+    if (!text.trim()) {
+      setFilteredServices(allServices);
+      return;
+    }
+
+    const query = text.toLowerCase();
+    const filtered = allServices.filter(service => 
+      service.name.toLowerCase().includes(query) ||
+      service.specialty?.toLowerCase().includes(query) ||
+      service.type.toLowerCase().includes(query) ||
+      service.description?.toLowerCase().includes(query)
+    );
+    
+    setFilteredServices(filtered);
+  };
+
+  const handleSearchSubmit = () => {
+    // Quando usuário pressiona enter ou botão de busca, não faz navegação
+    // A busca já é feita em tempo real no handleSearch
   };
 
   const handleServicePress = (service: HealthService) => {
     navigation.navigate('ServiceDetail', { service });
+  };
+
+  const handleTabPress = (tabName: string) => {
+    if (activeTab === tabName && isExpanded) {
+      // Se o tab já está ativo e expandido, colapsar
+      collapsePanel();
+    } else {
+      // Primeiro mostrar os tabs se não estiverem visíveis
+      if (!showTabs) {
+        setShowTabs(true);
+      }
+      // Expandir o painel para o tab selecionado
+      setActiveTab(tabName);
+      expandPanel();
+    }
+  };
+
+  const expandPanel = () => {
+    setIsExpanded(true);
+    Animated.timing(expandedHeight, {
+      toValue: height * 0.85, // 85% da altura da tela para melhor visualização
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const collapsePanel = () => {
+    Animated.timing(expandedHeight, {
+      toValue: showTabs ? SEARCH_BAR_HEIGHT + TABS_HEIGHT : SEARCH_BAR_HEIGHT,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => {
+      setIsExpanded(false);
+      setActiveTab(null);
+    });
+  };
+
+  const showTabsPanel = () => {
+    if (!showTabs) {
+      setShowTabs(true);
+      Animated.timing(expandedHeight, {
+        toValue: SEARCH_BAR_HEIGHT + TABS_HEIGHT,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+    }
+  };
+
+  const hideTabsPanel = () => {
+    if (showTabs && !isExpanded) {
+      setShowTabs(false);
+      Animated.timing(expandedHeight, {
+        toValue: SEARCH_BAR_HEIGHT,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+    }
+  };
+
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationY: dragY } }],
+    { useNativeDriver: false }
+  );
+
+  const onHandlerStateChange = (event: any) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      const { translationY, velocityY } = event.nativeEvent;
+      
+      // Reset drag position
+      dragY.setValue(0);
+      
+      // Se estiver expandido, não processar gestos (deixar o scroll funcionar)
+      if (isExpanded) {
+        return;
+      }
+      
+      // Determinar ação baseada na direção e velocidade do gesto
+      if (translationY < -DRAG_THRESHOLD || velocityY < -500) {
+        // Arrastar para cima - mostrar tabs
+        showTabsPanel();
+      } else if (translationY > DRAG_THRESHOLD || velocityY > 500) {
+        // Arrastar para baixo - esconder tabs (se não estiver expandido)
+        if (!isExpanded) {
+          hideTabsPanel();
+        }
+      }
+    }
+  };
+
+  const getProfessionals = () => {
+    return allServices.filter(service => 
+      service.type === 'professional' || 
+      service.specialty
+    );
+  };
+
+  const getInstitutions = () => {
+    return allServices.filter(service => 
+      service.type === 'hospital' || 
+      service.type === 'clinic' || 
+      service.type === 'pharmacy'
+    );
+  };
+
+  const getInitialRegion = (): Region => {
+    // Se há pesquisa ativa e serviços filtrados, centralizar nos serviços encontrados
+    if (searchQuery.trim() && filteredServices.length > 0) {
+      const latitudes = filteredServices.map(s => s.coordinates.latitude);
+      const longitudes = filteredServices.map(s => s.coordinates.longitude);
+      
+      const minLat = Math.min(...latitudes);
+      const maxLat = Math.max(...latitudes);
+      const minLng = Math.min(...longitudes);
+      const maxLng = Math.max(...longitudes);
+      
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      
+      const latDelta = (maxLat - minLat) * 1.5;
+      const lngDelta = (maxLng - minLng) * 1.5;
+      
+      return {
+        latitude: centerLat,
+        longitude: centerLng,
+        latitudeDelta: Math.max(latDelta, 0.05),
+        longitudeDelta: Math.max(lngDelta, 0.05),
+      };
+    }
+
+    // Se não há pesquisa ativa, priorizar localização do usuário
+    if (userLocation && !searchQuery.trim()) {
+      return {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      };
+    }
+
+    // Se há serviços mas sem pesquisa específica, mostrar todos os serviços
+    if (filteredServices.length > 0) {
+      const latitudes = filteredServices.map(s => s.coordinates.latitude);
+      const longitudes = filteredServices.map(s => s.coordinates.longitude);
+      
+      const minLat = Math.min(...latitudes);
+      const maxLat = Math.max(...latitudes);
+      const minLng = Math.min(...longitudes);
+      const maxLng = Math.max(...longitudes);
+      
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      
+      const latDelta = (maxLat - minLat) * 1.5;
+      const lngDelta = (maxLng - minLng) * 1.5;
+      
+      return {
+        latitude: centerLat,
+        longitude: centerLng,
+        latitudeDelta: Math.max(latDelta, 0.05),
+        longitudeDelta: Math.max(lngDelta, 0.05),
+      };
+    }
+
+    // Localização padrão (Luanda, Angola)
+    return {
+      latitude: -8.8383,
+      longitude: 13.2344,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    };
+  };
+
+  const renderTabContent = () => {
+    if (!activeTab || !isExpanded) return null;
+
+    let data: HealthService[] = [];
+    let title = '';
+
+    switch (activeTab) {
+      case 'professionals':
+        data = getProfessionals();
+        title = t('dashboard.professionals') || 'Profissionais Disponíveis';
+        break;
+      case 'institutions':
+        data = getInstitutions();
+        title = t('dashboard.institutions') || 'Instituições de Saúde';
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <>
+        <View style={styles.expandedHeader}>
+          <Text style={styles.expandedTitle}>{title}</Text>
+          <TouchableOpacity onPress={collapsePanel} style={styles.closeButton}>
+            <Ionicons name="close" size={24} color={Colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        {data.length > 0 ? (
+          data.map((item, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={styles.listItem}
+              onPress={() => handleServicePress(item)}
+            >
+              <View style={styles.listItemContent}>
+                <View style={styles.listItemIcon}>
+                  <Ionicons 
+                    name={activeTab === 'professionals' ? 'person' : 'business'} 
+                    size={20} 
+                    color={Colors.primary} 
+                  />
+                </View>
+                <View style={styles.listItemText}>
+                  <Text style={styles.listItemTitle}>{item.name}</Text>
+                  <Text style={styles.listItemSubtitle}>
+                    {item.specialty || item.type} • {item.address}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons name="search" size={48} color={Colors.textSecondary} />
+            <Text style={styles.emptyStateText}>
+              {t('dashboard.noResults') || 'Nenhum resultado encontrado'}
+            </Text>
+          </View>
+        )}
+      </>
+    );
   };
 
   const handleRegister = () => {
@@ -157,202 +507,218 @@ export const GuestDashboard: React.FC = () => {
     navigation.navigate('Login');
   };
 
-  const renderFeatureCard = (
-    icon: string, 
-    title: string, 
-    description: string, 
-    isPremium = false
-  ) => (
-    <View style={[styles.featureCard, isPremium && styles.premiumCard]}>
-      <View style={[styles.featureIcon, isPremium && styles.premiumIcon]}>
-        <Ionicons 
-          name={icon as any} 
-          size={24} 
-          color={isPremium ? Colors.primary : Colors.textSecondary} 
-        />
-      </View>
-      <Text style={[styles.featureTitle, isPremium && styles.premiumTitle]}>
-        {title}
-      </Text>
-      <Text style={styles.featureDescription}>{description}</Text>
-      {isPremium && (
-        <View style={styles.premiumBadge}>
-          <Text style={styles.premiumBadgeText}>Premium</Text>
-        </View>
-      )}
-    </View>
-  );
+  // const renderFeatureCard = (
+  //   icon: string, 
+  //   title: string, 
+  //   description: string, 
+  //   isPremium = false
+  // ) => (
+  //   <View style={[styles.featureCard, isPremium && styles.premiumCard]}>
+  //     <View style={[styles.featureIcon, isPremium && styles.premiumIcon]}>
+  //       <Ionicons 
+  //         name={icon as any} 
+  //         size={24} 
+  //         color={isPremium ? Colors.primary : Colors.textSecondary} 
+  //       />
+  //     </View>
+  //     <Text style={[styles.featureTitle, isPremium && styles.premiumTitle]}>
+  //       {title}
+  //     </Text>
+  //     <Text style={styles.featureDescription}>{description}</Text>
+  //     {isPremium && (
+  //       <View style={styles.premiumBadge}>
+  //         <Text style={styles.premiumBadgeText}>Premium</Text>
+  //       </View>
+  //     )}
+  //   </View>
+  // );
 
-  const renderServiceCard = (service: HealthService) => (
-    <TouchableOpacity 
-      key={service.id}
-      style={styles.serviceCard}
-      onPress={() => handleServicePress(service)}
-    >
-      <View style={styles.serviceHeader}>
-        <Ionicons 
-          name={service.type === 'professional' ? 'person' : 'medical'} 
-          size={20} 
-          color={Colors.primary} 
-        />
-        <Text style={styles.serviceName} numberOfLines={1}>
-          {service.name}
-        </Text>
+  // const renderServiceCard = (service: HealthService) => (
+  //   <TouchableOpacity 
+  //     key={service.id}
+  //     style={styles.serviceCard}
+  //     onPress={() => handleServicePress(service)}
+  //   >
+  //     <View style={styles.serviceHeader}>
+  //       <Ionicons 
+  //         name={service.type === 'professional' ? 'person' : 'medical'} 
+  //         size={20} 
+  //         color={Colors.primary} 
+  //       />
+  //       <Text style={styles.serviceName} numberOfLines={1}>
+  //         {service.name}
+  //       </Text>
+  //     </View>
+  //     <Text style={styles.serviceType}>
+  //       {service.specialty || service.type}
+  //     </Text>
+  //     {service.rating && (
+  //       <View style={styles.ratingContainer}>
+  //         <Ionicons name="star" size={14} color="#FFD700" />
+  //         <Text style={styles.rating}>{service.rating}</Text>
+  //       </View>
+  //     )}
+  //     <View style={styles.serviceFooter}>
+  //       <Text style={styles.serviceAddress} numberOfLines={1}>
+  //         {service.address}
+  //       </Text>
+  //       <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
+  //     </View>
+  //   </TouchableOpacity>
+  // );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
       </View>
-      <Text style={styles.serviceType}>
-        {service.specialty || service.type}
-      </Text>
-      {service.rating && (
-        <View style={styles.ratingContainer}>
-          <Ionicons name="star" size={14} color="#FFD700" />
-          <Text style={styles.rating}>{service.rating}</Text>
-        </View>
-      )}
-      <View style={styles.serviceFooter}>
-        <Text style={styles.serviceAddress} numberOfLines={1}>
-          {service.address}
-        </Text>
-        <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
-      </View>
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header com Logo e Ações */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.logo}>MEDILOCATOR</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>{t('auth.login')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        <Text style={styles.welcomeText}>
-          {t('guest.welcome') || 'Encontre profissionais de saúde próximos a você'}
-        </Text>
-      </View>
-
-      {/* Barra de Busca */}
-      <View style={styles.searchSection}>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color={Colors.textSecondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('app.searchPlaceholder') || 'Buscar serviços de saúde...'}
-            placeholderTextColor={Colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
+    <View style={styles.container}>
+      {/* Mapa */}
+      <View style={styles.mapContainer}>
+        {mapRegion && (
+          <MapView
+            services={filteredServices}
+            region={mapRegion}
+            onServicePress={handleServicePress}
+            userLocation={userLocation || undefined}
           />
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Ionicons name="arrow-forward" size={20} color={Colors.surface} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Convite para Registro */}
-      <View style={styles.ctaSection}>
-        <View style={styles.ctaCard}>
-          <Ionicons name="heart" size={32} color={Colors.primary} />
-          <Text style={styles.ctaTitle}>
-            {t('guest.ctaTitle') || 'Crie sua conta gratuita'}
-          </Text>
-          <Text style={styles.ctaDescription}>
-            {t('guest.ctaDescription') || 'Acesse recursos exclusivos e salve seus profissionais favoritos'}
-          </Text>
-          <TouchableOpacity style={styles.ctaButton} onPress={handleRegister}>
-            <Text style={styles.ctaButtonText}>
-              {t('auth.register') || 'Registrar Gratuitamente'}
-            </Text>
-            <Ionicons name="arrow-forward" size={16} color={Colors.surface} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Recursos Disponíveis */}
-      <View style={styles.featuresSection}>
-        <Text style={styles.sectionTitle}>
-          {t('guest.features') || 'O que você pode fazer'}
-        </Text>
-        
-        <View style={styles.featuresGrid}>
-          {renderFeatureCard(
-            'search',
-            t('guest.feature1Title') || 'Buscar Serviços',
-            t('guest.feature1Desc') || 'Encontre profissionais e instituições'
-          )}
-          
-          {renderFeatureCard(
-            'heart',
-            t('guest.feature2Title') || 'Salvar Favoritos',
-            t('guest.feature2Desc') || 'Guarde seus profissionais preferidos',
-            true
-          )}
-          
-          {renderFeatureCard(
-            'star',
-            t('guest.feature3Title') || 'Fazer Avaliações',
-            t('guest.feature3Desc') || 'Compartilhe sua experiência',
-            true
-          )}
-          
-          {renderFeatureCard(
-            'chatbubble',
-            t('guest.feature4Title') || 'Contato Direto',
-            t('guest.feature4Desc') || 'Fale diretamente com profissionais',
-            true
-          )}
-        </View>
-      </View>
-
-      {/* Serviços em Destaque */}
-      <View style={styles.featuredSection}>
-        <Text style={styles.sectionTitle}>
-          {t('guest.featured') || 'Serviços em Destaque'}
-        </Text>
-        
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
-          </View>
-        ) : (
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.servicesContainer}
-          >
-            {featuredServices.map(renderServiceCard)}
-          </ScrollView>
         )}
       </View>
 
-      {/* Call to Action Final */}
-      <View style={styles.finalCta}>
-        <Text style={styles.finalCtaTitle}>
-          {t('guest.finalCtaTitle') || 'Pronto para começar?'}
-        </Text>
-        <Text style={styles.finalCtaDescription}>
-          {t('guest.finalCtaDescription') || 'Registre-se agora e tenha acesso completo à plataforma'}
-        </Text>
+      {/* Barra de pesquisa com área arrastável específica */}
+      <Animated.View style={[
+        styles.searchContainer, 
+        { 
+          bottom: bottomPosition,
+          height: isExpanded ? height * 0.85 : (showTabs ? SEARCH_BAR_HEIGHT + TABS_HEIGHT : SEARCH_BAR_HEIGHT),
+          transform: [{ translateY: dragY }]
+        }
+      ]}>
+        {/* Handle arrastável - só esta área responde ao gesto */}
+        <PanGestureHandler
+          onGestureEvent={onGestureEvent}
+          onHandlerStateChange={onHandlerStateChange}
+          enabled={!isExpanded} // Desabilitar quando expandido
+        >
+          <View style={styles.dragHandleArea}>
+            <View style={styles.dragHandle} />
+          </View>
+        </PanGestureHandler>
         
-        <View style={styles.finalCtaButtons}>
-          <TouchableOpacity style={styles.primaryCtaButton} onPress={handleRegister}>
-            <Text style={styles.primaryCtaButtonText}>
-              {t('auth.register') || 'Criar Conta'}
-            </Text>
-          </TouchableOpacity>
+        {/* Barra de pesquisa */}
+        <View style={styles.searchBarContainer}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('app.searchPlaceholder') || 'Buscar serviços de saúde...'}
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={handleSearch}
+              returnKeyType="search"
+              blurOnSubmit={true}
+              enablesReturnKeyAutomatically={true}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => handleSearch('')}>
+                <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
           
-          <TouchableOpacity style={styles.secondaryCtaButton} onPress={handleLogin}>
-            <Text style={styles.secondaryCtaButtonText}>
-              {t('auth.login') || 'Já tenho conta'}
-            </Text>
-          </TouchableOpacity>
+          {/* Botões de ação para Guest */}
+          <View style={styles.guestActions}>
+            <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
+              <Ionicons name="log-in" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleRegister} style={styles.registerButton}>
+              <Ionicons name="person-add" size={20} color={Colors.surface} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+
+        {/* Botões de Tab - só aparecem quando showTabs é true */}
+        {showTabs && (
+          <View style={styles.tabContainer}>
+            <TouchableOpacity 
+              style={[
+                styles.tabButton, 
+                activeTab === 'professionals' && styles.activeTabButton
+              ]}
+              onPress={() => handleTabPress('professionals')}
+            >
+              <Ionicons 
+                name="people" 
+                size={20} 
+                color={activeTab === 'professionals' ? Colors.surface : Colors.textSecondary} 
+              />
+              <Text style={[
+                styles.tabButtonText,
+                activeTab === 'professionals' && styles.activeTabButtonText
+              ]}>
+                {t('dashboard.professionals') || 'Profissionais'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[
+                styles.tabButton, 
+                activeTab === 'institutions' && styles.activeTabButton
+              ]}
+              onPress={() => handleTabPress('institutions')}
+            >
+              <Ionicons 
+                name="business" 
+                size={20} 
+                color={activeTab === 'institutions' ? Colors.surface : Colors.textSecondary} 
+              />
+              <Text style={[
+                styles.tabButtonText,
+                activeTab === 'institutions' && styles.activeTabButtonText
+              ]}>
+                {t('dashboard.institutions') || 'Instituições'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Painel expandido */}
+        {isExpanded && (
+          <ScrollView 
+            style={[
+              styles.expandedPanel,
+              { 
+                flex: 1,
+                marginTop: spacing.sm,
+              }
+            ]}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+            contentContainerStyle={styles.scrollContent}
+            bounces={true}
+          >
+            {renderTabContent()}
+          </ScrollView>
+        )}
+        
+        {/* Contador de resultados - só aparece quando não está expandido */}
+        {!isExpanded && (
+          <View style={styles.resultsInfo}>
+            <Text style={styles.resultsText}>
+              {filteredServices.length} {t('app.servicesFound') || 'serviços encontrados'}
+            </Text>
+            <Text style={styles.guestNote}>
+              {t('guest.limitedAccess') || 'Faça login para acesso completo'}
+            </Text>
+          </View>
+        )}
+      </Animated.View>
+    </View>
   );
 };
 
@@ -361,46 +727,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    padding: spacing.lg,
-    backgroundColor: Colors.surface,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    backgroundColor: Colors.background,
   },
-  logo: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: Colors.primary,
+  loadingText: {
+    marginTop: spacing.md,
+    fontSize: fontSize.md,
+    color: Colors.textSecondary,
   },
-  headerActions: {
-    flexDirection: 'row',
-  },
-  loginButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: borderRadius.md,
-  },
-  loginButtonText: {
-    color: Colors.primary,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-  },
-  welcomeText: {
-    fontSize: fontSize.lg,
-    color: Colors.text,
-    textAlign: 'center',
-  },
-  searchSection: {
-    padding: spacing.lg,
-    backgroundColor: Colors.surface,
+  mapContainer: {
+    flex: 1,
   },
   searchContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1000,
+    minHeight: SEARCH_BAR_HEIGHT,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: Colors.textSecondary + '40',
+    borderRadius: 2,
+    alignSelf: 'center',
+  },
+  dragHandleArea: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.background,
@@ -410,230 +792,165 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    fontSize: fontSize.md,
-    color: Colors.text,
-  },
-  searchButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    marginLeft: spacing.sm,
-  },
-  ctaSection: {
-    padding: spacing.lg,
-  },
-  ctaCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.primary + '20',
-  },
-  ctaTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: Colors.text,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  ctaDescription: {
-    fontSize: fontSize.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  ctaButton: {
-    backgroundColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-  },
-  ctaButtonText: {
-    color: Colors.surface,
-    fontSize: fontSize.md,
-    fontWeight: '600',
+  searchIcon: {
     marginRight: spacing.sm,
   },
-  featuresSection: {
-    padding: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
+  searchInput: {
+    flex: 1,
+    fontSize: fontSize.md,
     color: Colors.text,
-    marginBottom: spacing.lg,
+    padding: 0,
   },
-  featuresGrid: {
+  guestActions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: spacing.xs,
   },
-  featureCard: {
-    width: (width - spacing.lg * 3) / 2,
-    backgroundColor: Colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    alignItems: 'center',
-  },
-  premiumCard: {
-    borderWidth: 2,
-    borderColor: Colors.primary + '30',
-  },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  loginButton: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
     backgroundColor: Colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  registerButton: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: Colors.primary,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  resultsInfo: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    marginTop: spacing.sm,
+  },
+  resultsText: {
+    fontSize: fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  guestNote: {
+    fontSize: fontSize.xs,
+    color: Colors.primary,
+    fontStyle: 'italic',
+    marginTop: spacing.xs,
+  },
+  // Novos estilos para os tabs e painel expandido
+  expandedPanel: {
+    backgroundColor: Colors.surface,
+    paddingTop: spacing.sm,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: spacing.xl,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xs,
+    marginTop: spacing.sm,
     marginBottom: spacing.sm,
+    gap: spacing.xs, // Espaçamento entre os dois botões
   },
-  premiumIcon: {
-    backgroundColor: Colors.primary + '10',
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm, // Aumentar padding horizontal
+    borderRadius: borderRadius.md,
   },
-  featureTitle: {
+  activeTabButton: {
+    backgroundColor: Colors.primary,
+  },
+  tabButtonText: {
+    marginLeft: spacing.xs,
+    fontSize: fontSize.sm,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  activeTabButtonText: {
+    color: Colors.surface,
+  },
+  expandedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    marginHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  expandedTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  closeButton: {
+    padding: spacing.xs,
+  },
+  listItem: {
+    backgroundColor: Colors.background,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+    marginHorizontal: spacing.md,
+    overflow: 'hidden',
+  },
+  listItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  listItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  listItemText: {
+    flex: 1,
+  },
+  listItemTitle: {
     fontSize: fontSize.md,
     fontWeight: '600',
     color: Colors.text,
     marginBottom: spacing.xs,
-    textAlign: 'center',
   },
-  premiumTitle: {
-    color: Colors.primary,
-  },
-  featureDescription: {
+  listItemSubtitle: {
     fontSize: fontSize.sm,
     color: Colors.textSecondary,
-    textAlign: 'center',
   },
-  premiumBadge: {
-    position: 'absolute',
-    top: spacing.xs,
-    right: spacing.xs,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: borderRadius.sm,
-  },
-  premiumBadgeText: {
-    color: Colors.surface,
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  featuredSection: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  loadingContainer: {
-    height: 120,
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    marginHorizontal: spacing.md,
   },
-  loadingText: {
-    color: Colors.textSecondary,
-    fontSize: fontSize.md,
-  },
-  servicesContainer: {
-    paddingRight: spacing.lg,
-  },
-  serviceCard: {
-    width: 200,
-    backgroundColor: Colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginRight: spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  serviceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  serviceName: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: Colors.text,
-    marginLeft: spacing.sm,
-    flex: 1,
-  },
-  serviceType: {
-    fontSize: fontSize.sm,
-    color: Colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  rating: {
-    fontSize: fontSize.sm,
-    color: Colors.text,
-    marginLeft: spacing.xs,
-    fontWeight: '600',
-  },
-  serviceFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  serviceAddress: {
-    fontSize: fontSize.sm,
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-  finalCta: {
-    margin: spacing.lg,
-    backgroundColor: Colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  finalCtaTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    color: Colors.text,
-    marginBottom: spacing.sm,
-  },
-  finalCtaDescription: {
+  emptyStateText: {
+    marginTop: spacing.md,
     fontSize: fontSize.md,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  finalCtaButtons: {
-    width: '100%',
-  },
-  primaryCtaButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  primaryCtaButtonText: {
-    color: Colors.surface,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  secondaryCtaButton: {
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  secondaryCtaButtonText: {
-    color: Colors.primary,
-    fontSize: fontSize.md,
-    fontWeight: '600',
   },
 });

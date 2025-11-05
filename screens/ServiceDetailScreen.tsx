@@ -327,15 +327,6 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.primary} />
-      
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {service.type === 'professional' ? t('serviceDetail.professionalDetails') : t('serviceDetail.institutionDetails')}
-        </Text>
-      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.serviceCard}>
@@ -462,6 +453,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   backButton: {
     padding: spacing.sm,
