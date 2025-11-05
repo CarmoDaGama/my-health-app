@@ -165,11 +165,8 @@ export default function RegisterScreen() {
     const result = await register(formData);
     
     if (result.success) {
-      Alert.alert(
-        t('auth.registrationSuccess'), 
-        t('auth.accountCreated'),
-        [{ text: t('common.ok'), onPress: () => navigation.navigate('Home') }]
-      );
+      // Navigate to email verification screen instead of directly to home
+      navigation.navigate('EmailVerification', { email: formData.email });
     } else {
       const errorMessage = result.error || t('auth.loginGenericError');
       

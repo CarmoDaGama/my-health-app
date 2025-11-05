@@ -13,10 +13,12 @@ interface AuthContextType {
   isLoading: boolean; // Alias para compatibilidade
   isAuthenticated: boolean;
   isGuest: boolean;
-  login: (credentials: AuthCredentials) => Promise<{ success: boolean; error?: string }>;
-  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  login: (credentials: AuthCredentials) => Promise<{ success: boolean; error?: string; needsEmailVerification?: boolean }>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string; needsEmailVerification?: boolean }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resendEmailVerification: () => Promise<{ success: boolean; error?: string }>;
+  checkEmailVerification: () => Promise<{ success: boolean; isVerified: boolean; error?: string }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
   updatePreferences: (preferences: Partial<UserProfile['preferences']>) => Promise<{ success: boolean; error?: string }>;
   continueAsGuest: () => void;
@@ -235,6 +237,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const resendEmailVerification = async () => {
+    try {
+      const response = await AuthServiceFirebase.resendEmailVerification();
+      return response;
+    } catch (error) {
+      console.error('Resend email verification error:', error);
+      return { success: false, error: 'Erro ao reenviar email de verificação' };
+    }
+  };
+
+  const checkEmailVerification = async () => {
+    try {
+      const response = await AuthServiceFirebase.checkEmailVerification();
+      
+      // If email was verified, update the user state
+      if (response.success && response.isVerified && firebaseUser) {
+        try {
+          const userData = await AuthServiceFirebase.getUserData(firebaseUser.uid);
+          if (userData) {
+            setUser(userData as any);
+          }
+        } catch (error) {
+          console.warn('Error updating user data after email verification:', error);
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Check email verification error:', error);
+      return { success: false, isVerified: false, error: 'Erro ao verificar status do email' };
+    }
+  };
+
   const updateProfile = async (updates: Partial<UserProfile>) => {
     try {
       if (!user) {
@@ -376,6 +411,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     forgotPassword,
+    resendEmailVerification,
+    checkEmailVerification,
     updateProfile,
     updatePreferences,
     continueAsGuest

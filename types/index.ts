@@ -232,6 +232,7 @@ export interface AuthResponse {
   token?: string;
   refreshToken?: string;
   error?: string;
+  needsEmailVerification?: boolean;
 }
 
 export interface ResetPasswordData {

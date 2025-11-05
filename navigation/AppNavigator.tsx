@@ -12,6 +12,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import EmailVerificationScreen from '../screens/EmailVerificationScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { useAuth } from '../hooks/useAuth-firebase';
@@ -87,6 +88,15 @@ const AppNavigatorContent: React.FC = () => {
             component={ForgotPasswordScreen}
             options={{
               title: t('auth.forgotPassword') || 'Recuperar Senha',
+            }}
+          />
+          
+          <Stack.Screen
+            name="EmailVerification"
+            component={EmailVerificationScreen}
+            options={{
+              title: t('auth.verifyEmail') || 'Verificar Email',
+              headerLeft: () => null, // Disable back button
             }}
           />
         </>
@@ -172,6 +182,14 @@ const AppNavigatorContent: React.FC = () => {
             component={ForgotPasswordScreen}
             options={{
               title: t('auth.forgotPassword') || 'Recuperar Senha',
+            }}
+          />
+          
+          <Stack.Screen
+            name="EmailVerification"
+            component={EmailVerificationScreen}
+            options={{
+              title: t('auth.verifyEmail') || 'Verificar Email',
             }}
           />
         </>

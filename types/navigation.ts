@@ -24,6 +24,9 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  EmailVerification: {
+    email?: string;
+  };
   UserProfile: undefined;
   EditProfile: undefined;
 
@@ -77,6 +80,7 @@ export type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList
 export type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 export type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 export type ForgotPasswordScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ForgotPassword'>;
+export type EmailVerificationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EmailVerification'>;
 export type UserProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'UserProfile'>;
 export type EditProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EditProfile'>;
 

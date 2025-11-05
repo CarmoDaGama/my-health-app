@@ -82,6 +82,23 @@ const translations = {
       fillAllFields: 'Please fill in all required fields.',
       registrationFailed: 'Could not create account. Please try again.',
       
+      // Email verification
+      verifyEmail: 'Verify Email',
+      verifyYourEmail: 'Verify Your Email',
+      verificationEmailSent: 'We sent a verification email to',
+      clickLinkInEmail: 'Please click the link in the email to activate your account.',
+      checkEmailApp: 'Check Email App',
+      resendEmail: 'Resend Email',
+      didntReceiveEmail: "Didn't receive the email?",
+      checkSpamFolder: 'Check your spam/junk folder',
+      checkEmailAddress: 'Make sure the email address is correct',
+      waitFewMinutes: 'Wait a few minutes and try again',
+      verificationEmailResent: 'Verification email sent successfully!',
+      resendEmailError: 'Error resending verification email',
+      openEmailAppInstruction: 'Please open your email app to check for the verification message.',
+      checkEmail: 'Check Email',
+      emailNotVerified: 'Email Not Verified',
+      
       // Account status validations
       accountInactive: 'Account Inactive',
       accountInactiveMessage: 'Your account has been deactivated. Please contact support for assistance.',
@@ -832,6 +849,23 @@ const translations = {
       requiredFields: 'Campos Obrigatórios',
       fillAllFields: 'Por favor, preencha todos os campos obrigatórios.',
       registrationFailed: 'Não foi possível criar a conta. Tente novamente.',
+      
+      // Verificação de email
+      verifyEmail: 'Verificar Email',
+      verifyYourEmail: 'Verifique Seu Email',
+      verificationEmailSent: 'Enviamos um email de verificação para',
+      clickLinkInEmail: 'Por favor, clique no link no email para ativar sua conta.',
+      checkEmailApp: 'Abrir App de Email',
+      resendEmail: 'Reenviar Email',
+      didntReceiveEmail: 'Não recebeu o email?',
+      checkSpamFolder: 'Verifique sua pasta de spam/lixo eletrônico',
+      checkEmailAddress: 'Certifique-se de que o endereço de email está correto',
+      waitFewMinutes: 'Aguarde alguns minutos e tente novamente',
+      verificationEmailResent: 'Email de verificação enviado com sucesso!',
+      resendEmailError: 'Erro ao reenviar email de verificação',
+      openEmailAppInstruction: 'Por favor, abra seu aplicativo de email para verificar a mensagem de verificação.',
+      checkEmail: 'Verificar Email',
+      emailNotVerified: 'Email Não Verificado',
       
       // Account status validations
       accountInactive: 'Conta Inativa',

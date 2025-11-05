@@ -71,11 +71,16 @@ export default function LoginScreen() {
     const result = await login(formData);
     
     if (!result.success) {
-      Alert.alert(
-        t('auth.loginError') || 'Erro no Login',
-        result.error || t('auth.loginGenericError') || 'Erro desconhecido',
-        [{ text: t('common.ok') || 'OK' }]
-      );
+      if (result.needsEmailVerification) {
+        // Navigate to email verification screen
+        navigation.navigate('EmailVerification', { email: formData.email });
+      } else {
+        Alert.alert(
+          t('auth.loginError') || 'Erro no Login',
+          result.error || t('auth.loginGenericError') || 'Erro desconhecido',
+          [{ text: t('common.ok') || 'OK' }]
+        );
+      }
     }
     // Navigation será automática através do AuthContext se sucesso
   };

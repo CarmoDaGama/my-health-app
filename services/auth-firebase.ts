@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
   User
 } from 'firebase/auth';
@@ -45,6 +46,15 @@ export class AuthServiceFirebase {
         return {
           success: false,
           error: 'Sua conta foi desativada. Entre em contato com o suporte para assistência.'
+        };
+      }
+
+      // Check if email is verified (except for admin users)
+      if (!userCredential.user.emailVerified && userData.userType !== UserType.ADMIN) {
+        return {
+          success: false,
+          error: 'Por favor, verifique seu email antes de fazer login. Verifique sua caixa de entrada.',
+          needsEmailVerification: true
         };
       }
       
@@ -90,6 +100,15 @@ export class AuthServiceFirebase {
       await updateProfile(userCredential.user, {
         displayName: data.name
       });
+
+      // Send email verification
+      try {
+        await sendEmailVerification(userCredential.user);
+        console.log('✅ Email de verificação enviado com sucesso');
+      } catch (emailError) {
+        console.warn('⚠️ Erro ao enviar email de verificação:', emailError);
+        // Não falha o registro se não conseguir enviar o email de verificação
+      }
       
       // Save additional user data to Firestore
       const userData: any = {
@@ -99,6 +118,7 @@ export class AuthServiceFirebase {
         userType: data.userType,
         isActive: true, // New users are active by default
         isVerified: data.userType === UserType.NORMAL_USER ? true : false, // Normal users are verified, professionals/institutions need verification
+        emailVerified: false, // Email not verified initially
         preferences: {
           language: 'en',
           notifications: {
@@ -156,6 +176,7 @@ export class AuthServiceFirebase {
         userType: data.userType,
         isActive: userData.isActive,
         isVerified: userData.isVerified,
+        emailVerified: userCredential.user.emailVerified,
         preferences: userData.preferences
       };
       
@@ -213,6 +234,70 @@ export class AuthServiceFirebase {
       console.error('Password reset error:', error);
       return {
         success: false,
+        error: this.getErrorMessage(error.code)
+      };
+    }
+  }
+
+  /**
+   * Resend email verification
+   */
+  static async resendEmailVerification(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        return { success: false, error: 'Usuário não autenticado' };
+      }
+
+      if (currentUser.emailVerified) {
+        return { success: false, error: 'Email já foi verificado' };
+      }
+
+      await sendEmailVerification(currentUser);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Resend email verification error:', error);
+      return {
+        success: false,
+        error: this.getErrorMessage(error.code)
+      };
+    }
+  }
+
+  /**
+   * Check if current user's email is verified
+   */
+  static async checkEmailVerification(): Promise<{ success: boolean; isVerified: boolean; error?: string }> {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        return { success: false, isVerified: false, error: 'Usuário não autenticado' };
+      }
+
+      // Reload user to get latest verification status
+      await currentUser.reload();
+      
+      const isVerified = currentUser.emailVerified;
+
+      // Update Firestore if email was verified
+      if (isVerified) {
+        try {
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            emailVerified: true,
+            updatedAt: serverTimestamp()
+          });
+        } catch (updateError) {
+          console.warn('Error updating email verification status in Firestore:', updateError);
+          // Don't fail the whole operation if Firestore update fails
+        }
+      }
+
+      return { success: true, isVerified };
+    } catch (error: any) {
+      console.error('Check email verification error:', error);
+      return {
+        success: false,
+        isVerified: false,
         error: this.getErrorMessage(error.code)
       };
     }
