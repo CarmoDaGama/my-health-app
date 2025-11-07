@@ -104,103 +104,34 @@ export const GuestDashboard: React.FC = () => {
 
     const loadFeaturedServices = async () => {
     try {
-      console.log('🔄 Iniciando carregamento dos serviços em destaque...');
+      console.log('🔄 Carregando serviços do banco de dados...');
       setLoading(true);
-      const result = await HealthServiceAPIFirebase.getAllServices(); // Get all services
+      // Tentar carregar todos os serviços do banco
+      const result = await HealthServiceAPIFirebase.getAllServices();
       const services = result?.services || [];
-      
+
       console.log('📊 Resultado da API:', result);
-      
+
       if (services && services.length > 0) {
+        // Preencher listas com os dados do banco
         setAllServices(Array.isArray(services) ? services : []);
         setFilteredServices(Array.isArray(services) ? services : []);
-        const featured = services.slice(0, 6); // Take first 6 as featured
-        setFeaturedServices(featured); 
-        console.log('✅ Serviços carregados:', services.length);
+        const featured = services.slice(0, 6);
+        setFeaturedServices(featured);
+        console.log('✅ Serviços carregados do banco:', services.length);
       } else {
-        console.log('⚠️ Nenhum serviço retornado pela API, usando dados mock');
-        // Fallback para dados mock quando não há serviços na API
-        const mockServices: HealthService[] = [
-          {
-            id: 'mock-1',
-            name: 'Hospital Américo Boavida',
-            type: 'hospital' as const,
-            address: 'Rua Amílcar Cabral, 105, Maianga, Luanda',
-            city: 'Luanda',
-            state: 'Luanda',
-            coordinates: { latitude: -8.8383, longitude: 13.2344 },
-            phone: '+244 222 334 455',
-            description: 'Hospital público de referência',
-            rating: 4.2,
-            specialty: 'Geral'
-          },
-          {
-            id: 'mock-2',
-            name: 'Clínica Girassol',
-            type: 'clinic' as const,
-            address: 'Avenida 4 de Fevereiro, 321, Ingombota, Luanda',
-            city: 'Luanda',
-            state: 'Luanda',
-            coordinates: { latitude: -8.8368, longitude: 13.2343 },
-            phone: '+244 222 445 566',
-            description: 'Clínica geral com atendimento 24h',
-            rating: 4.5,
-            specialty: 'Clínica Geral'
-          },
-          {
-            id: 'mock-3',
-            name: 'Hospital Josina Machel',
-            type: 'hospital' as const,
-            address: 'Rua Major Kanhangulo, 100, Ingombota, Luanda',
-            city: 'Luanda',
-            state: 'Luanda',
-            coordinates: { latitude: -8.8300, longitude: 13.2400 },
-            phone: '+244 222 556 677',
-            description: 'Hospital especializado em emergências',
-            rating: 4.0,
-            specialty: 'Emergência'
-          }
-        ];
-        setAllServices(mockServices);
-        setFilteredServices(mockServices);
-        setFeaturedServices(mockServices);
-        console.log('✅ Usando serviços mock:', mockServices.length);
+        // Sem serviços no banco: manter listas vazias e informar no console
+        console.log('⚠️ Nenhum serviço encontrado no banco de dados.');
+        setAllServices([]);
+        setFilteredServices([]);
+        setFeaturedServices([]);
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar serviços em destaque:', error);
-      // Em caso de erro, usar dados mock como fallback
-      const mockServices: HealthService[] = [
-        {
-          id: 'mock-1',
-          name: 'Hospital Américo Boavida',
-          type: 'hospital' as const,
-          address: 'Rua Amílcar Cabral, 105, Maianga, Luanda',
-          city: 'Luanda',
-          state: 'Luanda',
-          coordinates: { latitude: -8.8383, longitude: 13.2344 },
-          phone: '+244 222 334 455',
-          description: 'Hospital público de referência',
-          rating: 4.2,
-          specialty: 'Geral'
-        },
-        {
-          id: 'mock-2',
-          name: 'Clínica Girassol',
-          type: 'clinic' as const,
-          address: 'Avenida 4 de Fevereiro, 321, Ingombota, Luanda',
-          city: 'Luanda',
-          state: 'Luanda',
-          coordinates: { latitude: -8.8368, longitude: 13.2343 },
-          phone: '+244 222 445 566',
-          description: 'Clínica geral com atendimento 24h',
-          rating: 4.5,
-          specialty: 'Clínica Geral'
-        }
-      ];
-      setAllServices(mockServices);
-      setFilteredServices(mockServices);
-      setFeaturedServices(mockServices);
-      console.log('✅ Fallback para serviços mock devido a erro');
+      console.error('❌ Erro ao carregar serviços do banco de dados:', error);
+      // Em caso de erro, não usar mocks — limpar listas e deixar UI tratar estado vazio
+      setAllServices([]);
+      setFilteredServices([]);
+      setFeaturedServices([]);
     } finally {
       setLoading(false);
     }

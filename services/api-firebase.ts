@@ -38,27 +38,45 @@ export class HealthServiceAPIFirebase {
     lastDoc?: DocumentSnapshot
   ): Promise<{ services: HealthService[]; lastDoc?: DocumentSnapshot }> {
     try {
-      console.log('🔍 Buscando serviços na coleção healthServices...');
+      console.log('🔍 Buscando serviços nas coleções healthServices e registeredServices...');
       
-      // Temporariamente removendo filtro de verificação para não ocultar serviços existentes
-      // TODO: Implementar migração para adicionar campo 'verified' aos serviços existentes
-      let q = query(
+      const services: HealthService[] = [];
+      let newLastDoc: DocumentSnapshot | undefined;
+
+      // 1. Buscar na coleção healthServices (serviços migrados)
+      let healthServicesQuery = query(
         collection(db, 'healthServices'),
         limit(pageSize)
       );
 
       if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
+        healthServicesQuery = query(healthServicesQuery, startAfter(lastDoc));
       }
 
-      console.log('📡 Executando query no Firestore...');
-      const querySnapshot = await getDocs(q);
-      console.log(`📋 Query retornou ${querySnapshot.size} documentos`);
-      
-      const services: HealthService[] = [];
-      let newLastDoc: DocumentSnapshot | undefined;
+      console.log('📡 Executando query em healthServices...');
+      const healthServicesSnapshot = await getDocs(healthServicesQuery);
+      console.log(`📋 healthServices retornou ${healthServicesSnapshot.size} documentos`);
 
-      querySnapshot.forEach((doc) => {
+      // 2. Buscar também em registeredServices com status 'approved' (correção temporária)
+      const registeredServicesQuery = query(
+        collection(db, 'registeredServices'),
+        where('status', '==', 'approved'),
+        limit(pageSize)
+      );
+
+      console.log('📡 Executando query em registeredServices (approved)...');
+      const registeredServicesSnapshot = await getDocs(registeredServicesQuery);
+      console.log(`📋 registeredServices (approved) retornou ${registeredServicesSnapshot.size} documentos`);
+
+      // 3. Processar serviços de ambas as coleções
+      const allSnapshots = [
+        ...healthServicesSnapshot.docs,
+        ...registeredServicesSnapshot.docs
+      ];
+
+      console.log(`📊 Total de documentos para processar: ${allSnapshots.length}`);
+
+      allSnapshots.forEach((doc) => {
         const data = doc.data();
         console.log(`📄 Processando documento: ${doc.id}`);
         
@@ -384,12 +402,14 @@ export class HealthServiceAPIFirebase {
     filters?: ServiceFilters
   ): Promise<HealthService[]> {
     try {
-      let q = collection(db, 'healthServices');
-      const constraints: any[] = [];
+      const services: HealthService[] = [];
+
+      // 1. Buscar na coleção healthServices
+      let healthConstraints: any[] = [];
 
       // Text search (Firebase doesn't have full-text search, so we use prefix matching)
       if (searchQuery) {
-        constraints.push(
+        healthConstraints.push(
           where('name', '>=', searchQuery),
           where('name', '<=', searchQuery + '\uf8ff')
         );
@@ -397,22 +417,46 @@ export class HealthServiceAPIFirebase {
 
       // Filter by type
       if (filters?.type && filters.type !== 'all') {
-        constraints.push(where('type', '==', filters.type));
+        healthConstraints.push(where('type', '==', filters.type));
       }
 
       // Filter by city
       if (filters?.city) {
-        constraints.push(where('city', '==', filters.city));
+        healthConstraints.push(where('city', '==', filters.city));
       }
 
-      // TODO: Reativar filtro de verificação após migração dos dados existentes
-      // constraints.push(where('verified', '==', true));
+      const healthQuery = query(collection(db, 'healthServices'), ...healthConstraints, orderBy('name'), limit(25));
+      const healthSnapshot = await getDocs(healthQuery);
 
-      const finalQuery = query(q, ...constraints, orderBy('name'), limit(50));
-      const querySnapshot = await getDocs(finalQuery);
+      // 2. Buscar também em registeredServices (approved)
+      let registeredConstraints: any[] = [
+        where('status', '==', 'approved')
+      ];
+
+      // Adicionar mesmo filtro de busca para registeredServices
+      if (searchQuery) {
+        registeredConstraints.push(
+          where('name', '>=', searchQuery),
+          where('name', '<=', searchQuery + '\uf8ff')
+        );
+      }
+
+      if (filters?.type && filters.type !== 'all') {
+        // Para registeredServices, o tipo pode estar em 'serviceType' ao invés de 'type'
+        registeredConstraints.push(where('serviceType', '==', filters.type));
+      }
+
+      if (filters?.city) {
+        registeredConstraints.push(where('city', '==', filters.city));
+      }
+
+      const registeredQuery = query(collection(db, 'registeredServices'), ...registeredConstraints, orderBy('name'), limit(25));
+      const registeredSnapshot = await getDocs(registeredQuery);
+
+      // 3. Combinar resultados de ambas as coleções
+      const allDocs = [...healthSnapshot.docs, ...registeredSnapshot.docs];
       
-      const services: HealthService[] = [];
-      querySnapshot.forEach((doc) => {
+      allDocs.forEach((doc) => {
         const data = doc.data();
         
         // FILTRO RIGOROSO PARA PROFISSIONAIS E INSTITUIÇÕES (mesmo do getAllServices)
