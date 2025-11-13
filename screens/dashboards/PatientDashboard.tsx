@@ -264,16 +264,22 @@ export const PatientDashboard: React.FC = () => {
 
   const getProfessionals = () => {
     return allServices.filter(service => 
-      service.type === 'professional' || 
-      service.specialty
+      // Usar serviceType como filtro principal
+      (service as any).serviceType === 'professional' ||
+      // Fallback para casos antigos
+      (service.type === 'professional') ||
+      (service.type === 'clinic' && service.specialty)
     );
   };
 
   const getInstitutions = () => {
     return allServices.filter(service => 
-      service.type === 'hospital' || 
-      service.type === 'clinic' || 
-      service.type === 'pharmacy'
+      // Usar serviceType como filtro principal
+      (service as any).serviceType === 'institution' ||
+      // Fallback para casos antigos ou serviços estáticos
+      (service.type === 'hospital' && !(service as any).serviceType) || 
+      (service.type === 'clinic' && !(service as any).serviceType && !service.specialty) ||
+      (service.type === 'pharmacy')
     );
   };
 
