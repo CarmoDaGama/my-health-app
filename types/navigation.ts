@@ -1,4 +1,5 @@
 import { StackNavigationProp } from '@react-navigation/stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RouteProp } from '@react-navigation/native';
 import { HealthService, Coordinates } from './index';
 
@@ -6,19 +7,13 @@ export type RootStackParamList = {
   // Core screens
   Splash: undefined;
   Welcome: undefined;
-  Home: undefined;
-  Map: {
-    services: HealthService[];
-    userLocation?: Coordinates;
-    searchQuery?: string;
-  };
+  MainTabs: undefined;
   ServiceDetail: {
     service: HealthService;
   };
   MapDirections: {
     service: HealthService;
   };
-  Profile: undefined;
   
   // Authentication screens
   Login: undefined;
@@ -67,14 +62,27 @@ export type RootStackParamList = {
   UserManagement: undefined;
 };
 
-// Navigation prop types
-export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
-export type MapScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Map'>;
+// Bottom Tab Navigator types
+export type MainTabParamList = {
+  Home: undefined;
+  Messaging: undefined;
+  Search: undefined;
+  Favorites: undefined;
+  Profile: undefined;
+};
+
+// Navigation prop types for Stack Navigator  
 export type ServiceDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ServiceDetail'>;
 export type MapDirectionsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MapDirections'>;
 export type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 export type WelcomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
-export type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
+
+// Navigation prop types for Bottom Tab Navigator
+export type HomeScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
+export type MessagingScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Messaging'>;
+export type SearchScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Search'>;
+export type FavoritesScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Favorites'>;
+export type ProfileScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Profile'>;
 
 // Authentication screen navigation props
 export type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -118,7 +126,6 @@ export type SystemReportsNavigationProp = StackNavigationProp<RootStackParamList
 export type UserManagementNavigationProp = StackNavigationProp<RootStackParamList, 'UserManagement'>;
 
 // Route prop types
-export type MapScreenRouteProp = RouteProp<RootStackParamList, 'Map'>;
 export type ServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'ServiceDetail'>;
 export type MapDirectionsScreenRouteProp = RouteProp<RootStackParamList, 'MapDirections'>;
 export type EditServiceRouteProp = RouteProp<RootStackParamList, 'EditService'>;

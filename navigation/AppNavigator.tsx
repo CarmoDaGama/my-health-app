@@ -4,11 +4,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { SplashScreen } from '../screens/SplashScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
-import HomeScreen from '../screens/HomeScreen';
-import { MapScreen } from '../screens/MapScreen';
 import { ServiceDetailScreen } from '../screens/ServiceDetailScreen';
 import { MapDirectionsScreen } from '../screens/MapDirectionsScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
+import { MainTabNavigator } from './MainTabNavigator';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
@@ -39,7 +37,7 @@ const AppNavigatorContent: React.FC = () => {
 
   // Show main app if authenticated OR in guest mode
   const showMainApp = isAuthenticated || isGuest;
-  const initialRoute = showMainApp ? "Home" : "Welcome";
+  const initialRoute = showMainApp ? "MainTabs" : "Welcome";
 
   return (
     <Stack.Navigator
@@ -79,7 +77,7 @@ const AppNavigatorContent: React.FC = () => {
             name="Register"
             component={RegisterScreen}
             options={{
-              title: t('auth.register') || 'Registrar',
+              title: t('auth.register') || 'Register',
             }}
           />
           
@@ -87,7 +85,7 @@ const AppNavigatorContent: React.FC = () => {
             name="ForgotPassword"
             component={ForgotPasswordScreen}
             options={{
-              title: t('auth.forgotPassword') || 'Recuperar Senha',
+              title: t('auth.forgotPassword') || 'Forgot Password',
             }}
           />
           
@@ -95,7 +93,7 @@ const AppNavigatorContent: React.FC = () => {
             name="EmailVerification"
             component={EmailVerificationScreen}
             options={{
-              title: t('auth.verifyEmail') || 'Verificar Email',
+              title: t('auth.verifyEmail') || 'Verify Email',
               headerLeft: () => null, // Disable back button
             }}
           />
@@ -104,19 +102,10 @@ const AppNavigatorContent: React.FC = () => {
         // Main App Stack - shown when user is authenticated or guest
         <>
           <Stack.Screen
-            name="Home"
-            component={HomeScreen}
+            name="MainTabs"
+            component={MainTabNavigator}
             options={{
-              title: t('screens.home') || 'Início',
-              headerLeft: () => null, // Disable back button
-            }}
-          />
-          
-          <Stack.Screen
-            name="Map"
-            component={MapScreen}
-            options={{
-              title: t('screens.map') || 'Mapa',
+              headerShown: false, // Tabs will handle their own headers
             }}
           />
           
@@ -124,7 +113,8 @@ const AppNavigatorContent: React.FC = () => {
             name="ServiceDetail"
             component={ServiceDetailScreen}
             options={{
-              title: t('screens.details') || 'Detalhes',
+              title: 'Service Details',
+              presentation: 'modal',
             }}
           />
           
@@ -133,14 +123,6 @@ const AppNavigatorContent: React.FC = () => {
             component={MapDirectionsScreen}
             options={{
               headerShown: false,
-            }}
-          />
-          
-          <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{
-              title: t('screens.profile') || 'Perfil',
             }}
           />
           

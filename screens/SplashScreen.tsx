@@ -25,7 +25,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.pulseSymbol}>~</Text>
           </View>
         </View>
-        <Text style={styles.appName}>{t('app.name') || 'MEDILOCATOR'}</Text>
+        <Text style={styles.appName}>MENDLINK</Text>
       </View>
     </View>
   );

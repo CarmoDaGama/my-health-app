@@ -347,8 +347,8 @@ const translations = {
       cityRequired: 'City is required',
     },
     app: {
-      title: 'Health Services Locator',
-      name: 'MEDILOCATOR',
+      title: 'MENDLINK',
+      name: 'MENDLINK',
       search: 'Search health services...',
       searchPlaceholder: 'Search health services...',
       noResults: 'No services found',
@@ -1118,8 +1118,8 @@ const translations = {
       cityRequired: 'Cidade é obrigatória',
     },
     app: {
-      title: 'Localizador de Serviços de Saúde',
-      name: 'MEDILOCATOR',
+      title: 'MENDLINK',
+      name: 'MENDLINK',
       search: 'Buscar serviços de saúde...',
       searchPlaceholder: 'Pesquisar serviços de saúde...',
       noResults: 'Nenhum serviço encontrado',
