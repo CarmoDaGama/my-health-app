@@ -6,16 +6,74 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
-import { MapView } from '../../components/specific/MapView';
+import { InteractiveMap } from '../../components/specific/InteractiveMap';
+import { HealthService } from '../../types';
+import { RootStackParamList } from '../../types/navigation';
+import { HealthServiceAPIFirebase } from '../../services/api-firebase';
+import { LocationService } from '../../services/location';
 
 type HomeSubTab = 'map' | 'list';
 
 export const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState<HomeSubTab>('map');
+  const [services, setServices] = useState<HealthService[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  // Load services and user location on component mount
+  React.useEffect(() => {
+    loadServices();
+    getUserLocation();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      setLoading(true);
+      const servicesResult = await HealthServiceAPIFirebase.getAllServices();
+      const servicesData = servicesResult?.services || [];
+      setServices(Array.isArray(servicesData) ? servicesData : []);
+    } catch (error) {
+      console.error('Error loading services:', error);
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getUserLocation = async () => {
+    try {
+      const locationResult = await LocationService.getLocationWithFallback();
+      if (locationResult) {
+        setUserLocation({
+          latitude: locationResult.coordinates.latitude,
+          longitude: locationResult.coordinates.longitude
+        });
+      }
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      // Fallback to Luanda, Angola
+      setUserLocation({
+        latitude: -8.8383,
+        longitude: 13.2344
+      });
+    }
+  };
+
+  const handleServicePress = (service: HealthService) => {
+    console.log('Service selected:', service.name);
+    navigation.navigate('ServiceDetail', { service });
+  };
+
+  const handleLocationChange = (location: { latitude: number; longitude: number }) => {
+    setUserLocation(location);
+  };
 
   const renderSubTabButton = (tab: HomeSubTab, icon: string, label: string) => (
     <TouchableOpacity
@@ -40,24 +98,45 @@ export const HomeScreen: React.FC = () => {
   );
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading healthcare facilities...</Text>
+        </View>
+      );
+    }
+
     switch (activeSubTab) {
       case 'map':
         return (
           <View style={styles.mapContainer}>
-            <Text style={styles.contentTitle}>Interactive Map</Text>
-            <Text style={styles.contentDescription}>
-              Healthcare facilities are displayed with color-coded categories
-            </Text>
-            {/* MapView component will be rendered here */}
+            <InteractiveMap
+              services={services}
+              userLocation={userLocation || undefined}
+              onServicePress={handleServicePress}
+              onLocationChange={handleLocationChange}
+              showUserLocation={true}
+              autoZoomToServices={true}
+              enableClustering={true}
+              categoryColors={{
+                hospital: '#2196F3',
+                clinic: '#4CAF50', 
+                pharmacy: '#FF9800',
+                emergency: '#F44336',
+                laboratory: '#9C27B0',
+                default: '#2E7D32'
+              }}
+            />
           </View>
         );
       case 'list':
         return (
           <View style={styles.listContainer}>
-            <Text style={styles.contentTitle}>Professionals List</Text>
+            <Text style={styles.contentTitle}>Healthcare Professionals</Text>
             <Text style={styles.contentDescription}>
-              Browse healthcare professionals by specialty and location
+              {services.length} professionals available in your area
             </Text>
+            {/* TODO: Implement professionals list view */}
           </View>
         );
       default:
@@ -119,17 +198,26 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: spacing.md,
   },
-  mapContainer: {
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: spacing.lg,
+  },
+  loadingText: {
+    fontSize: fontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  mapContainer: {
+    flex: 1,
   },
   listContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: spacing.lg,
   },
   contentTitle: {
     fontSize: fontSize.lg,
