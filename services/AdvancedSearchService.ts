@@ -35,14 +35,14 @@ export class AdvancedSearchService {
     const startTime = Date.now();
     
     try {
-      // Get services from both collections
-      const [healthServices, registeredServices] = await Promise.all([
-        this.searchInCollection('healthServices', filters, maxResults / 2),
-        this.searchInCollection('registeredServices', filters, maxResults / 2)
-      ]);
+      // TEMPORÁRIO: Usar apenas healthServices até resolver permissões
+      const healthServices = await this.searchInCollection('healthServices', filters, maxResults);
       
-      // Combine and deduplicate results
-      let allServices = [...healthServices, ...registeredServices];
+      // TODO: Reativar registeredServices quando regras Firestore forem corrigidas
+      // const registeredServices = await this.searchInCollection('registeredServices', filters, maxResults / 2);
+      
+      // Use apenas healthServices por enquanto
+      let allServices = [...healthServices];
       allServices = this.removeDuplicates(allServices);
       
       // Apply distance filter if location is provided
@@ -91,51 +91,52 @@ export class AdvancedSearchService {
   ): Promise<HealthService[]> {
     const constraints: QueryConstraint[] = [];
     
-    // Text search (prefix matching)
-    if (filters.query) {
-      const searchLower = filters.query.toLowerCase();
-      constraints.push(
-        where('name', '>=', searchLower),
-        where('name', '<=', searchLower + '\uf8ff')
-      );
-    }
+    // ⚠️ CORREÇÃO: Não usar busca por texto diretamente no Firestore
+    // Firestore não suporta busca full-text sem índices especiais
+    // Vamos buscar todos os dados e filtrar manualmente
     
-    // Service type filter
-    if (filters.type && filters.type.length > 0) {
+    // Se há busca por texto, não aplicar filtro no Firestore
+    // Será aplicado depois manualmente
+    const hasTextSearch = filters.query && filters.query.length > 0;
+    
+    // Service type filter (apenas se não há busca por texto)
+    if (!hasTextSearch && filters.type && filters.type.length > 0) {
       if (filters.type.length === 1) {
         constraints.push(where('type', '==', filters.type[0]));
       }
       // For multiple types, we'll filter after query due to Firestore limitations
     }
     
-    // City filter
-    if (filters.city) {
+    // City filter (apenas se não há busca por texto)
+    if (!hasTextSearch && filters.city) {
       constraints.push(where('city', '==', filters.city));
     }
     
-    // State filter
-    if (filters.state) {
+    // State filter (apenas se não há busca por texto)
+    if (!hasTextSearch && filters.state) {
       constraints.push(where('state', '==', filters.state));
     }
     
-    // Rating filter
-    if (filters.rating) {
+    // Rating filter (apenas se não há busca por texto)
+    if (!hasTextSearch && filters.rating) {
       constraints.push(where('rating', '>=', filters.rating));
     }
     
-    // Emergency service filter
-    if (filters.emergencyService) {
+    // Emergency service filter (apenas se não há busca por texto)
+    if (!hasTextSearch && filters.emergencyService) {
       constraints.push(where('emergencyService', '==', true));
     }
     
-    // Insurance filter
-    if (filters.acceptsInsurance) {
+    // Insurance filter (apenas se não há busca por texto)
+    if (!hasTextSearch && filters.acceptsInsurance) {
       constraints.push(where('acceptsInsurance', '==', true));
     }
     
     // Add ordering and limit
-    constraints.push(orderBy('name'));
-    constraints.push(limit(maxResults));
+    if (constraints.length > 0) {
+      constraints.push(orderBy('name'));
+    }
+    constraints.push(limit(hasTextSearch ? 100 : maxResults)); // Buscar mais se há filtro de texto
     
     const q = query(collection(db, collectionName), ...constraints);
     const snapshot = await getDocs(q);
@@ -188,6 +189,24 @@ export class AdvancedSearchService {
         status: serviceStatus,
         ...data
       };
+      
+      // ✅ APLICAR BUSCA POR TEXTO MANUALMENTE
+      if (filters.query && filters.query.length > 0) {
+        const searchLower = filters.query.toLowerCase();
+        const searchableText = [
+          service.name,
+          service.description,
+          service.specialty,
+          service.address,
+          service.city,
+          ...(service.services || [])
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        // Pular se não contém o texto buscado
+        if (!searchableText.includes(searchLower)) {
+          return;
+        }
+      }
       
       services.push(service);
     });

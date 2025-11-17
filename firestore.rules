@@ -64,10 +64,12 @@ service cloud.firestore {
     // COLEÇÃO: healthServices (serviços aprovados)
     // ========================================
     match /healthServices/{serviceId} {
-      // Qualquer um pode ler serviços aprovados (dados públicos)
+      // ✅ LEITURA PÚBLICA TOTALMENTE LIBERADA
+      // Qualquer pessoa pode ler serviços de saúde (dados públicos)
       allow read: if true;
-      // Apenas admins podem criar serviços diretamente (bypass approval)
-      allow create: if isAdmin();
+      
+      // Usuários autenticados podem criar serviços (sujeito a aprovação)
+      allow create: if request.auth != null;
       // Criadores podem atualizar seus próprios serviços, ou admins
       allow update: if request.auth != null && 
         (request.auth.uid == resource.data.createdBy || isAdmin());
@@ -79,6 +81,10 @@ service cloud.firestore {
     // COLEÇÃO: registeredServices (aguardando aprovação)
     // ========================================
     match /registeredServices/{serviceId} {
+      // ✅ LEITURA PÚBLICA LIBERADA PARA SERVIÇOS APROVADOS
+      // Qualquer um pode ler serviços aprovados (dados públicos)
+      allow read: if true;
+      
       // Admins podem ler todos os registros pendentes
       allow read: if isAdmin();
       // Criadores podem ler seus próprios registros

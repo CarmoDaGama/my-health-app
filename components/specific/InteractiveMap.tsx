@@ -14,6 +14,13 @@ import { HealthService, Coordinates, Region } from '../../types';
 import { LocationService } from '../../services/location';
 import { Colors, spacing } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
+import { 
+  getServiceColor, 
+  getServiceIcon, 
+  calculateCategoryStats,
+  CategoryStats 
+} from '../../constants/categories';
+import { MapCategoryLegend } from './MapCategoryLegend';
 
 interface InteractiveMapProps {
   services: HealthService[];
@@ -25,6 +32,9 @@ interface InteractiveMapProps {
   autoZoomToServices?: boolean;
   enableClustering?: boolean;
   categoryColors?: Record<string, string>;
+  selectedCategories?: string[];
+  onCategoryToggle?: (categoryId: string) => void;
+  showCategoryLegend?: boolean;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -36,16 +46,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   showUserLocation = true,
   autoZoomToServices = true,
   enableClustering = true,
-  categoryColors = {
-    hospital: '#2196F3',
-    clinic: '#4CAF50', 
-    pharmacy: '#FF9800',
-    emergency: '#F44336',
-    laboratory: '#9C27B0',
-    default: '#2E7D32'
-  }
+  categoryColors,
+  selectedCategories = [],
+  onCategoryToggle,
+  showCategoryLegend = true,
 }) => {
   const webViewRef = useRef<WebView>(null);
+  const locateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
   const [isMapReady, setIsMapReady] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -62,10 +69,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   );
   const [userManuallyLocated, setUserManuallyLocated] = useState(false);
   const [initialAutoZoomDone, setInitialAutoZoomDone] = useState(false);
+  const [userLocationActivated, setUserLocationActivated] = useState(false);
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
 
   // Auto-locate user on component mount
   useEffect(() => {
-    if (showUserLocation && !currentUserLocation) {
+    if (showUserLocation && !currentUserLocation && !userLocationActivated) {
       handleLocateUser();
     }
   }, [showUserLocation]);
@@ -77,19 +86,38 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, [propUserLocation]);
 
-  // Auto-zoom to services when they change (but only once initially)
+  // Auto-zoom to services when they change (but only once initially and not if user manually located)
   useEffect(() => {
-    if (autoZoomToServices && services.length > 0 && isMapReady && !userManuallyLocated && !initialAutoZoomDone) {
-      // Only auto-zoom once initially
-      setTimeout(() => {
+    if (autoZoomToServices && 
+        services.length > 0 && 
+        isMapReady && 
+        !userManuallyLocated && 
+        !initialAutoZoomDone &&
+        !userLocationActivated) {
+      // Only auto-zoom once initially and not after user interaction
+      console.log('🗺️ Auto-zoom inicial para serviços');
+      const timeout = setTimeout(() => {
         fitToServices();
         setInitialAutoZoomDone(true);
       }, 500);
+      
+      return () => clearTimeout(timeout);
     }
-  }, [services, autoZoomToServices, isMapReady, userManuallyLocated, initialAutoZoomDone]);
+  }, [services, autoZoomToServices, isMapReady, userManuallyLocated, initialAutoZoomDone, userLocationActivated]);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (locateTimeoutRef.current) {
+        clearTimeout(locateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleLocateUser = async () => {
     setIsLocating(true);
+    console.log('📍 LOCATE ME: Iniciando localização manual do usuário...');
+    
     try {
       const locationResult = await LocationService.getLocationWithFallback();
       
@@ -99,20 +127,36 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           longitude: locationResult.coordinates.longitude
         };
         
+        console.log('✅ LOCATE ME: Localização obtida:', newLocation);
+        
+        // 🔒 BLOQUEAR QUALQUER AUTO-ZOOM FUTURO
+        setUserManuallyLocated(true);
+        setUserLocationActivated(true);
+        setInitialAutoZoomDone(true);
+        
+        // Atualizar localização atual
         setCurrentUserLocation(newLocation);
-        setUserManuallyLocated(true); // Mark as manually located
         onLocationChange?.(newLocation);
         
-        // Center map on user location with close zoom
-        const newRegion = {
+        // Região focada no usuário com zoom próximo
+        const userRegion = {
           latitude: newLocation.latitude,
           longitude: newLocation.longitude,
-          latitudeDelta: 0.005, // Closer zoom for manual location
-          longitudeDelta: 0.005
+          latitudeDelta: 0.003, // Zoom mais próximo
+          longitudeDelta: 0.003
         };
         
-        setMapRegion(newRegion);
-        updateMapView(newRegion, newLocation);
+        console.log('🎯 LOCATE ME: Centralizando mapa na localização (bloqueando auto-zoom)');
+        setMapRegion(userRegion);
+        
+        // Atualizar mapa imediatamente
+        updateMapView(userRegion, newLocation, true);
+        
+        // 🔒 SEGUNDA VERIFICAÇÃO: Garantir que não há race condition
+        setTimeout(() => {
+          console.log('🔐 LOCATE ME: Verificação final - mantendo localização do usuário');
+          updateMapView(userRegion, newLocation, true);
+        }, 500);
         
       } else {
         Alert.alert(
@@ -121,7 +165,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         );
       }
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('❌ LOCATE ME ERROR:', error);
       Alert.alert(
         'Location Error',
         'Failed to get your location. Please try again.'
@@ -133,6 +177,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   const fitToServices = useCallback(() => {
     if (services.length === 0) return;
+    
+    console.log('📊 Ajustando mapa para mostrar todos os serviços');
     
     const lats = services.map(s => s.coordinates.latitude);
     const lngs = services.map(s => s.coordinates.longitude);
@@ -159,22 +205,39 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   }, [services, currentUserLocation]);
 
   const handleShowAllServices = () => {
-    // This is a manual action, so we reset the auto-zoom flags
+    console.log('📊 Mostrando todos os serviços...');
+    // This is a manual action
     setUserManuallyLocated(false);
+    setUserLocationActivated(false); // Allow location button to work again
     setInitialAutoZoomDone(true);
     fitToServices();
   };
 
-  const updateMapView = (region: Region, userLoc: Coordinates | null) => {
+  const updateMapView = (region: Region, userLoc: Coordinates | null, forceUpdate: boolean = false) => {
     if (webViewRef.current) {
       const script = `
         if (window.map) {
+          // Force map update with animation disabled for immediate response
           window.map.setView([${region.latitude}, ${region.longitude}], 
-            ${calculateZoomLevel(region.latitudeDelta)});
+            ${calculateZoomLevel(region.latitudeDelta)}, {animate: ${forceUpdate ? 'false' : 'true'}});
           
           ${userLoc ? `
             if (window.userMarker) {
               window.userMarker.setLatLng([${userLoc.latitude}, ${userLoc.longitude}]);
+            } else {
+              // Create user marker if it doesn't exist
+              const userIcon = L.divIcon({
+                className: 'user-marker',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+              });
+              
+              window.userMarker = L.marker([${userLoc.latitude}, ${userLoc.longitude}], {
+                icon: userIcon,
+                zIndexOffset: 1000
+              }).addTo(window.map);
+              
+              window.userMarker.bindPopup('<div class="popup-content"><div class="popup-title">Your Location</div></div>');
             }
           ` : ''}
         }
@@ -195,9 +258,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return 17;
   };
 
-  const getServiceColor = (service: HealthService): string => {
-    const category = service.type?.toLowerCase() || 'default';
-    return categoryColors[category] || categoryColors.default;
+  const getServiceColorForMap = (service: HealthService): string => {
+    // Use the new category system
+    return getServiceColor(service.type || 'general');
   };
 
   const handleServiceClick = (serviceId: string) => {
@@ -233,9 +296,29 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   };
 
-  const servicesJSON = JSON.stringify(services.map(service => ({
+  // Calculate category statistics
+  useEffect(() => {
+    if (services.length > 0) {
+      const stats = calculateCategoryStats(services);
+      setCategoryStats(stats);
+    }
+  }, [services]);
+
+  // Filter services by category if categories are selected
+  const filteredServices = selectedCategories.length === 0 
+    ? services 
+    : services.filter(service => {
+        const serviceType = service.type || 'general';
+        // Import getCategoryByType to properly match categories
+        const { getCategoryByType } = require('../../constants/categories');
+        const serviceCategory = getCategoryByType(serviceType);
+        return selectedCategories.includes(serviceCategory.id);
+      });
+
+  const servicesJSON = JSON.stringify(filteredServices.map(service => ({
     ...service,
-    color: getServiceColor(service)
+    color: getServiceColorForMap(service),
+    icon: getServiceIcon(service.type || 'general')
   })));
 
   const htmlContent = `
@@ -466,16 +549,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         }
         
         function getServiceIcon(type) {
-          const icons = {
-            hospital: '🏥',
-            clinic: '🏩',
-            pharmacy: '💊',
-            emergency: '🚑',
-            laboratory: '🔬',
-            dentist: '🦷',
-            default: '🏥'
-          };
-          return icons[type?.toLowerCase()] || icons.default;
+          // Use the icon from the service data, or fallback to category icon
+          return type || '🏥';
         }
         
         // Listen for messages from React Native
@@ -502,7 +577,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     <View style={styles.container}>
       <WebView
         ref={webViewRef}
-        key={`map-${services.length}-${currentUserLocation?.latitude}-${currentUserLocation?.longitude}`}
+        key={`map-${services.length}`}
         source={{ html: htmlContent }}
         style={styles.webView}
         javaScriptEnabled={true}
@@ -546,11 +621,23 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         </TouchableOpacity>
       </View>
       
+      {/* Category Legend */}
+      {showCategoryLegend && categoryStats.length > 0 && onCategoryToggle && (
+        <MapCategoryLegend
+          categoryStats={categoryStats}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={onCategoryToggle}
+          position="top-right"
+          collapsible={true}
+        />
+      )}
+
       {/* Services Count Badge */}
-      {services.length > 0 && (
+      {filteredServices.length > 0 && (
         <View style={styles.servicesBadge}>
           <Text style={styles.servicesBadgeText}>
-            {services.length} facilities
+            {filteredServices.length} facilities
+            {selectedCategories.length > 0 && ` (filtered)`}
           </Text>
         </View>
       )}

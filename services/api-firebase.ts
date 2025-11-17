@@ -57,21 +57,13 @@ export class HealthServiceAPIFirebase {
       const healthServicesSnapshot = await getDocs(healthServicesQuery);
       console.log(`📋 healthServices retornou ${healthServicesSnapshot.size} documentos`);
 
-      // 2. Buscar também em registeredServices com status 'approved' (correção temporária)
-      const registeredServicesQuery = query(
-        collection(db, 'registeredServices'),
-        where('status', '==', 'approved'),
-        limit(pageSize)
-      );
+      // 2. POR ENQUANTO: Usar apenas healthServices até resolver permissões
+      // TODO: Reativar registeredServices quando as regras Firestore forem atualizadas
+      console.log('⚠️ TEMPORÁRIO: Usando apenas healthServices devido a problemas de permissão');
 
-      console.log('📡 Executando query em registeredServices (approved)...');
-      const registeredServicesSnapshot = await getDocs(registeredServicesQuery);
-      console.log(`📋 registeredServices (approved) retornou ${registeredServicesSnapshot.size} documentos`);
-
-      // 3. Processar serviços de ambas as coleções
+      // 3. Processar serviços apenas de healthServices
       const allSnapshots = [
-        ...healthServicesSnapshot.docs,
-        ...registeredServicesSnapshot.docs
+        ...healthServicesSnapshot.docs
       ];
 
       console.log(`📊 Total de documentos para processar: ${allSnapshots.length}`);

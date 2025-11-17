@@ -12,10 +12,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InteractiveMap } from '../../components/specific/InteractiveMap';
+import { CategoryFilter } from '../../components/specific/CategoryFilter';
 import { HealthService } from '../../types';
 import { RootStackParamList } from '../../types/navigation';
 import { HealthServiceAPIFirebase } from '../../services/api-firebase';
 import { LocationService } from '../../services/location';
+import { calculateCategoryStats, CategoryStats } from '../../constants/categories';
 
 type HomeSubTab = 'map' | 'list';
 
@@ -26,6 +28,8 @@ export const HomeScreen: React.FC = () => {
   const [services, setServices] = useState<HealthService[]>([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
 
   // Load services and user location on component mount
   React.useEffect(() => {
@@ -39,9 +43,16 @@ export const HomeScreen: React.FC = () => {
       const servicesResult = await HealthServiceAPIFirebase.getAllServices();
       const servicesData = servicesResult?.services || [];
       setServices(Array.isArray(servicesData) ? servicesData : []);
+      
+      // Calculate category statistics
+      if (servicesData.length > 0) {
+        const stats = calculateCategoryStats(servicesData);
+        setCategoryStats(stats);
+      }
     } catch (error) {
       console.error('Error loading services:', error);
       setServices([]);
+      setCategoryStats([]);
     } finally {
       setLoading(false);
     }
@@ -73,6 +84,33 @@ export const HomeScreen: React.FC = () => {
 
   const handleLocationChange = (location: { latitude: number; longitude: number }) => {
     setUserLocation(location);
+  };
+
+  const handleCategoryToggle = (categoryId: string) => {
+    setSelectedCategories(prev => {
+      if (prev.length === 0) {
+        // If no categories selected (showing all), select only this category
+        return [categoryId];
+      } else if (prev.includes(categoryId)) {
+        // If category is selected, remove it
+        const newCategories = prev.filter(id => id !== categoryId);
+        // If removing last category, show all (empty array)
+        return newCategories;
+      } else {
+        // Add category to selection
+        return [...prev, categoryId];
+      }
+    });
+  };
+
+  const handleSelectAllCategories = () => {
+    setSelectedCategories([]);
+  };
+
+  const handleClearAllCategories = () => {
+    // Select all available categories (essentially hiding everything until something is selected)
+    const allCategoryIds = categoryStats.map(stat => stat.categoryId);
+    setSelectedCategories(allCategoryIds);
   };
 
   const renderSubTabButton = (tab: HomeSubTab, icon: string, label: string) => (
@@ -110,6 +148,18 @@ export const HomeScreen: React.FC = () => {
       case 'map':
         return (
           <View style={styles.mapContainer}>
+            {/* Category Filter */}
+            <CategoryFilter
+              selectedCategories={selectedCategories}
+              onCategoryToggle={handleCategoryToggle}
+              onSelectAll={handleSelectAllCategories}
+              onClearAll={handleClearAllCategories}
+              categoryStats={categoryStats}
+              showStats={true}
+              horizontal={true}
+            />
+            
+            {/* Interactive Map */}
             <InteractiveMap
               services={services}
               userLocation={userLocation || undefined}
@@ -118,14 +168,9 @@ export const HomeScreen: React.FC = () => {
               showUserLocation={true}
               autoZoomToServices={true}
               enableClustering={true}
-              categoryColors={{
-                hospital: '#2196F3',
-                clinic: '#4CAF50', 
-                pharmacy: '#FF9800',
-                emergency: '#F44336',
-                laboratory: '#9C27B0',
-                default: '#2E7D32'
-              }}
+              selectedCategories={selectedCategories}
+              onCategoryToggle={handleCategoryToggle}
+              showCategoryLegend={true}
             />
           </View>
         );
