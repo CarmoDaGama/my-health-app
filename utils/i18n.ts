@@ -401,6 +401,10 @@ const translations = {
       details: 'Details',
       profile: 'Profile',
       welcome: 'Welcome',
+      // MENDLINK additions
+      facility: 'Facility',
+      facilities: 'Facilities',
+      professionalsInList: 'professionals in list view',
     },
     actions: {
       search: 'Search',
@@ -1165,6 +1169,10 @@ const translations = {
       details: 'Detalhes',
       profile: 'Perfil',
       welcome: 'Bem-vindo',
+      // MENDLINK additions
+      facility: 'Instituição',
+      facilities: 'Instituições',
+      professionalsInList: 'profissionais na lista',
     },
     actions: {
       search: 'Buscar',

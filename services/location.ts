@@ -399,6 +399,54 @@ export class LocationService {
   }
 
   /**
+   * Obtém localização com alta precisão (para inicialização automática estilo ATM Locator)
+   */
+  static async getCurrentLocationHighAccuracy(): Promise<LocationResult | null> {
+    try {
+      console.log('🎯 Tentando geolocalização de alta precisão (ATM Locator style)...');
+      
+      const hasPermission = await this.requestLocationPermission();
+      if (!hasPermission) {
+        throw new Error('Permission denied');
+      }
+
+      // Verificar se GPS está habilitado
+      const isEnabled = await Location.hasServicesEnabledAsync();
+      if (!isEnabled) {
+        throw new Error('GPS services disabled');
+      }
+
+      // Usar configuração de máxima precisão com timeout otimizado
+      const locationData = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeInterval: 15000, // 15s timeout para inicialização automática
+        distanceInterval: 0,
+        mayShowUserSettingsDialog: true,
+      });
+
+      const result: LocationResult = {
+        coordinates: {
+          latitude: locationData.coords.latitude,
+          longitude: locationData.coords.longitude,
+        },
+        accuracy: locationData.coords.accuracy || 0,
+        timestamp: locationData.timestamp,
+      };
+
+      // Validar coordenadas
+      if (!this.isValidCoordinates(result.coordinates)) {
+        throw new Error('Invalid coordinates received');
+      }
+
+      console.log('✅ High accuracy location obtained:', result.coordinates);
+      return result;
+    } catch (error) {
+      console.log('⚠️ High accuracy geolocation failed:', error);
+      return null;
+    }
+  }
+
+  /**
    * Obter localização usando fallbacks em caso de falha
    */
   static async getLocationWithFallback(): Promise<LocationResult | null> {

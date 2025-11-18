@@ -27,15 +27,17 @@ export const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState<HomeSubTab>('map');
   const [services, setServices] = useState<HealthService[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
 
-  // Load services and user location on component mount
+  // Load services and user location on component mount with automatic geolocation
   React.useEffect(() => {
     loadServices();
-    getUserLocation();
+    // Automatic geolocation on startup (ATM Locator style)
+    console.log('🚀 Starting automatic geolocation on app startup');
+    getUserLocationAutomatically();
   }, []);
 
   const loadServices = async () => {
@@ -44,6 +46,12 @@ export const HomeScreen: React.FC = () => {
       const servicesResult = await HealthServiceAPIFirebase.getAllServices();
       const servicesData = servicesResult?.services || [];
       setServices(Array.isArray(servicesData) ? servicesData : []);
+      
+      // MENDLINK Debug: Log service types for debugging
+      console.log(`📊 Loaded ${servicesData.length} total services:`);
+      servicesData.forEach((service, index) => {
+        console.log(`  ${index + 1}. ${service.name} - Type: ${service.type}${service.specialty ? ` - Specialty: ${service.specialty}` : ''}`);
+      });
       
       // Calculate category statistics
       if (servicesData.length > 0) {
@@ -59,24 +67,47 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
-  const getUserLocation = async () => {
+  const getUserLocationAutomatically = async () => {
     try {
-      const locationResult = await LocationService.getLocationWithFallback();
-      if (locationResult) {
+      console.log('📍 Attempting automatic geolocation (ATM Locator style)...');
+      setLoading(true);
+      
+      // First try high accuracy GPS
+      const locationResult = await LocationService.getCurrentLocationHighAccuracy();
+      if (locationResult && locationResult.coordinates) {
+        console.log('✅ Automatic geolocation successful:', locationResult.coordinates);
         setUserLocation({
           latitude: locationResult.coordinates.latitude,
           longitude: locationResult.coordinates.longitude
         });
+        return;
       }
+      
+      // Fallback to regular location
+      const fallbackResult = await LocationService.getLocationWithFallback();
+      if (fallbackResult) {
+        console.log('✅ Fallback geolocation successful:', fallbackResult.coordinates);
+        setUserLocation({
+          latitude: fallbackResult.coordinates.latitude,
+          longitude: fallbackResult.coordinates.longitude
+        });
+        return;
+      }
+      
+      throw new Error('No location methods available');
     } catch (error) {
-      console.error('Error getting user location:', error);
+      console.error('❌ Automatic geolocation failed, using Luanda fallback:', error);
       // Fallback to Luanda, Angola
       setUserLocation({
         latitude: -8.8383,
         longitude: 13.2344
       });
+    } finally {
+      setLoading(false);
     }
   };
+
+  const getUserLocation = getUserLocationAutomatically;
 
   const handleServicePress = (service: HealthService) => {
     console.log('Service selected:', service.name);
@@ -137,53 +168,111 @@ export const HomeScreen: React.FC = () => {
   );
 
   const renderContent = () => {
-    if (loading) {
+    if (loading === true) {
       return (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading healthcare facilities...</Text>
         </View>
       );
     }
-
     switch (activeSubTab) {
       case 'map':
-        return (
-          <View style={styles.mapContainer}>
-            {/* Category Filter */}
-            <CategoryFilter
-              selectedCategories={selectedCategories}
-              onCategoryToggle={handleCategoryToggle}
-              onSelectAll={handleSelectAllCategories}
-              onClearAll={handleClearAllCategories}
-              categoryStats={categoryStats}
-              showStats={true}
-              horizontal={true}
-            />
-            
-            {/* Interactive Map */}
-            <InteractiveMap
-              services={services}
-              userLocation={userLocation || undefined}
-              onServicePress={handleServicePress}
-              onLocationChange={handleLocationChange}
-              showUserLocation={true}
-              autoZoomToServices={true}
-              enableClustering={true}
-              selectedCategories={selectedCategories}
-              onCategoryToggle={handleCategoryToggle}
-              showCategoryLegend={true}
-            />
-          </View>
-        );
-      case 'list':
-        const professionals = services.filter(service => {
+        // MENDLINK Requirement: Map view shows ONLY facilities, not individual professionals
+        const facilities = services.filter(service => {
+          const isFacility = 
+            // Core facility types
+            service.type === 'hospital' ||
+            service.type === 'pharmacy' ||
+            service.type === 'laboratory' ||
+            service.type === 'emergency' ||
+            // Clinics without individual specialties (institution, not professional)
+            (service.type === 'clinic' && !service.specialty) ||
+            // Services explicitly marked as institutions
+            (service as any).serviceType === 'institution' ||
+            // Other facility types
+            service.type === 'diagnostic_center' ||
+            service.type === 'rehabilitation' ||
+            service.type === 'mental_health_center';
+          
+          // EXCLUDE individual professionals from map
           const isProfessional = 
             service.type === 'professional' ||
             service.specialty ||
             (service as any).serviceType === 'professional' ||
+            (service as any).professionalInfo;
+          
+          return isFacility && !isProfessional;
+        });
+        
+        console.log(`🗺️ Map showing ${facilities.length} facilities (excluding ${services.length - facilities.length} professionals)`);
+        
+        return (
+          <View style={styles.mapContainer}>
+            {/* Category Filter */}
+            {Array.isArray(categoryStats) && (
+              <CategoryFilter
+                selectedCategories={selectedCategories}
+                onCategoryToggle={handleCategoryToggle}
+                onSelectAll={handleSelectAllCategories}
+                onClearAll={handleClearAllCategories}
+                categoryStats={categoryStats}
+                showStats={true}
+                horizontal={true}
+              />
+            )}
+            
+            {/* MENDLINK Info: Facilities vs Professionals indicator */}
+            <View style={styles.mapInfoBanner}>
+              <Text style={styles.mapInfoText}>
+                🏥 {t('screens.map')} • {facilities.length} {facilities.length === 1 ? t('screens.facility') : t('screens.facilities')}
+                {services.length - facilities.length > 0 && (
+                  <Text style={styles.mapInfoSecondary}>
+                    {' '} • {services.length - facilities.length} {t('screens.professionalsInList')}
+                  </Text>
+                )}
+              </Text>
+            </View>
+            
+            {/* Interactive Map - Only Facilities */}
+            {Array.isArray(facilities) && facilities.length >= 0 && (
+              <InteractiveMap
+                services={facilities}
+                userLocation={userLocation || undefined}
+                onServicePress={handleServicePress}
+                onLocationChange={handleLocationChange}
+                showUserLocation={true}
+                autoZoomToServices={true}
+                enableClustering={true}
+                selectedCategories={selectedCategories || []}
+                onCategoryToggle={handleCategoryToggle}
+                showCategoryLegend={true}
+              />
+            )}
+          </View>
+        );
+      case 'list':
+        // MENDLINK Requirement: List view shows ONLY professionals, not facilities
+        const professionals = services.filter(service => {
+          const isProfessional = 
+            // Direct professional types
+            service.type === 'professional' ||
+            // Has specialty (indicates individual professional)
+            service.specialty ||
+            // ServiceType explicitly set as professional  
+            (service as any).serviceType === 'professional' ||
+            // Has professional info (registered professional)
             (service as any).professionalInfo ||
-            (service.verified && service.type === 'clinic');
-          return isProfessional;
+            // Individual practitioners in clinics (not the clinic itself)
+            (service.verified && service.type === 'practitioner');
+          
+          // EXCLUDE facilities (hospitals, pharmacies, labs) from professionals list
+          const isFacility = 
+            service.type === 'hospital' ||
+            service.type === 'pharmacy' ||
+            service.type === 'laboratory' ||
+            service.type === 'clinic' && !service.specialty; // Clinic without specialty = facility
+          
+          return isProfessional && !isFacility;
         });
         
         return (
@@ -197,7 +286,7 @@ export const HomeScreen: React.FC = () => {
               {professionals.length > 0 ? (
                 professionals.map((professional, index) => (
                   <TouchableOpacity
-                    key={index}
+                    key={professional.id || `professional-${index}`}
                     style={styles.professionalCard}
                     onPress={() => handleServicePress(professional)}
                   >
@@ -206,12 +295,12 @@ export const HomeScreen: React.FC = () => {
                         <Ionicons name="person" size={24} color={Colors.primary} />
                       </View>
                       <View style={styles.professionalDetails}>
-                        <Text style={styles.professionalName}>{professional.name}</Text>
+                        <Text style={styles.professionalName}>{String(professional.name || 'Professional')}</Text>
                         <Text style={styles.professionalSpecialty}>
-                          {professional.specialty || professional.type}
+                          {String(professional.specialty || professional.type || 'Professional')}
                         </Text>
                         {professional.address && (
-                          <Text style={styles.professionalAddress}>{professional.address}</Text>
+                          <Text style={styles.professionalAddress}>{String(professional.address)}</Text>
                         )}
                       </View>
                     </View>
@@ -379,5 +468,25 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  // MENDLINK: Map info banner styles
+  mapInfoBanner: {
+    backgroundColor: Colors.primary + '15',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: 8,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  mapInfoText: {
+    fontSize: fontSize.sm,
+    color: Colors.primary,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  mapInfoSecondary: {
+    fontSize: fontSize.xs,
+    color: Colors.textSecondary,
+    fontWeight: '400',
   },
 });
