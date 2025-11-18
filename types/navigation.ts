@@ -6,7 +6,6 @@ import { HealthService, Coordinates } from './index';
 export type RootStackParamList = {
   // Core screens
   Splash: undefined;
-  Welcome: undefined;
   MainTabs: undefined;
   ServiceDetail: {
     service: HealthService;
@@ -65,7 +64,6 @@ export type RootStackParamList = {
 // Bottom Tab Navigator types
 export type MainTabParamList = {
   Home: undefined;
-  Messaging: undefined;
   Search: undefined;
   Favorites: undefined;
   Profile: undefined;
@@ -75,11 +73,9 @@ export type MainTabParamList = {
 export type ServiceDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ServiceDetail'>;
 export type MapDirectionsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MapDirections'>;
 export type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
-export type WelcomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
 // Navigation prop types for Bottom Tab Navigator
 export type HomeScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Home'>;
-export type MessagingScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Messaging'>;
 export type SearchScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Search'>;
 export type FavoritesScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Favorites'>;
 export type ProfileScreenNavigationProp = BottomTabNavigationProp<MainTabParamList, 'Profile'>;

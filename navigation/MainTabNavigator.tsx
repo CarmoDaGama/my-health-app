@@ -7,7 +7,6 @@ import { useTranslation } from '../hooks/useTranslation';
 
 // Import tab screens
 import { HomeScreen } from '../screens/tabs/HomeScreen';
-import { MessagingScreen } from '../screens/tabs/MessagingScreen';
 import { SearchScreen } from '../screens/tabs/SearchScreen';
 import { FavoritesScreen } from '../screens/tabs/FavoritesScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -26,9 +25,6 @@ export const MainTabNavigator: React.FC = () => {
           switch (route.name) {
             case 'Home':
               iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'Messaging':
-              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
               break;
             case 'Search':
               iconName = focused ? 'search' : 'search-outline';
@@ -73,13 +69,6 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           title: 'Home',
           headerTitle: 'MENDLINK',
-        }}
-      />
-      <Tab.Screen
-        name="Messaging"
-        component={MessagingScreen}
-        options={{
-          title: 'Messages',
         }}
       />
       <Tab.Screen

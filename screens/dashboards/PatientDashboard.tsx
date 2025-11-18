@@ -263,13 +263,28 @@ export const PatientDashboard: React.FC = () => {
   };
 
   const getProfessionals = () => {
-    return allServices.filter(service => 
-      // Usar serviceType como filtro principal
-      (service as any).serviceType === 'professional' ||
-      // Fallback para casos antigos
-      (service.type === 'professional') ||
-      (service.type === 'clinic' && service.specialty)
-    );
+    console.log('🔍 getProfessionals - Total services:', allServices.length);
+    const professionals = allServices.filter(service => {
+      const isProfessional = 
+        // Usar serviceType como filtro principal
+        (service as any).serviceType === 'professional' ||
+        // Fallback para casos antigos
+        (service.type === 'professional') ||
+        // Clínicas com especialidade
+        (service.type === 'clinic' && service.specialty) ||
+        // Verificar se tem informações profissionais
+        (service as any).professionalInfo ||
+        // Verificar se é um profissional registrado
+        (service.verified && (service.type === 'clinic' || service.specialty));
+      
+      if (isProfessional) {
+        console.log('✅ Profissional encontrado:', service.name, service.type, service.specialty);
+      }
+      
+      return isProfessional;
+    });
+    console.log('📊 Total profissionais filtrados:', professionals.length);
+    return professionals;
   };
 
   const getInstitutions = () => {

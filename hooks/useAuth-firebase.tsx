@@ -146,6 +146,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         console.log('🚪 Usuário não autenticado');
         setUser(null);
+        // Auto-activate guest mode when no user is authenticated
+        console.log('🎭 Auto-ativando modo convidado após Splash Screen');
+        setIsGuestMode(true);
+        setUser({
+          id: 'guest',
+          email: '',
+          name: 'Convidado',
+          phone: '',
+          userType: UserType.GUEST,
+          preferences: {
+            language: 'en',
+            notifications: {
+              enabled: false,
+              serviceReminders: false,
+              healthTips: false,
+              emergencyAlerts: false,
+            },
+            favorites: { services: [], locations: [] },
+            privacy: { shareLocation: false, publicProfile: false }
+          }
+        } as any);
       }
       
       console.log('✅ Auth loading completed, setting loading = false');
@@ -155,6 +176,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Safety timeout to ensure loading never stays true forever
     const safetyTimeout = setTimeout(() => {
       console.log('⏰ Safety timeout: forçando loading = false');
+      // If no user is set and not in guest mode, activate guest mode
+      if (!user && !isGuestMode) {
+        console.log('🎭 Safety timeout: Auto-ativando modo convidado');
+        setIsGuestMode(true);
+        setUser({
+          id: 'guest',
+          email: '',
+          name: 'Convidado',
+          phone: '',
+          userType: UserType.GUEST,
+          preferences: {
+            language: 'en',
+            notifications: {
+              enabled: false,
+              serviceReminders: false,
+              healthTips: false,
+              emergencyAlerts: false,
+            },
+            favorites: { services: [], locations: [] },
+            privacy: { shareLocation: false, publicProfile: false }
+          }
+        } as any);
+      }
       setLoading(false);
     }, 5000);
 

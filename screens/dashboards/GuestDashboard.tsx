@@ -284,10 +284,28 @@ export const GuestDashboard: React.FC = () => {
   };
 
   const getProfessionals = () => {
-    return allServices.filter(service => 
-      service.type === 'professional' || 
-      service.specialty
-    );
+    console.log('🔍 getProfessionals (Guest) - Total services:', allServices.length);
+    const professionals = allServices.filter(service => {
+      const isProfessional = 
+        // Tipo profissional diretamente
+        service.type === 'professional' ||
+        // Tem especialidade (indica profissional)
+        service.specialty ||
+        // Serviços com serviceType professional
+        (service as any).serviceType === 'professional' ||
+        // Tem informações profissionais
+        (service as any).professionalInfo ||
+        // Clínicas verificadas
+        (service.verified && service.type === 'clinic');
+      
+      if (isProfessional) {
+        console.log('✅ Profissional encontrado (Guest):', service.name, service.type, service.specialty);
+      }
+      
+      return isProfessional;
+    });
+    console.log('📊 Total profissionais filtrados (Guest):', professionals.length);
+    return professionals;
   };
 
   const getInstitutions = () => {

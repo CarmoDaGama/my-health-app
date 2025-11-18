@@ -445,13 +445,6 @@ const translations = {
       validItems: 'Valid items',
       expiredItems: 'Expired items',
     },
-    welcome: {
-      title: 'Welcome to MediLocator',
-      subtitle: 'Quickly find the best health services in your region. Access detailed information, locations and reviews.',
-      login: 'Login',
-      continueAsGuest: 'Continue as Guest',
-      findProfessional: 'Find Professional',
-    },
     categories: {
       title: 'Categories',
       professionals: 'Professionals',
@@ -1214,13 +1207,6 @@ const translations = {
       totalItems: 'Total de itens',
       validItems: 'Itens válidos',
       expiredItems: 'Itens expirados',
-    },
-    welcome: {
-      title: 'Boas-Vindas ao MediLocator',
-      subtitle: 'Encontre rapidamente os melhores serviços de saúde da sua região. Acesse informações detalhadas, localizações e avaliações.',
-      login: 'Entrar',
-      continueAsGuest: 'Continuar como Convidado',
-      findProfessional: 'Encontrar Profissional',
     },
     categories: {
       title: 'Categorias',

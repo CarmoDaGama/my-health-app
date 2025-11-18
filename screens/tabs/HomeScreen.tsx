@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -175,13 +176,55 @@ export const HomeScreen: React.FC = () => {
           </View>
         );
       case 'list':
+        const professionals = services.filter(service => {
+          const isProfessional = 
+            service.type === 'professional' ||
+            service.specialty ||
+            (service as any).serviceType === 'professional' ||
+            (service as any).professionalInfo ||
+            (service.verified && service.type === 'clinic');
+          return isProfessional;
+        });
+        
         return (
           <View style={styles.listContainer}>
             <Text style={styles.contentTitle}>Healthcare Professionals</Text>
             <Text style={styles.contentDescription}>
-              {services.length} professionals available in your area
+              {professionals.length} professionals available in your area
             </Text>
-            {/* TODO: Implement professionals list view */}
+            
+            <ScrollView style={styles.professionalsList} showsVerticalScrollIndicator={false}>
+              {professionals.length > 0 ? (
+                professionals.map((professional, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.professionalCard}
+                    onPress={() => handleServicePress(professional)}
+                  >
+                    <View style={styles.professionalInfo}>
+                      <View style={styles.professionalIcon}>
+                        <Ionicons name="person" size={24} color={Colors.primary} />
+                      </View>
+                      <View style={styles.professionalDetails}>
+                        <Text style={styles.professionalName}>{professional.name}</Text>
+                        <Text style={styles.professionalSpecialty}>
+                          {professional.specialty || professional.type}
+                        </Text>
+                        {professional.address && (
+                          <Text style={styles.professionalAddress}>{professional.address}</Text>
+                        )}
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <Ionicons name="search" size={48} color={Colors.textSecondary} />
+                  <Text style={styles.emptyStateText}>No professionals found</Text>
+                </View>
+              )}
+            </ScrollView>
           </View>
         );
       default:
@@ -260,9 +303,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
+    padding: spacing.md,
   },
   contentTitle: {
     fontSize: fontSize.lg,
@@ -276,5 +317,67 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  professionalsList: {
+    flex: 1,
+  },
+  professionalCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  professionalInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  professionalIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.accent + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  professionalDetails: {
+    flex: 1,
+  },
+  professionalName: {
+    fontSize: fontSize.md,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  professionalSpecialty: {
+    fontSize: fontSize.sm,
+    color: Colors.primary,
+    marginBottom: 2,
+  },
+  professionalAddress: {
+    fontSize: fontSize.xs,
+    color: Colors.textSecondary,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  emptyStateText: {
+    fontSize: fontSize.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
 });
