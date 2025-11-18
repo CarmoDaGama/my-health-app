@@ -70,6 +70,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [userManuallyLocated, setUserManuallyLocated] = useState(false);
   const [initialAutoZoomDone, setInitialAutoZoomDone] = useState(false);
   const [userLocationActivated, setUserLocationActivated] = useState(false);
+  // Lock to prevent other effects from recentering the map immediately after a manual locate
+  const userLocationLockRef = useRef<boolean>(false);
+  const USER_LOCATION_LOCK_MS = 10000; // 10 seconds lock
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
 
   // Auto-locate user on component mount
@@ -133,6 +136,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         setUserManuallyLocated(true);
         setUserLocationActivated(true);
         setInitialAutoZoomDone(true);
+        // Set a temporary lock to avoid race conditions where other effects
+        // (services update / mapReady) recenter the map immediately after locate
+        userLocationLockRef.current = true;
+        // Release lock after a short timeout so normal behavior resumes
+        if (locateTimeoutRef.current) clearTimeout(locateTimeoutRef.current);
+        locateTimeoutRef.current = setTimeout(() => {
+          userLocationLockRef.current = false;
+          locateTimeoutRef.current = null;
+          console.log('🔓 LOCATE ME: location lock released');
+        }, USER_LOCATION_LOCK_MS);
         
         // Atualizar localização atual
         setCurrentUserLocation(newLocation);
@@ -176,6 +189,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   };
 
   const fitToServices = useCallback(() => {
+    // Respect temporary lock: if user recently used Locate Me, skip fitting
+    if (userLocationLockRef.current) {
+      console.log('⚠️ fitToServices skipped due to user location lock');
+      return;
+    }
     if (services.length === 0) return;
     
     console.log('📊 Ajustando mapa para mostrar todos os serviços');
@@ -201,7 +219,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     };
     
     setMapRegion(newRegion);
-    updateMapView(newRegion, currentUserLocation);
+  updateMapView(newRegion, currentUserLocation);
   }, [services, currentUserLocation]);
 
   const handleShowAllServices = () => {
@@ -210,6 +228,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setUserManuallyLocated(false);
     setUserLocationActivated(false); // Allow location button to work again
     setInitialAutoZoomDone(true);
+    // Release any location lock so auto-zoom/fits can operate again
+    userLocationLockRef.current = false;
     fitToServices();
   };
 
@@ -277,7 +297,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       switch (data.type) {
         case 'mapReady':
           setIsMapReady(true);
-          if (autoZoomToServices && services.length > 0) {
+          // Only auto-zoom if the user hasn't manually located themselves
+          // and the initial auto-zoom hasn't already been performed.
+          // This prevents a race where the WebView/map signals ready after
+          // the user used "Locate Me" and then the map jumps back to show services.
+          if (
+            autoZoomToServices &&
+            services.length > 0 &&
+            !userManuallyLocated &&
+            !initialAutoZoomDone &&
+            !userLocationActivated
+          ) {
             setTimeout(() => fitToServices(), 500);
           }
           break;
