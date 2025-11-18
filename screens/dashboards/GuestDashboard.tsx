@@ -555,11 +555,11 @@ export const GuestDashboard: React.FC = () => {
               blurOnSubmit={true}
               enablesReturnKeyAutomatically={true}
             />
-            {searchQuery.length > 0 && (
+            {searchQuery.length > 0 ? (
               <TouchableOpacity onPress={() => handleSearch('')}>
                 <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
           
           {/* Botões de ação para Guest */}
@@ -638,16 +638,16 @@ export const GuestDashboard: React.FC = () => {
         )}
         
         {/* Contador de resultados - só aparece quando não está expandido */}
-        {!isExpanded && (
+        {!isExpanded ? (
           <View style={styles.resultsInfo}>
             <Text style={styles.resultsText}>
-              {filteredServices.length} {t('app.servicesFound') || 'serviços encontrados'}
+              {String(filteredServices.length || 0)} {t('app.servicesFound') || 'serviços encontrados'}
             </Text>
             <Text style={styles.guestNote}>
               {t('guest.limitedAccess') || 'Faça login para acesso completo'}
             </Text>
           </View>
-        )}
+        ) : null}
       </Animated.View>
     </View>
   );

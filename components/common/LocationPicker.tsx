@@ -580,7 +580,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
             {isSearching && (
               <ActivityIndicator size="small" color={colors.primary} style={styles.searchLoader} />
             )}
-            {searchQuery.length > 0 && (
+            {searchQuery.length > 0 ? (
               <TouchableOpacity
                 onPress={() => {
                   setSearchQuery('');
@@ -591,11 +591,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               >
                 <Text style={styles.clearButtonText}>✕</Text>
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
 
           {/* Resultados da Pesquisa */}
-          {searchQuery.length >= 3 && (
+          {searchQuery.length >= 3 ? (
             <View style={styles.searchResultsContainer}>
               {searchResults.length > 0 ? (
                 <FlatList
@@ -629,7 +629,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                 </View>
               ) : null}
             </View>
-          )}
+          ) : null}
         </View>
 
         <MapComponent />

@@ -37,33 +37,33 @@ export const SearchScreen: React.FC = () => {
     >
       <View style={styles.serviceHeader}>
         <View style={styles.serviceInfo}>
-          <Text style={styles.serviceName}>{item.name}</Text>
-          <Text style={styles.serviceType}>{item.type}</Text>
+          <Text style={styles.serviceName}>{item.name || 'N/A'}</Text>
+          <Text style={styles.serviceType}>{item.type || 'N/A'}</Text>
         </View>
         <View style={styles.serviceActions}>
-          {item.rating && (
+          {item.rating ? (
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={14} color="#FFB800" />
-              <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingText}>{(item.rating || 0).toFixed(1)}</Text>
             </View>
-          )}
+          ) : null}
           <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
         </View>
       </View>
       
       <Text style={styles.serviceAddress} numberOfLines={1}>
-        📍 {item.address}, {item.city}
+        📍 {item.address || 'N/A'}, {item.city || 'N/A'}
       </Text>
       
-      {item.specialty && (
-        <Text style={styles.serviceSpecialty}>🔬 {item.specialty}</Text>
-      )}
+      {item.specialty ? (
+        <Text style={styles.serviceSpecialty}>🔬 {item.specialty || 'N/A'}</Text>
+      ) : null}
       
-      {item.services && item.services.length > 0 && (
+      {item.services && item.services.length > 0 ? (
         <Text style={styles.serviceServices} numberOfLines={1}>
           💼 {item.services.slice(0, 3).join(', ')}{item.services.length > 3 ? '...' : ''}
         </Text>
-      )}
+      ) : null}
     </TouchableOpacity>
   );
 

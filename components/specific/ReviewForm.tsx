@@ -158,11 +158,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
         </View>
         {rating > 0 && (
           <Text style={styles.ratingText}>
-            {rating === 1 && t('ratings.veryBad')}
-            {rating === 2 && t('ratings.bad')}
-            {rating === 3 && t('ratings.regular')}
-            {rating === 4 && t('ratings.good')}
-            {rating === 5 && t('ratings.excellent')}
+            {rating === 1 ? t('ratings.veryBad') || 'Muito Ruim' : ''}
+            {rating === 2 ? t('ratings.bad') || 'Ruim' : ''}
+            {rating === 3 ? t('ratings.regular') || 'Regular' : ''}
+            {rating === 4 ? t('ratings.good') || 'Bom' : ''}
+            {rating === 5 ? t('ratings.excellent') || 'Excelente' : ''}
           </Text>
         )}
       </View>

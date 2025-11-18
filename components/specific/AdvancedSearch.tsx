@@ -190,11 +190,11 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             size={20}
             color={activeFiltersCount > 0 ? Colors.white : Colors.primary}
           />
-          {activeFiltersCount > 0 && (
+          {activeFiltersCount > 0 ? (
             <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
+              <Text style={styles.filterBadgeText}>{String(activeFiltersCount || 0)}</Text>
             </View>
-          )}
+          ) : null}
         </TouchableOpacity>
       </View>
 
@@ -245,7 +245,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       )}
 
       {/* Auto-suggestions */}
-      {showSuggestions && (
+      {showSuggestions ? (
         <View style={styles.suggestionsContainer}>
           <FlatList
             data={suggestions}
@@ -261,32 +261,32 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                   color={Colors.textSecondary}
                   style={styles.suggestionIcon}
                 />
-                <Text style={styles.suggestionText}>{item.text}</Text>
-                {item.metadata?.count && (
-                  <Text style={styles.suggestionCount}>{item.metadata.count}</Text>
-                )}
+                <Text style={styles.suggestionText}>{item.text || ''}</Text>
+                {item.metadata?.count ? (
+                  <Text style={styles.suggestionCount}>{String(item.metadata.count)}</Text>
+                ) : null}
               </TouchableOpacity>
             )}
             style={styles.suggestionsList}
             keyboardShouldPersistTaps="handled"
           />
         </View>
-      )}
+      ) : null}
 
       {/* Search Results Summary */}
-      {results && !showSuggestions && (
+      {results && !showSuggestions ? (
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsText}>
-            {results.totalResults} results found
+            {String(results.totalResults || 0)} results found
             {results.searchTime > 0 && ` in ${results.searchTime}ms`}
           </Text>
-          {activeFiltersCount > 0 && (
+          {activeFiltersCount > 0 ? (
             <TouchableOpacity onPress={clearFilters}>
               <Text style={styles.clearFiltersText}>Clear all</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
         </View>
-      )}
+      ) : null}
 
       {/* Advanced Filters Modal */}
       <AdvancedFiltersModal

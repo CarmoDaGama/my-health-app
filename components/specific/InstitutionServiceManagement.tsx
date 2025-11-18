@@ -257,11 +257,11 @@ export const InstitutionServiceManagement: React.FC<InstitutionServiceManagement
               onChangeText={setSearchQuery}
               placeholderTextColor={Colors.textSecondary}
             />
-            {searchQuery.length > 0 && (
+            {searchQuery.length > 0 ? (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
                 <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
 
           {/* Services List */}
