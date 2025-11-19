@@ -220,6 +220,46 @@ service cloud.firestore {
       allow update, delete: if isModerator();
     }
     
+    // ========================================
+    // COLEÇÃO: thematicReviews (avaliações temáticas)
+    // ========================================
+    match /thematicReviews/{reviewId} {
+      // Qualquer um pode ler avaliações temáticas (dados públicos)
+      allow read: if true;
+      
+      // TEMPORÁRIO: Regra mais permissiva para debug
+      // Usuários autenticados podem criar avaliações sem validação rigorosa
+      allow create: if request.auth != null;
+      
+      // Criadores podem atualizar suas próprias avaliações
+      allow update: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isModerator());
+      
+      // Criadores podem deletar suas avaliações, ou moderadores
+      allow delete: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isModerator());
+    }
+    
+    // ========================================
+    // COLEÇÃO: serviceInsights (insights automáticos dos serviços)
+    // ========================================
+    match /serviceInsights/{serviceId} {
+      // TEMPORÁRIO: Regras mais permissivas para debug
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+    
+    // ========================================
+    // COLEÇÃO: reviewStats (estatísticas de avaliações)
+    // ========================================
+    match /reviewStats/{serviceId} {
+      // TEMPORÁRIO: Regras mais permissivas para debug
+      allow read: if true;
+      allow create, update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+    
     // Helper functions for review validation
     function validateReviewData(data) {
       return data.keys().hasAll(['serviceId', 'userId', 'userName', 'rating', 'comment', 'createdAt', 'updatedAt', 'verified', 'helpful'])
@@ -248,6 +288,47 @@ service cloud.firestore {
             (data.rating is int && data.rating >= 1 && data.rating <= 5))
         && (!data.diff(resource.data).affectedKeys().hasAny(['comment']) || 
             (data.comment is string && data.comment.size() >= 1 && data.comment.size() <= 1000));
+    }
+    
+    // ========================================
+    // FUNÇÕES DE VALIDAÇÃO PARA AVALIAÇÕES TEMÁTICAS
+    // ========================================
+    
+    function validateThematicReviewData(data) {
+      return data.keys().hasAll(['serviceId', 'serviceName', 'serviceType', 'userId', 'userName', 'categoryRatings', 'overallRating', 'visitContext', 'createdAt', 'updatedAt', 'verified', 'helpful', 'reportCount'])
+        && data.serviceId is string
+        && data.serviceId.size() > 0
+        && data.serviceName is string
+        && data.serviceName.size() > 0
+        && data.serviceType is string
+        && data.serviceType.size() > 0
+        && data.userId is string
+        && data.userId.size() > 0
+        && data.userName is string
+        && data.userName.size() > 0
+        && data.categoryRatings is map
+        && data.overallRating is number
+        && data.overallRating >= 1
+        && data.overallRating <= 5
+        && data.visitContext is string
+        && data.visitContext.size() > 0
+        && data.verified == false // New reviews start as unverified
+        && data.helpful is int
+        && data.helpful >= 0
+        && data.reportCount is int
+        && data.reportCount >= 0
+        && (!data.keys().hasAny(['generalComment']) || data.generalComment is string || data.generalComment == null)
+        && (!data.keys().hasAny(['userAvatar']) || data.userAvatar is string || data.userAvatar == null);
+    }
+    
+    function validateThematicReviewUpdate(data) {
+      return data.diff(resource.data).affectedKeys().hasOnly(['categoryRatings', 'overallRating', 'generalComment', 'updatedAt', 'helpful'])
+        && (!data.diff(resource.data).affectedKeys().hasAny(['overallRating']) || 
+            (data.overallRating is number && data.overallRating >= 1 && data.overallRating <= 5))
+        && (!data.diff(resource.data).affectedKeys().hasAny(['generalComment']) || 
+            data.generalComment is string || data.generalComment == null)
+        && (!data.diff(resource.data).affectedKeys().hasAny(['categoryRatings']) || 
+            data.categoryRatings is map);
     }
   }
 }

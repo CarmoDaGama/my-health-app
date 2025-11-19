@@ -18,6 +18,8 @@ import { Colors, spacing, borderRadius, fontSize } from '../constants';
 import { ReviewForm } from '../components/specific/ReviewForm';
 import { ReviewsList } from '../components/specific/ReviewsList';
 import { ReviewsPreview } from '../components/specific/ReviewsPreview';
+import { ThematicReviewForm } from '../components/specific/ThematicReviewForm';
+import { ServiceReviews } from '../components/specific/ServiceReviews';
 import { useReviews } from '../hooks/useReviews';
 import { useAuth } from '../hooks/useAuth-firebase';
 import { useTranslation } from '../hooks/useTranslation';
@@ -40,6 +42,11 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [userReview, setUserReview] = useState<Review | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  
+  // Thematic Reviews states
+  const [showThematicReviewForm, setShowThematicReviewForm] = useState(false);
+  const [showThematicReviews, setShowThematicReviews] = useState(false);
+  const [activeReviewTab, setActiveReviewTab] = useState<'traditional' | 'thematic'>('thematic');
 
   const getServiceTypeLabel = (type: string) => {
     if (type === 'professional') return t('serviceDetail.professionalDetails');
@@ -89,8 +96,27 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       return;
     }
     
-    setEditingReview(null);
-    setShowReviewForm(true);
+    // Use thematic reviews by default
+    if (activeReviewTab === 'thematic') {
+      setShowThematicReviewForm(true);
+    } else {
+      setEditingReview(null);
+      setShowReviewForm(true);
+    }
+  };
+
+  const handleThematicReviewSubmitted = (reviewId: string) => {
+    console.log('Review temático enviado:', reviewId);
+    setShowThematicReviewForm(false);
+    // Refresh reviews or show success message
+  };
+
+  const handleShowReviews = () => {
+    if (activeReviewTab === 'thematic') {
+      setShowThematicReviews(true);
+    } else {
+      setShowAllReviews(true);
+    }
   };
 
   const handleEditReview = (review: Review) => {
@@ -414,6 +440,44 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
         } : undefined}
       />
       
+      {/* Thematic Review Form Modal */}
+      {showThematicReviewForm && (
+        <View style={styles.fullScreenModal}>
+          <SafeAreaView style={styles.modalContainer}>
+            <ThematicReviewForm
+              service={service}
+              onReviewSubmitted={handleThematicReviewSubmitted}
+              onCancel={() => setShowThematicReviewForm(false)}
+            />
+          </SafeAreaView>
+        </View>
+      )}
+
+      {/* Thematic Reviews Modal */}
+      {showThematicReviews && (
+        <View style={styles.fullScreenModal}>
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowThematicReviews(false)}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Avaliações Temáticas</Text>
+              <View style={styles.modalPlaceholder} />
+            </View>
+            <ServiceReviews
+              service={service}
+              onWriteReview={() => {
+                setShowThematicReviews(false);
+                setShowThematicReviewForm(true);
+              }}
+            />
+          </SafeAreaView>
+        </View>
+      )}
+
       {/* All Reviews Modal */}
       {showAllReviews && (
         <View style={styles.fullScreenModal}>
@@ -680,5 +744,91 @@ const styles = StyleSheet.create({
   },
   modalPlaceholder: {
     width: 40,
+  },
+  
+  // Thematic Reviews Styles
+  reviewTabs: {
+    flexDirection: 'row',
+    marginVertical: spacing.md,
+    backgroundColor: Colors.background,
+    borderRadius: 8,
+    padding: spacing.xs,
+  },
+  reviewTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: 6,
+    position: 'relative',
+  },
+  reviewTabActive: {
+    backgroundColor: Colors.surface,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  reviewTabText: {
+    fontSize: fontSize.xs,
+    color: Colors.textSecondary,
+    marginLeft: spacing.xs,
+    fontWeight: '500',
+  },
+  reviewTabTextActive: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  newBadge: {
+    position: 'absolute',
+    top: -spacing.xs,
+    right: -spacing.xs,
+    backgroundColor: Colors.error,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  newBadgeText: {
+    fontSize: 8,
+    color: Colors.surface,
+    fontWeight: 'bold',
+  },
+  thematicPreview: {
+    backgroundColor: Colors.surface,
+    padding: spacing.lg,
+    borderRadius: 12,
+    margin: spacing.md,
+  },
+  thematicPreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  thematicPreviewTitle: {
+    fontSize: fontSize.md,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginLeft: spacing.sm,
+  },
+  thematicPreviewDescription: {
+    fontSize: fontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.lg,
+  },
+  tryThematicButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tryThematicButtonText: {
+    color: Colors.surface,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
   },
 });

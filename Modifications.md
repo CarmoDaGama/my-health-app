@@ -112,7 +112,9 @@ Starting (2/10) *Criar plano de modernização do design*
 #### **4. Internacionalização (Criticalidade: Média-Alta)**
 - 🌍 Migração completa para **inglês**
 - 📝 Atualização de todos os textos da interface
+ 
 
+ 
 #### **5. Mapa Interativo Avançado (Criticalidade: Muito Alta)**
 - 🗺️ Mapa totalmente interativo estilo **ATM Locator**
 - 📍 Geolocalização automática na inicialização
