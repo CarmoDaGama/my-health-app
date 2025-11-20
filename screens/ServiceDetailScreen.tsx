@@ -48,6 +48,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const [showThematicReviewForm, setShowThematicReviewForm] = useState(false);
   const [showThematicReviews, setShowThematicReviews] = useState(false);
   const [activeReviewTab, setActiveReviewTab] = useState<'traditional' | 'thematic'>('thematic');
+  const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
 
   const getServiceTypeLabel = (type: string) => {
     if (type === 'professional') return t('serviceDetail.professionalDetails');
@@ -110,7 +111,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
     console.log('Review temático enviado:', reviewId);
     setShowThematicReviewForm(false);
     // Force refresh of thematic reviews preview
-    // O ThematicReviewsPreview tem useEffect que recarrega quando o componente é remontado
+    setReviewsRefreshTrigger(prev => prev + 1);
+    console.log('🔄 [ServiceDetailScreen] Forçando refresh dos reviews temáticos');
   };
 
   const handleShowReviews = () => {
@@ -132,6 +134,9 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       const updatedReview = await checkUserReview(service.id);
       setUserReview(updatedReview);
     }
+    // Force refresh of reviews preview
+    setReviewsRefreshTrigger(prev => prev + 1);
+    console.log('🔄 [ServiceDetailScreen] Forçando refresh dos reviews tradicionais');
   };
 
   const handleCloseReviewForm = () => {
@@ -224,12 +229,14 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               <ThematicReviewsPreview
                 serviceId={service.id}
                 maxReviews={3}
+                refreshTrigger={reviewsRefreshTrigger}
               />
             ) : (
               <ReviewsPreview
                 serviceId={service.id}
                 onEditReview={handleEditReview}
                 maxReviews={3}
+                refreshTrigger={reviewsRefreshTrigger}
               />
             );
           })()}
@@ -370,12 +377,14 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               <ThematicReviewsPreview
                 serviceId={service.id}
                 maxReviews={3}
+                refreshTrigger={reviewsRefreshTrigger}
               />
             ) : (
               <ReviewsPreview
                 serviceId={service.id}
                 onEditReview={handleEditReview}
                 maxReviews={3}
+                refreshTrigger={reviewsRefreshTrigger}
               />
             );
           })()}

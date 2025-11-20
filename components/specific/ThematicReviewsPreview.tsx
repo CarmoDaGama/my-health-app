@@ -22,12 +22,14 @@ interface ThematicReviewsPreviewProps {
   serviceId: string;
   onEditReview?: (review: ThematicReview) => void;
   maxReviews?: number;
+  refreshTrigger?: number;
 }
 
 export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
   serviceId,
   onEditReview,
   maxReviews = 3,
+  refreshTrigger = 0,
 }) => {
   console.log('🎬 [ThematicReviewsPreview] Componente renderizado:', {
     serviceId,
@@ -46,10 +48,11 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
     console.log('🔄 [ThematicReviewsPreview] useEffect disparado:', {
       serviceId,
       maxReviews,
+      refreshTrigger,
       timestamp: new Date().toISOString()
     });
     loadThematicReviews();
-  }, [serviceId, maxReviews]);
+  }, [serviceId, maxReviews, refreshTrigger]);
 
   const loadThematicReviews = async () => {
     console.log('🎯 [ThematicReviewsPreview] loadThematicReviews chamado:', {

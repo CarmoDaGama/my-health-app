@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { HealthService, Coordinates, Region } from '../../types';
 import { LocationService } from '../../services/location';
-import { Colors, spacing } from '../../constants';
+import { Colors, spacing, borderRadius } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
 import { 
   getServiceColor, 
@@ -634,7 +634,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           style={styles.showAllButton}
           onPress={handleShowAllServices}
         >
-          <Ionicons name="apps" size={20} color="white" />
+          <Ionicons name="apps" size={24} color="white" />
         </TouchableOpacity>
         
         {/* Locate Me Button */}
@@ -657,7 +657,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           categoryStats={categoryStats}
           selectedCategories={selectedCategories}
           onCategoryToggle={onCategoryToggle}
-          position="top-right"
+          position="top-left"
           collapsible={true}
         />
       )}
@@ -697,14 +697,15 @@ const styles = StyleSheet.create({
   controlButtons: {
     position: 'absolute',
     right: spacing.md,
-    bottom: spacing.xl,
+    bottom: spacing.xxxl + spacing.xl, // 64 + 32 = 96px para evitar sobreposição com a tab bar
     flexDirection: 'column',
+    alignItems: 'center',
     gap: spacing.sm,
   },
   showAllButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.round,
     backgroundColor: Colors.info,
     justifyContent: 'center',
     alignItems: 'center',
@@ -718,9 +719,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   locateButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.round,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -735,7 +736,7 @@ const styles = StyleSheet.create({
   },
   servicesBadge: {
     position: 'absolute',
-    top: spacing.md,
+    bottom: spacing.xxxl + spacing.xl, // 64 + 32 = 96px para evitar sobreposição com a tab bar
     left: spacing.md,
     backgroundColor: Colors.primary + 'CC',
     paddingHorizontal: spacing.sm,

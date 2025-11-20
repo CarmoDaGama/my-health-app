@@ -16,12 +16,14 @@ interface ReviewsPreviewProps {
   serviceId: string;
   onEditReview?: (review: Review) => void;
   maxReviews?: number;
+  refreshTrigger?: number;
 }
 
 export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
   serviceId,
   onEditReview,
   maxReviews = 3,
+  refreshTrigger = 0,
 }) => {
   const { user } = useAuth();
   const { loadReviews, reviews, stats, isLoading, error } = useReviews();
@@ -31,7 +33,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
     if (serviceId) {
       loadReviews(serviceId, { limit: maxReviews });
     }
-  }, [serviceId, loadReviews, maxReviews]);
+  }, [serviceId, loadReviews, maxReviews, refreshTrigger]);
 
   const renderStars = (rating: number) => {
     return (
