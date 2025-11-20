@@ -31,3 +31,8 @@ export { default as InstitutionForm } from './auth/InstitutionForm';
 // New common components  
 export { SmartDashboard } from './common/SmartDashboard';
 export { ProtectedComponent, useConditionalRender, usePermissionedAction } from './common/ProtectedComponent';
+
+// Neumorphic UI components
+export { NeumorphicButton } from './ui/NeumorphicButton';
+export { NeumorphicCard } from './ui/NeumorphicCard';
+export { NeumorphicInput } from './ui/NeumorphicInput';

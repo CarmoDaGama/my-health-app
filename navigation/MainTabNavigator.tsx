@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../constants';
+import { Colors, shadows } from '../constants';
 import { MainTabParamList } from '../types/navigation';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -45,21 +45,40 @@ export const MainTabNavigator: React.FC = () => {
         tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: {
           backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          borderTopWidth: 0,
+          height: 70,
+          paddingBottom: 12,
+          paddingTop: 12,
+          paddingHorizontal: 16,
+          ...shadows.neumorphic.medium,
+          borderRadius: 20,
+          marginHorizontal: 16,
+          marginBottom: 16,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: 11,
+          fontWeight: '600',
+          marginTop: 4,
+        },
+        tabBarItemStyle: {
+          borderRadius: 12,
+          marginHorizontal: 4,
+          paddingVertical: 4,
         },
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: Colors.background,
+          ...shadows.neumorphic.small,
+          borderBottomWidth: 0,
         },
-        headerTintColor: Colors.textOnPrimary,
+        headerTintColor: Colors.text,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '700',
+          fontSize: 18,
+          color: Colors.text,
         },
       })}
     >

@@ -13,8 +13,11 @@ import { useAuth, useUser } from '../hooks/useAuth-firebase';
 import { useTranslation, useLocalization } from '../hooks/useTranslation';
 import { usePreferences } from '../hooks/usePreferences';
 import { UserAvatar, LanguageSelector } from '../components';
-import { Colors } from '../constants/colors';
+import { Colors, shadows, borderRadius } from '../constants';
 import { spacing } from '../constants/dimensions';
+import { NeumorphicCard } from '../components/ui/NeumorphicCard';
+import { NeumorphicButton } from '../components/ui/NeumorphicButton';
+import { createNeumorphicStyle } from '../utils/neumorphicStyles';
 import { UserType, isProfessional, isInstitution, NormalUser } from '../types';
 
 export const ProfileScreen: React.FC = () => {

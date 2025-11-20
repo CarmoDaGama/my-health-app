@@ -10,7 +10,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, spacing, fontSize } from '../../constants';
+import { Colors, spacing, fontSize, shadows, borderRadius } from '../../constants';
+import { NeumorphicCard } from '../../components/ui/NeumorphicCard';
+import { NeumorphicButton } from '../../components/ui/NeumorphicButton';
+import { createNeumorphicStyle } from '../../utils/neumorphicStyles';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InteractiveMap } from '../../components/specific/InteractiveMap';
 import { CategoryFilter } from '../../components/specific/CategoryFilter';
@@ -146,25 +149,17 @@ export const HomeScreen: React.FC = () => {
   };
 
   const renderSubTabButton = (tab: HomeSubTab, icon: string, label: string) => (
-    <TouchableOpacity
-      style={[
-        styles.subTabButton,
-        activeSubTab === tab && styles.subTabButtonActive
-      ]}
+    <NeumorphicButton
+      title={label}
+      icon={icon}
+      variant={activeSubTab === tab ? 'primary' : 'tertiary'}
+      size="small"
       onPress={() => setActiveSubTab(tab)}
-    >
-      <Ionicons 
-        name={icon as any} 
-        size={20} 
-        color={activeSubTab === tab ? Colors.primary : Colors.textSecondary} 
-      />
-      <Text style={[
-        styles.subTabText,
-        activeSubTab === tab && styles.subTabTextActive
-      ]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
+      style={{
+        ...styles.subTabButton,
+        ...(activeSubTab === tab && styles.subTabButtonActive)
+      }}
+    />
   );
 
   const renderContent = () => {
@@ -285,10 +280,11 @@ export const HomeScreen: React.FC = () => {
             <ScrollView style={styles.professionalsList} showsVerticalScrollIndicator={false}>
               {professionals.length > 0 ? (
                 professionals.map((professional, index) => (
-                  <TouchableOpacity
+                  <NeumorphicCard
                     key={professional.id || `professional-${index}`}
-                    style={styles.professionalCard}
+                    variant="default"
                     onPress={() => handleServicePress(professional)}
+                    style={styles.professionalCard}
                   >
                     <View style={styles.professionalInfo}>
                       <View style={styles.professionalIcon}>
@@ -303,9 +299,9 @@ export const HomeScreen: React.FC = () => {
                           <Text style={styles.professionalAddress}>{String(professional.address)}</Text>
                         )}
                       </View>
+                      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-                  </TouchableOpacity>
+                  </NeumorphicCard>
                 ))
               ) : (
                 <View style={styles.emptyState}>
@@ -344,34 +340,23 @@ const styles = StyleSheet.create({
   },
   subTabsContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    backgroundColor: Colors.background,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
   subTabButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: 8,
     marginHorizontal: spacing.xs,
   },
   subTabButtonActive: {
-    backgroundColor: Colors.accent + '20', // Adding transparency
+    // Handled by NeumorphicButton variant
   },
   subTabText: {
-    fontSize: fontSize.sm,
-    color: Colors.textSecondary,
-    marginLeft: spacing.xs,
-    fontWeight: '500',
+    // Handled by NeumorphicButton
   },
   subTabTextActive: {
-    color: Colors.primary,
-    fontWeight: '600',
+    // Handled by NeumorphicButton
   },
   content: {
     flex: 1,
@@ -412,18 +397,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   professionalCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
     marginBottom: spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    marginHorizontal: spacing.md,
   },
   professionalInfo: {
     flexDirection: 'row',
@@ -434,7 +409,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: Colors.accent + '20',
+    ...createNeumorphicStyle({ size: 'small', rounded: 25 }),
+    backgroundColor: Colors.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -471,10 +447,13 @@ const styles = StyleSheet.create({
   },
   // MENDLINK: Map info banner styles
   mapInfoBanner: {
-    backgroundColor: Colors.primary + '15',
-    paddingVertical: spacing.xs,
+    ...createNeumorphicStyle({ 
+      size: 'small', 
+      backgroundColor: Colors.primary + '10',
+      rounded: borderRadius.lg 
+    }),
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    borderRadius: 8,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
   },

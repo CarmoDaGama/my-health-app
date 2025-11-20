@@ -16,7 +16,11 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, spacing, borderRadius, fontSize } from '../../constants';
+import { Colors, spacing, borderRadius, fontSize, shadows } from '../../constants';
+import { NeumorphicInput } from '../ui/NeumorphicInput';
+import { NeumorphicButton } from '../ui/NeumorphicButton';
+import { NeumorphicCard } from '../ui/NeumorphicCard';
+import { createNeumorphicStyle } from '../../utils/neumorphicStyles';
 import { 
   SearchFilters, 
   SearchResult, 
@@ -157,45 +161,40 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     <View style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search services, doctors, specialties..."
-            placeholderTextColor={Colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
-          {isLoading && (
-            <ActivityIndicator size="small" color={Colors.primary} style={styles.loadingIndicator} />
-          )}
-          {searchQuery.length > 0 && !isLoading && (
-            <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-        </View>
+        <NeumorphicInput
+          placeholder="Search services, doctors, specialties..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          autoCapitalize="words"
+          autoCorrect={false}
+          icon="search"
+          containerStyle={styles.searchBar}
+        />
+        {isLoading && (
+          <ActivityIndicator size="small" color={Colors.primary} style={styles.loadingIndicator} />
+        )}
+        {searchQuery.length > 0 && !isLoading && (
+          <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
+            <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
+        )}
 
         {/* Filter Button */}
-        <TouchableOpacity
-          style={[styles.filterButton, activeFiltersCount > 0 && styles.filterButtonActive]}
-          onPress={() => setShowFilters(true)}
-        >
-          <Ionicons
-            name="options"
-            size={20}
-            color={activeFiltersCount > 0 ? Colors.white : Colors.primary}
+        <View style={styles.filterButtonContainer}>
+          <NeumorphicButton
+            icon="options"
+            variant={activeFiltersCount > 0 ? 'primary' : 'tertiary'}
+            onPress={() => setShowFilters(true)}
+            style={styles.filterButton}
           />
-          {activeFiltersCount > 0 ? (
+          {activeFiltersCount > 0 && (
             <View style={styles.filterBadge}>
               <Text style={styles.filterBadgeText}>{String(activeFiltersCount || 0)}</Text>
             </View>
-          ) : null}
-        </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Quick Filters */}
@@ -520,13 +519,11 @@ const styles = StyleSheet.create({
   clearButton: {
     marginLeft: spacing.sm,
   },
+  filterButtonContainer: {
+    position: 'relative',
+  },
   filterButton: {
     padding: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    position: 'relative',
   },
   filterButtonActive: {
     backgroundColor: Colors.primary,

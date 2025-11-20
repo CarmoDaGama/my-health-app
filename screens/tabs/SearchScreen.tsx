@@ -8,7 +8,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, spacing, fontSize, borderRadius } from '../../constants';
+import { Colors, spacing, fontSize, borderRadius, shadows } from '../../constants';
+import { NeumorphicCard } from '../../components/ui/NeumorphicCard';
+import { createNeumorphicStyle } from '../../utils/neumorphicStyles';
 import { useTranslation } from '../../hooks/useTranslation';
 import { AdvancedSearch } from '../../components/specific/AdvancedSearch';
 import { HealthService } from '../../types';
@@ -31,9 +33,10 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderServiceItem = ({ item }: { item: HealthService }) => (
-    <TouchableOpacity
-      style={styles.serviceItem}
+    <NeumorphicCard
+      variant="default"
       onPress={() => handleServiceSelect(item)}
+      style={styles.serviceItem}
     >
       <View style={styles.serviceHeader}>
         <View style={styles.serviceInfo}>
@@ -64,7 +67,7 @@ export const SearchScreen: React.FC = () => {
           💼 {item.services.slice(0, 3).join(', ')}{item.services.length > 3 ? '...' : ''}
         </Text>
       ) : null}
-    </TouchableOpacity>
+    </NeumorphicCard>
   );
 
   return (
@@ -87,9 +90,9 @@ export const SearchScreen: React.FC = () => {
         />
       ) : (
         <View style={styles.emptyState}>
-          <View style={styles.iconContainer}>
+          <NeumorphicCard variant="elevated" style={styles.iconContainer}>
             <Ionicons name="search-outline" size={64} color={Colors.primary} />
-          </View>
+          </NeumorphicCard>
           <Text style={styles.title}>Advanced Search</Text>
           <Text style={styles.description}>
             Find healthcare services, professionals, and facilities with intelligent filters and auto-suggestions.
@@ -129,13 +132,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   serviceItem: {
-    backgroundColor: Colors.surface,
     marginHorizontal: spacing.md,
     marginVertical: spacing.xs,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   serviceHeader: {
     flexDirection: 'row',
@@ -195,6 +193,10 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginBottom: spacing.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   title: {
     fontSize: fontSize.xl,
