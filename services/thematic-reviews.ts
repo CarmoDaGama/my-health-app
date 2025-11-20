@@ -44,59 +44,130 @@ export class ThematicReviewService {
     generalComment?: string,
     visitContext?: any
   ): Promise<string> {
+    console.log('🎯 [ThematicReview] Iniciando createReview...', { serviceId, serviceName, serviceType });
+    
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('User not authenticated');
+      // 🔒 AGUARDAR AUTH STATE ESTAR PRONTO
+      console.log('⏳ [ThematicReview] Aguardando auth state estar pronto...');
+      
+      let user = auth.currentUser;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      // Aguardar até 2 segundos para auth estar pronto
+      while (!user && attempts < maxAttempts) {
+        console.log(`⏳ [ThematicReview] Tentativa ${attempts + 1}/${maxAttempts} - aguardando auth...`);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        user = auth.currentUser;
+        attempts++;
+      }
+      
+      if (!user) {
+        console.error('❌ [ThematicReview] Usuário não autenticado após aguardar');
+        console.error('❌ [ThematicReview] Estado de autenticação:', {
+          isSignedIn: false,
+          currentUser: null,
+          attempts: attempts
+        });
+        throw new Error('Você precisa estar logado para criar uma avaliação');
+      }
+      
+      console.log('✅ [ThematicReview] Usuário autenticado:', {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName
+      });
+
+      // 📊 VALIDAR E LIMPAR DADOS DE ENTRADA
+      console.log('🧹 [ThematicReview] Validando e limpando dados...');
+      
+      // Validar campos obrigatórios
+      if (!serviceId || typeof serviceId !== 'string' || serviceId.trim() === '') {
+        throw new Error('Service ID é obrigatório');
+      }
+      if (!serviceName || typeof serviceName !== 'string' || serviceName.trim() === '') {
+        throw new Error('Service Name é obrigatório');
+      }
+      if (!serviceType || typeof serviceType !== 'string') {
+        throw new Error('Service Type é obrigatório');
+      }
+      if (!Array.isArray(categoryRatings) || categoryRatings.length === 0) {
+        throw new Error('Category Ratings são obrigatórios');
+      }
 
       // Calcular nota geral baseada nos pesos das categorias
       const overallRating = this.calculateOverallRating(serviceType, categoryRatings);
 
       // Converter categoryRatings de array para object
       const categoryRatingsMap = categoryRatings.reduce((acc, rating) => {
-        acc[rating.categoryId] = rating.rating;
+        if (rating && typeof rating.categoryId === 'string' && typeof rating.rating === 'number') {
+          acc[rating.categoryId] = rating.rating;
+        }
         return acc;
       }, {} as Record<string, number>);
 
-      const reviewData: Omit<ThematicReview, 'id'> = {
-        serviceId,
-        serviceName,
-        serviceType,
+      // 📋 CONSTRUIR OBJETO DE REVIEW COM LIMPEZA RIGOROSA
+      console.log('📋 [ThematicReview] Construindo objeto de review...');
+      
+      const reviewData = {
+        serviceId: serviceId.trim(),
+        serviceName: serviceName.trim(),
+        serviceType: serviceType,
         userId: user.uid,
-        userName: user.displayName || 'Usuário Anônimo',
-        ...(user.photoURL && { userAvatar: user.photoURL }), // Only include if not null/undefined
+        userName: (user.displayName && user.displayName.trim()) || 'Usuário Anônimo',
         categoryRatings: categoryRatingsMap,
-        overallRating,
-        ...(generalComment && generalComment.trim() && { generalComment: generalComment.trim() }), // Only include if not empty
-        visitContext,
+        overallRating: Number(overallRating),
+        visitContext: visitContext || 'consulta_geral',
         createdAt: new Date(),
         updatedAt: new Date(),
-        verified: false, // Will be verified later
+        verified: false,
         helpful: 0,
         reportCount: 0
       };
 
-      console.log('🎯 Criando review temático:', reviewData);
+      // Adicionar campos opcionais apenas se válidos
+      if (user.photoURL && typeof user.photoURL === 'string' && user.photoURL.trim() !== '') {
+        (reviewData as any).userAvatar = user.photoURL.trim();
+      }
 
-      // Limpar campos undefined/null e strings vazias antes de enviar ao Firebase
-      const cleanReviewData = Object.fromEntries(
-        Object.entries(reviewData).filter(([_, value]) => 
-          value !== undefined && 
-          value !== null && 
-          (typeof value !== 'string' || value.trim() !== '')
-        )
-      );
+      if (generalComment && typeof generalComment === 'string' && generalComment.trim() !== '') {
+        (reviewData as any).generalComment = generalComment.trim();
+      }
 
-      // Adicionar review (usando new Date() em vez de serverTimestamp())
-      const reviewRef = await addDoc(collection(db, 'thematicReviews'), cleanReviewData);
+      console.log('📊 [ThematicReview] Dados do review preparados:', {
+        serviceId: reviewData.serviceId,
+        serviceName: reviewData.serviceName,
+        serviceType: reviewData.serviceType,
+        userId: reviewData.userId,
+        userName: reviewData.userName,
+        categoryRatingsCount: Object.keys(reviewData.categoryRatings).length,
+        overallRating: reviewData.overallRating,
+        hasGeneralComment: !!(reviewData as any).generalComment,
+        hasUserAvatar: !!(reviewData as any).userAvatar
+      });
 
-      // Atualizar estatísticas do serviço (batch operation)
-      await this.updateServiceStats(serviceId, serviceType, categoryRatings, overallRating);
+      // 🔥 ENVIAR PARA FIRESTORE
+      console.log('🔥 [ThematicReview] Enviando para Firestore...');
+      
+      const reviewRef = await addDoc(collection(db, 'thematicReviews'), reviewData);
+      
+      console.log('✅ [ThematicReview] Review criado com sucesso:', reviewRef.id);
 
-      console.log('✅ Review temático criado:', reviewRef.id);
+      // 📈 ATUALIZAR ESTATÍSTICAS (em background, não bloquear)
+      this.updateServiceStats(serviceId, serviceType, categoryRatings, overallRating)
+        .then(() => console.log('✅ [ThematicReview] Estatísticas atualizadas'))
+        .catch(error => console.warn('⚠️ [ThematicReview] Erro ao atualizar estatísticas:', error));
+
       return reviewRef.id;
 
     } catch (error) {
-      console.error('❌ Erro ao criar review temático:', error);
+      console.error('❌ [ThematicReview] Erro ao criar review:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        code: (error as any)?.code,
+        stack: error instanceof Error ? error.stack : undefined,
+        serviceId,
+        serviceType
+      });
       throw error;
     }
   }
@@ -111,42 +182,83 @@ export class ThematicReviewService {
     lastDoc?: DocumentSnapshot
   ): Promise<{ reviews: ThematicReview[]; lastDoc?: DocumentSnapshot }> {
     try {
-      console.log(`🔍 Buscando reviews para serviço: ${serviceId}`);
+      console.log('🎯 [ThematicReviewService.getServiceReviews] Iniciado:', {
+        serviceId,
+        pageSize,
+        hasFilters: !!filters,
+        hasLastDoc: !!lastDoc
+      });
 
+      // Tentar query com ordenação primeiro
       let q = query(
         collection(db, 'thematicReviews'),
         where('serviceId', '==', serviceId)
       );
+      
+      console.log('🔍 [ThematicReviewService] Query base criada para serviceId:', serviceId);
 
-      // Aplicar filtros
-      if (filters?.verified !== undefined) {
-        q = query(q, where('verified', '==', filters.verified));
-      }
+      let snapshot;
+      let indexError = false;
 
-      if (filters?.ratingRange) {
-        q = query(
-          q, 
-          where('overallRating', '>=', filters.ratingRange[0]),
-          where('overallRating', '<=', filters.ratingRange[1])
+      try {
+        // Aplicar filtros
+        if (filters?.verified !== undefined) {
+          q = query(q, where('verified', '==', filters.verified));
+        }
+
+        if (filters?.ratingRange) {
+          q = query(
+            q, 
+            where('overallRating', '>=', filters.ratingRange[0]),
+            where('overallRating', '<=', filters.ratingRange[1])
+          );
+        }
+
+        // Ordenação - pode precisar de índice
+        const sortField = this.getSortField(filters?.sortBy || 'newest');
+        const sortDirection = filters?.sortBy === 'oldest' ? 'asc' : 'desc';
+        q = query(q, orderBy(sortField, sortDirection));
+
+        // Paginação
+        q = query(q, limit(pageSize));
+        if (lastDoc) {
+          q = query(q, startAfter(lastDoc));
+        }
+
+        console.log('📡 [ThematicReviewService] Executando query com ordenação...');
+        snapshot = await getDocs(q);
+        console.log('📊 [ThematicReviewService] Query executada, documentos:', snapshot.size);
+
+      } catch (error) {
+        console.warn('⚠️ [ThematicReviewService] Query com ordenação falhou, tentando sem ordenação:', error);
+        indexError = true;
+        
+        // Fallback: Query simples sem ordenação
+        const fallbackQ = query(
+          collection(db, 'thematicReviews'),
+          where('serviceId', '==', serviceId),
+          limit(pageSize)
         );
+        
+        console.log('📡 [ThematicReviewService] Executando query fallback sem ordenação...');
+        snapshot = await getDocs(fallbackQ);
+        console.log('📊 [ThematicReviewService] Query fallback executada, documentos:', snapshot.size);
       }
-
-      // Ordenação
-      const sortField = this.getSortField(filters?.sortBy || 'newest');
-      const sortDirection = filters?.sortBy === 'oldest' ? 'asc' : 'desc';
-      q = query(q, orderBy(sortField, sortDirection));
-
-      // Paginação
-      q = query(q, limit(pageSize));
-      if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
-      }
-
-      const snapshot = await getDocs(q);
+      
       const reviews: ThematicReview[] = [];
 
+      let index = 0;
       snapshot.forEach(doc => {
+        index++;
         const data = doc.data();
+        console.log(`📄 [ThematicReviewService] Processando doc ${index}:`, {
+          id: doc.id,
+          serviceName: data.serviceName,
+          userName: data.userName,
+          overallRating: data.overallRating,
+          createdAt: data.createdAt
+        });
+        
         reviews.push({
           id: doc.id,
           ...data,
@@ -155,7 +267,26 @@ export class ThematicReviewService {
         } as ThematicReview);
       });
 
-      console.log(`📋 Encontrados ${reviews.length} reviews`);
+      // Se usamos fallback, ordenar no cliente
+      if (indexError && reviews.length > 0) {
+        console.log('🔄 [ThematicReviewService] Ordenando reviews no cliente...');
+        reviews.sort((a, b) => {
+          const sortField = this.getSortField(filters?.sortBy || 'newest');
+          const sortDirection = filters?.sortBy === 'oldest' ? 'asc' : 'desc';
+          
+          if (sortField === 'createdAt') {
+            const dateA = a.createdAt.getTime();
+            const dateB = b.createdAt.getTime();
+            return sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
+          }
+          
+          return 0;
+        });
+      }
+
+      console.log(`✅ [ThematicReviewService] Processados ${reviews.length} reviews:`, 
+        reviews.map(r => ({ id: r.id, userName: r.userName, rating: r.overallRating }))
+      );
 
       return {
         reviews,

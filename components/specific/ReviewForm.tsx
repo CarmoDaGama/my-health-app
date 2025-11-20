@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ReviewInput } from '../../types';
 import { useReviews } from '../../hooks/useReviews';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useAuth } from '../../hooks/useAuth-firebase';
 
 interface ReviewFormProps {
   serviceId: string;
@@ -39,6 +40,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
 }) => {
   const { addReview, updateReview, isLoading } = useReviews();
   const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
   
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [comment, setComment] = useState(existingReview?.comment || '');
@@ -169,6 +171,37 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     );
   };
 
+  // 🚨 CRITICAL: Don't show modal if user is not authenticated
+  if (visible && (!isAuthenticated || !user || user.id === 'guest')) {
+    console.error('❌ ReviewForm modal opened without authentication!');
+    
+    // Show authentication required modal instead
+    return (
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={onClose}
+      >
+        <View style={styles.container}>
+          <View style={styles.authRequiredContainer}>
+            <Ionicons name="lock-closed" size={64} color="#ff6b6b" />
+            <Text style={styles.authRequiredTitle}>Login Necessário</Text>
+            <Text style={styles.authRequiredMessage}>
+              Você precisa fazer login para avaliar serviços de saúde.
+            </Text>
+            <TouchableOpacity
+              style={styles.authRequiredButton}
+              onPress={onClose}
+            >
+              <Text style={styles.authRequiredButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       visible={visible}
@@ -264,6 +297,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  authRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  authRequiredTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  authRequiredMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  authRequiredButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  authRequiredButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,

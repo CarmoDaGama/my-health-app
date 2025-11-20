@@ -34,6 +34,32 @@ export class ReviewsService {
     userAvatar?: string
   ): Promise<string> {
     try {
+      // Check authentication first
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.error('❌ Usuário não autenticado - auth.currentUser é null');
+        console.error('❌ Estado de autenticação:', {
+          isSignedIn: !!currentUser,
+          providedUserId: userId,
+          providedUserName: userName
+        });
+        throw new Error('Você precisa estar logado para criar uma avaliação');
+      }
+      
+      if (currentUser.uid !== userId) {
+        console.error('❌ User ID mismatch:', {
+          authUserId: currentUser.uid,
+          providedUserId: userId
+        });
+        throw new Error('Inconsistência na autenticação do usuário');
+      }
+      
+      console.log('✅ Usuário autenticado:', {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName
+      });
+      
       // TEMPORARILY DISABLED: Check if user already reviewed this service
       // const existingReview = await this.getUserReviewForService(reviewInput.serviceId, userId);
       // if (existingReview) {

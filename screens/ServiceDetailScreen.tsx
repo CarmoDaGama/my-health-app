@@ -18,6 +18,7 @@ import { Colors, spacing, borderRadius, fontSize } from '../constants';
 import { ReviewForm } from '../components/specific/ReviewForm';
 import { ReviewsList } from '../components/specific/ReviewsList';
 import { ReviewsPreview } from '../components/specific/ReviewsPreview';
+import { ThematicReviewsPreview } from '../components/specific/ThematicReviewsPreview';
 import { ThematicReviewForm } from '../components/specific/ThematicReviewForm';
 import { ServiceReviews } from '../components/specific/ServiceReviews';
 import { useReviews } from '../hooks/useReviews';
@@ -108,7 +109,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const handleThematicReviewSubmitted = (reviewId: string) => {
     console.log('Review temático enviado:', reviewId);
     setShowThematicReviewForm(false);
-    // Refresh reviews or show success message
+    // Force refresh of thematic reviews preview
+    // O ThematicReviewsPreview tem useEffect que recarrega quando o componente é remontado
   };
 
   const handleShowReviews = () => {
@@ -210,11 +212,27 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
         
         {/* Reviews Preview */}
         <View style={styles.reviewsPreview}>
-          <ReviewsPreview
-            serviceId={service.id}
-            onEditReview={handleEditReview}
-            maxReviews={3}
-          />
+          {(() => {
+            console.log('🔍 [ServiceDetailScreen - Professional] Renderizando Reviews Preview:', {
+              activeReviewTab,
+              serviceId: service.id,
+              serviceName: service.name,
+              isThematic: activeReviewTab === 'thematic'
+            });
+            
+            return activeReviewTab === 'thematic' ? (
+              <ThematicReviewsPreview
+                serviceId={service.id}
+                maxReviews={3}
+              />
+            ) : (
+              <ReviewsPreview
+                serviceId={service.id}
+                onEditReview={handleEditReview}
+                maxReviews={3}
+              />
+            );
+          })()}
         </View>
       </View>
 
@@ -340,11 +358,27 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
         
         {/* Reviews Preview */}
         <View style={styles.reviewsPreview}>
-          <ReviewsPreview
-            serviceId={service.id}
-            onEditReview={handleEditReview}
-            maxReviews={3}
-          />
+          {(() => {
+            console.log('🔍 [ServiceDetailScreen - Institution] Renderizando Reviews Preview:', {
+              activeReviewTab,
+              serviceId: service.id,
+              serviceName: service.name,
+              isThematic: activeReviewTab === 'thematic'
+            });
+            
+            return activeReviewTab === 'thematic' ? (
+              <ThematicReviewsPreview
+                serviceId={service.id}
+                maxReviews={3}
+              />
+            ) : (
+              <ReviewsPreview
+                serviceId={service.id}
+                onEditReview={handleEditReview}
+                maxReviews={3}
+              />
+            );
+          })()}
         </View>
       </View>
     </>

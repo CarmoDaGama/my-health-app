@@ -17,7 +17,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize } from '../../constants';
 import { useTranslation } from '../../hooks/useTranslation';
-import { ThematicReviewService } from '../../services/thematic-reviews';
+import { useAuth } from '../../hooks/useAuth-firebase';
+import { useThematicReviews } from '../../hooks/useThematicReviews';
 import { CategoryRating, ServiceType, REVIEW_CATEGORIES } from '../../types/reviews';
 import { HealthService } from '../../types';
 
@@ -66,6 +67,35 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
   onCancel,
 }) => {
   const { t } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
+  const { createReview, isLoading: isCreatingReview, error: reviewError } = useThematicReviews();
+
+  // 🚨 TEMPORÁRIO: Debug logging (auth check removido temporariamente)
+  React.useEffect(() => {
+    console.log('🔍 [ThematicReviewForm] Auth Check:', {
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+      userType: (user as any)?.userType
+    });
+    
+    // ⚠️ TEMPORÁRIO: Comentado para permitir debug
+    // if (!isAuthenticated || !user || user.id === 'guest') {
+    //   console.error('❌ ThematicReviewForm aberto sem autenticação!');
+    //   Alert.alert(...);
+    // }
+  }, [isAuthenticated, user, onCancel]);
+
+  // ⚠️ TEMPORÁRIO: Permitir renderização mesmo sem auth para debug
+  // if (!isAuthenticated || !user || user.id === 'guest') {
+  //   return (
+  //     <View style={styles.container}>
+  //       <View style={styles.authWarning}>
+  //         ...
+  //       </View>
+  //     </View>
+  //   );
+  // }
   const [categoryRatings, setCategoryRatings] = useState<CategoryRating[]>([]);
   const [generalComment, setGeneralComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -154,19 +184,43 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
   };
 
   const handleSubmit = async () => {
+    console.log('🚀 [ThematicReviewForm] handleSubmit iniciado');
+    
+    // ⚠️ TEMPORÁRIO: Auth check comentado para debug
+    // if (!isAuthenticated || !user) {
+    //   Alert.alert(...);
+    //   return;
+    // }
+
     if (!validateForm()) return;
 
     try {
       setIsSubmitting(true);
 
+      console.log('🔍 [ThematicReviewForm] Dados da submissão:', {
+        userId: user?.id || 'guest',
+        userName: user?.name || 'Guest User',
+        serviceId: service.id,
+        serviceName: service.name,
+        serviceType: serviceType,
+        isAuthenticated,
+        userType: (user as any)?.userType,
+        categoryRatingsCount: categoryRatings.length,
+        validRatingsCount: categoryRatings.filter(rating => rating.rating > 0).length
+      });
+
       const validRatings = categoryRatings.filter(rating => rating.rating > 0);
+      
+      console.log('🎯 [ThematicReviewForm] Valid ratings:', validRatings);
       
       const visitContext = {
         visitDate: new Date(),
         visitType: visitType as any,
       };
 
-      const reviewId = await ThematicReviewService.createReview(
+      console.log('🎯 [ThematicReviewForm] Chamando createReview...');
+
+      const reviewId = await createReview(
         service.id,
         service.name,
         serviceType,
@@ -175,22 +229,38 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
         visitContext
       );
 
-      Alert.alert(
-        'Avaliação Enviada!',
-        'Obrigado por sua avaliação. Ela ajudará outros usuários a fazer melhores escolhas.',
-        [
-          {
-            text: 'OK',
-            onPress: () => onReviewSubmitted(reviewId)
-          }
-        ]
-      );
+      console.log('📥 [ThematicReviewForm] Resposta do createReview:', reviewId);
+
+      if (reviewId) {
+        console.log('✅ [ThematicReviewForm] Review criado com sucesso:', reviewId);
+        Alert.alert(
+          'Avaliação Enviada!',
+          'Obrigado por sua avaliação. Ela ajudará outros usuários a fazer melhores escolhas.',
+          [
+            {
+              text: 'OK',
+              onPress: () => onReviewSubmitted(reviewId)
+            }
+          ]
+        );
+      } else {
+        console.error('❌ [ThematicReviewForm] CreateReview retornou null');
+        Alert.alert(
+          'Erro na Avaliação',
+          reviewError || 'Não foi possível enviar sua avaliação. Tente novamente.',
+          [{ text: 'OK' }]
+        );
+      }
 
     } catch (error) {
-      console.error('Erro ao enviar avaliação:', error);
+      console.error('❌ [ThematicReviewForm] Exception capturada:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        code: (error as any)?.code,
+        stack: error instanceof Error ? error.stack : undefined
+      });
       Alert.alert(
         'Erro',
-        'Não foi possível enviar sua avaliação. Tente novamente.',
+        `Erro detalhado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         [{ text: 'OK' }]
       );
     } finally {
@@ -354,6 +424,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  authWarning: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.large,
+  },
+  authWarningText: {
+    fontSize: fontSize.large,
+    fontWeight: 'bold',
+    color: Colors.error,
+    marginTop: spacing.medium,
+    marginBottom: spacing.small,
+    textAlign: 'center',
+  },
+  authWarningSubtext: {
+    fontSize: fontSize.medium,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: spacing.large,
+  },
+  authWarningButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: spacing.large,
+    paddingVertical: spacing.medium,
+    borderRadius: 8,
+  },
+  authWarningButtonText: {
+    color: Colors.white,
+    fontSize: fontSize.medium,
+    fontWeight: 'bold',
   },
   header: {
     backgroundColor: Colors.surface,
