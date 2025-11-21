@@ -27,10 +27,28 @@ npm install
 echo -e "${BLUE}📱 Step 2: Exporting for web (Expo Go compatible)...${NC}"
 npx expo export --platform web --clear
 
-echo -e "${BLUE}🌐 Step 3: Creating additional web assets...${NC}"
+echo -e "${BLUE}🌐 Step 3: Creating Expo Go compatible assets...${NC}"
 # Create web-specific optimizations if needed
 if [ ! -d "dist" ]; then
     mkdir -p dist
+fi
+
+# Copy expo manifest for Expo Go compatibility
+cp expo-manifest.json dist/app.json
+
+# Create _expo directory structure for Expo Go
+mkdir -p dist/_expo/static/js/web
+if [ -f "dist/static/js/web/index-*.js" ]; then
+    cp dist/static/js/web/index-*.js dist/_expo/static/js/web/index.js
+fi
+
+# Create basic assets for manifest
+mkdir -p dist/assets
+if [ -f "assets/icon.png" ]; then
+    cp assets/icon.png dist/icon.png
+fi
+if [ -f "assets/splash-icon.png" ]; then
+    cp assets/splash-icon.png dist/splash.png
 fi
 
 echo -e "${BLUE}📄 Step 4: Creating deployment files...${NC}"
