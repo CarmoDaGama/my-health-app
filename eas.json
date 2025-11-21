@@ -5,13 +5,16 @@
   },
   "build": {
     "development": {
+      "developmentClient": true,
       "distribution": "internal",
       "node": "18.19.0",
       "android": {
+        "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
       },
       "ios": {
-        "buildConfiguration": "Debug"
+        "buildConfiguration": "Debug",
+        "simulator": true
       }
     },
     "preview": {

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mendlink-health-app
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm run render-build && node -e "console.log('Build completed successfully')"
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: EXPO_USE_FAST_REFRESH
+        value: false
+      - key: EXPO_USE_METRO_WORKSPACE_ROOT
+        value: true
+    domains:
+      - mendlink-health-app.onrender.com
+    healthCheckPath: /health
