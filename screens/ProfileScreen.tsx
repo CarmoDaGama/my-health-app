@@ -5,9 +5,11 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  Alert 
+  Alert,
+  SafeAreaView 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProfileScreenNavigationProp } from '../types/navigation';
 import { useAuth, useUser } from '../hooks/useAuth-firebase';
 import { useTranslation, useLocalization } from '../hooks/useTranslation';
@@ -27,6 +29,7 @@ export const ProfileScreen: React.FC = () => {
   const { t } = useTranslation();
   const { formatDate } = useLocalization();
   const { setLanguage } = usePreferences();
+  const insets = useSafeAreaInsets();
 
   // Debug: Log user data
   React.useEffect(() => {
@@ -95,15 +98,15 @@ export const ProfileScreen: React.FC = () => {
 
   const handleLogout = () => {
     Alert.alert(
-      t('profile.logout') || 'Sair',
-      t('profile.logoutConfirmation') || 'Tem certeza que deseja sair da sua conta?',
+      t('profile.logout') || 'Logout',
+      t('profile.logoutConfirmation') || 'Are you sure you want to logout?',
       [
         {
-          text: t('common.cancel') || 'Cancelar',
+          text: t('common.cancel') || 'Cancel',
           style: 'cancel',
         },
         {
-          text: t('profile.logout') || 'Sair',
+          text: t('profile.logout') || 'Logout',
           style: 'destructive',
           onPress: () => logout(),
         },
@@ -114,7 +117,14 @@ export const ProfileScreen: React.FC = () => {
   if (!isAuthenticated || !user) {
     // Guest user view
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <SafeAreaView style={styles.container}>
+        <ScrollView 
+          style={styles.scrollViewContent} 
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Math.max(insets.bottom, spacing.lg) + 60 } // 60px for tab bar height
+          ]}
+        >
         <View style={styles.guestHeader}>
           <View style={styles.guestAvatarContainer}>
             <Text style={styles.guestAvatarText}>?</Text>
@@ -123,7 +133,7 @@ export const ProfileScreen: React.FC = () => {
             {t('profile.guestUser') || 'Usuário Convidado'}
           </Text>
           <Text style={styles.guestSubtitle}>
-            {t('profile.guestMessage') || 'Faça login para acessar seus dados pessoais e preferências'}
+            {t('profile.guestMessage') || 'Login to access your personal data and preferences'}
           </Text>
         </View>
 
@@ -139,37 +149,45 @@ export const ProfileScreen: React.FC = () => {
             onPress={() => navigation.navigate('Register')}
           >
             <Text style={styles.registerButtonText}>
-              {t('auth.register') || 'Criar Conta'}
+              {t('auth.register') || 'Create Account'}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            {t('profile.appInfo') || 'Sobre o App'}
+            {t('profile.appInfo') || 'About App'}
           </Text>
           
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>
-              {t('profile.version') || 'Versão'}
+              {t('profile.version') || 'Version'}
             </Text>
             <Text style={styles.infoValue}>1.0.0</Text>
           </View>
           
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>
-              {t('profile.developer') || 'Desenvolvedor'}
+              {t('profile.developer') || 'Developer'}
             </Text>
             <Text style={styles.infoValue}>{t('company.developer')}</Text>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   // Authenticated user view
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        style={styles.scrollViewContent} 
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, spacing.lg) + 60 } // 60px for tab bar height
+        ]}
+      >
       <View style={styles.header}>
         <UserAvatar 
           name={user.name} 
@@ -206,12 +224,12 @@ export const ProfileScreen: React.FC = () => {
         
         <View style={styles.menuItem}>
           <Text style={styles.menuItemText}>
-            {t('profile.notifications') || 'Notificações'}
+            {t('profile.notifications') || 'Notifications'}
           </Text>
           <Text style={styles.menuItemValue}>
             {user.preferences.notifications.enabled ? 
-              t('common.enabled') || 'Ativado' : 
-              t('common.disabled') || 'Desativado'
+              t('common.enabled') || 'Enabled' : 
+              t('common.disabled') || 'Disabled'
             }
           </Text>
         </View>
@@ -219,12 +237,12 @@ export const ProfileScreen: React.FC = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          {t('profile.favorites') || 'Favoritos'}
+          {t('profile.favorites') || 'Favorites'}
         </Text>
         
         <View style={styles.menuItem}>
           <Text style={styles.menuItemText}>
-            {t('profile.favoriteServices') || 'Serviços Favoritos'}
+            {t('profile.favoriteServices') || 'Favorite Services'}
           </Text>
           <Text style={styles.menuItemValue}>
             {user.preferences.favorites.services.length}
@@ -272,7 +290,7 @@ export const ProfileScreen: React.FC = () => {
             {t('profile.memberSince') || 'Membro desde'}
           </Text>
           <Text style={styles.infoValue}>
-            {user.createdAt ? formatDate(new Date(user.createdAt)) : (t('common.notAvailable') || 'Não disponível')}
+            {user.createdAt ? formatDate(new Date(user.createdAt)) : (t('common.notAvailable') || 'Not available')}
           </Text>
         </View> */}
         
@@ -417,11 +435,12 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.actions}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>
-            {t('profile.logout') || 'Sair da Conta'}
+            {t('profile.logout') || 'Logout'}
           </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -429,6 +448,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  scrollViewContent: {
+    flex: 1,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -583,12 +605,14 @@ const styles = StyleSheet.create({
   // Actions
   actions: {
     marginTop: spacing.lg,
+    marginBottom: spacing.lg, // Extra margin to ensure visibility
   },
   logoutButton: {
     backgroundColor: Colors.error,
     paddingVertical: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: spacing.md, // Ensure visibility above navigation
   },
   logoutButtonText: {
     fontSize: 16,

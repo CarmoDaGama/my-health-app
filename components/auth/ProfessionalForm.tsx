@@ -39,8 +39,8 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
   const handleAddressChange = async (address: string) => {
     onChange('address', address);
     
-    // Geocoding automático quando o endereço é alterado
-    if (address.length > 10) { // Só tentar geocoding se o endereço tiver algum conteúdo
+    // Automatic geocoding when the address is changed
+    if (address.length > 10) { // Only try geocoding if the address has some content
       setIsGeocodingAddress(true);
       try {
         const result = await GeocodingService.getCoordinatesFromAddress(address);
@@ -65,7 +65,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         setCoordinates(location.coordinates);
         onChange('coordinates', location.coordinates);
         
-        // Se obtivemos um endereço do GPS, atualizar também
+        // If we got an address from GPS, update it as well
         if (location.address) {
           onChange('address', location.address);
         }
@@ -90,7 +90,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
     setCoordinates(coords);
     onChange('coordinates', coords);
     
-    // Se o mapa forneceu um endereço, atualizar
+    // If the map provided an address, update it
     if (address) {
       onChange('address', address);
     }
@@ -107,7 +107,7 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
       <Text style={styles.title}>{t('forms.professionalInfo')}</Text>
       
       <ValidatedInput
-        label={t('forms.specialty') || 'Especialidade'}
+        label={t('forms.specialty') || 'Specialty'}
         value={data.specialty || ''}
         onChangeText={(value) => onChange('specialty', value)}
         error={errors.specialty}

@@ -1,6 +1,6 @@
 /**
- * MENDLINK - Componente de Avaliação Temática
- * Interface para usuários avaliarem serviços por categorias
+ * MENDLINK - Thematic Review Component
+ * Interface for users to rate services by categories
  */
 
 import React, { useState, useEffect } from 'react';
@@ -70,7 +70,7 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
   const { user, isAuthenticated } = useAuth();
   const { createReview, isLoading: isCreatingReview, error: reviewError } = useThematicReviews();
 
-  // 🚨 TEMPORÁRIO: Debug logging (auth check removido temporariamente)
+  // 🚨 TEMPORARY: Debug logging (auth check temporarily removed)
   React.useEffect(() => {
     console.log('🔍 [ThematicReviewForm] Auth Check:', {
       isAuthenticated,
@@ -79,14 +79,14 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
       userType: (user as any)?.userType
     });
     
-    // ⚠️ TEMPORÁRIO: Comentado para permitir debug
+    // ⚠️ TEMPORARY: Commented out to allow debug
     // if (!isAuthenticated || !user || user.id === 'guest') {
-    //   console.error('❌ ThematicReviewForm aberto sem autenticação!');
+    //   console.error('❌ ThematicReviewForm opened without authentication!');
     //   Alert.alert(...);
     // }
   }, [isAuthenticated, user, onCancel]);
 
-  // ⚠️ TEMPORÁRIO: Permitir renderização mesmo sem auth para debug
+  // ⚠️ TEMPORARY: Allow rendering even without auth for debug
   // if (!isAuthenticated || !user || user.id === 'guest') {
   //   return (
   //     <View style={styles.container}>
@@ -104,7 +104,7 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
   const serviceType = service.type as ServiceType;
   const availableCategories = REVIEW_CATEGORIES[serviceType] || [];
 
-  // Inicializar ratings das categorias
+  // Initialize category ratings
   useEffect(() => {
     const initialRatings: CategoryRating[] = availableCategories.map(category => ({
       categoryId: category.id,
@@ -156,14 +156,14 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
     
     if (ratedCategories.length === 0) {
       Alert.alert(
-        'Avaliação Incompleta',
-        'Por favor, avalie pelo menos uma categoria.',
+        'Incomplete Review',
+        'Please rate at least one category.',
         [{ text: 'OK' }]
       );
       return false;
     }
 
-    // Verificar se pelo menos as categorias principais foram avaliadas
+    // Check if at least the main categories have been rated
     const mainCategories = availableCategories
       .filter(cat => cat.weight >= 0.2)
       .map(cat => cat.id);
@@ -173,8 +173,8 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
 
     if (ratedMainCategories.length === 0) {
       Alert.alert(
-        'Avaliação Incompleta',
-        'Por favor, avalie pelo menos uma das categorias principais.',
+        'Incomplete Review',
+        'Please rate at least one of the main categories.',
         [{ text: 'OK' }]
       );
       return false;
@@ -184,9 +184,9 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
   };
 
   const handleSubmit = async () => {
-    console.log('🚀 [ThematicReviewForm] handleSubmit iniciado');
+    console.log('🚀 [ThematicReviewForm] handleSubmit started');
     
-    // ⚠️ TEMPORÁRIO: Auth check comentado para debug
+    // ⚠️ TEMPORARY: Auth check commented out for debug
     // if (!isAuthenticated || !user) {
     //   Alert.alert(...);
     //   return;
@@ -197,7 +197,7 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
     try {
       setIsSubmitting(true);
 
-      console.log('🔍 [ThematicReviewForm] Dados da submissão:', {
+      console.log('🔍 [ThematicReviewForm] Submission data:', {
         userId: user?.id || 'guest',
         userName: user?.name || 'Guest User',
         serviceId: service.id,
@@ -232,10 +232,10 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
       console.log('📥 [ThematicReviewForm] Resposta do createReview:', reviewId);
 
       if (reviewId) {
-        console.log('✅ [ThematicReviewForm] Review criado com sucesso:', reviewId);
+        console.log('✅ [ThematicReviewForm] Review created successfully:', reviewId);
         Alert.alert(
-          'Avaliação Enviada!',
-          'Obrigado por sua avaliação. Ela ajudará outros usuários a fazer melhores escolhas.',
+          'Review Submitted!',
+          'Thank you for your review. It will help other users make better choices.',
           [
             {
               text: 'OK',
@@ -244,23 +244,23 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
           ]
         );
       } else {
-        console.error('❌ [ThematicReviewForm] CreateReview retornou null');
+        console.error('❌ [ThematicReviewForm] CreateReview returned null');
         Alert.alert(
-          'Erro na Avaliação',
-          reviewError || 'Não foi possível enviar sua avaliação. Tente novamente.',
+          'Review Error',
+          reviewError || 'Could not send your review. Please try again.',
           [{ text: 'OK' }]
         );
       }
 
     } catch (error) {
       console.error('❌ [ThematicReviewForm] Exception capturada:', {
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        message: error instanceof Error ? error.message : 'Unknown error',
         code: (error as any)?.code,
         stack: error instanceof Error ? error.stack : undefined
       });
       Alert.alert(
-        'Erro',
-        `Erro detalhado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        'Error',
+        `Detailed error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         [{ text: 'OK' }]
       );
     } finally {
@@ -278,7 +278,7 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.serviceName}>{service.name}</Text>
+            <Text style={styles.serviceName}>{typeof service.name === 'string' ? service.name : 'Service'}</Text>
             <Text style={styles.serviceType}>{serviceType}</Text>
           </View>
           <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
@@ -292,14 +292,14 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
             <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
           </View>
           <Text style={styles.progressText}>
-            {completedCategories}/{availableCategories.length} categorias avaliadas
+            {completedCategories}/{availableCategories.length} categories rated
           </Text>
         </View>
 
         {/* Overall Rating */}
         {overallRating > 0 && (
           <View style={styles.overallRating}>
-            <Text style={styles.overallRatingLabel}>Nota Geral:</Text>
+            <Text style={styles.overallRatingLabel}>Overall Rating:</Text>
             <View style={styles.overallRatingValue}>
               <Text style={styles.overallRatingNumber}>{overallRating}</Text>
               <StarRating rating={Math.round(overallRating)} onRatingChange={() => {}} disabled size={20} />
@@ -310,7 +310,7 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
 
       {/* Visit Context */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tipo de Visita</Text>
+        <Text style={styles.sectionTitle}>Visit Type</Text>
         <View style={styles.visitTypeContainer}>
           {['consultation', 'emergency', 'routine', 'exam', 'procedure'].map((type) => (
             <TouchableOpacity
@@ -334,9 +334,9 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
 
       {/* Category Ratings */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Avalie por Categoria</Text>
+        <Text style={styles.sectionTitle}>Rate by Category</Text>
         <Text style={styles.sectionDescription}>
-          Sua avaliação detalhada ajuda outros usuários a entender melhor a qualidade do serviço.
+          Your detailed review helps other users better understand the quality of the service.
         </Text>
         
         {availableCategories.map((category) => {
@@ -366,7 +366,7 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
                 {currentRating && currentRating.rating > 0 && (
                   <TextInput
                     style={styles.commentInput}
-                    placeholder={`Comentário sobre ${category.name.toLowerCase()} (opcional)`}
+                    placeholder={`Comment about ${category.name.toLowerCase()} (optional)`}
                     value={currentRating.comment}
                     onChangeText={(text) => updateCategoryComment(category.id, text)}
                     multiline
@@ -381,10 +381,10 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
 
       {/* General Comment */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Comentário Geral (Opcional)</Text>
+        <Text style={styles.sectionTitle}>General Comment (Optional)</Text>
         <TextInput
           style={styles.generalCommentInput}
-          placeholder="Conte sobre sua experiência geral..."
+          placeholder="Tell us about your overall experience..."
           value={generalComment}
           onChangeText={setGeneralComment}
           multiline
@@ -407,13 +407,13 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
             <ActivityIndicator color={Colors.surface} size="small" />
           ) : (
             <Text style={styles.submitButtonText}>
-              Enviar Avaliação
+              Submit Review
             </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelButtonText}>Cancelar</Text>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

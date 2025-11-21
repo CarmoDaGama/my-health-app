@@ -65,7 +65,7 @@ const CategoryStatsCard: React.FC<CategoryStatsProps> = ({ insights }) => {
 
   return (
     <View style={styles.statsCard}>
-      <Text style={styles.statsTitle}>Avaliações por Categoria</Text>
+      <Text style={styles.statsTitle}>Reviews by Category</Text>
       
       {insights.categoryStats.map((stat) => {
         const category = categories.find(cat => cat.id === stat.categoryId);
@@ -366,7 +366,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Avaliações de {service.name}</Text>
+        <Text style={styles.title}>Avaliações de {typeof service.name === 'string' ? service.name : 'Serviço'}</Text>
         <TouchableOpacity style={styles.writeReviewButton} onPress={onWriteReview}>
           <Ionicons name="create" size={20} color={Colors.surface} />
           <Text style={styles.writeReviewText}>Avaliar</Text>

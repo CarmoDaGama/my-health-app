@@ -81,7 +81,7 @@ const AppNavigatorContent: React.FC = () => {
         name="UserProfile"
         component={UserProfileScreen}
         options={{
-          title: t('profile.myProfile') || 'Meu Perfil',
+          title: t('profile.myProfile') || 'My Profile',
         }}
       />
       
@@ -89,7 +89,7 @@ const AppNavigatorContent: React.FC = () => {
         name="EditProfile"
         component={EditProfileScreen}
         options={{
-          title: t('profile.editProfile') || 'Editar Perfil',
+          title: t('profile.editProfile') || 'Edit Profile',
         }}
       />
       
@@ -106,7 +106,7 @@ const AppNavigatorContent: React.FC = () => {
         name="Register"
         component={RegisterScreen}
         options={{
-          title: t('auth.register') || 'Registrar',
+          title: t('auth.register') || 'Register',
         }}
       />
       
@@ -114,7 +114,7 @@ const AppNavigatorContent: React.FC = () => {
         name="ForgotPassword"
         component={ForgotPasswordScreen}
         options={{
-          title: t('auth.forgotPassword') || 'Recuperar Senha',
+          title: t('auth.forgotPassword') || 'Reset Password',
         }}
       />
       
@@ -122,7 +122,7 @@ const AppNavigatorContent: React.FC = () => {
         name="EmailVerification"
         component={EmailVerificationScreen}
         options={{
-          title: t('auth.verifyEmail') || 'Verificar Email',
+          title: t('auth.verifyEmail') || 'Verify Email',
         }}
       />
     </Stack.Navigator>

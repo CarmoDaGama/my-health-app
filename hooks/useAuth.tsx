@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         ...prev,
         user: { userType: UserType.GUEST, id: 'guest' },
         isLoading: false,
-        error: 'Erro ao carregar dados',
+        error: 'Error loading data',
       }));
     }
   };
@@ -103,12 +103,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     switch (userData.userType) {
       case UserType.PROFESSIONAL:
         if (!userData.professionalInfo?.specialty || !userData.professionalInfo?.license) {
-          throw new Error('Especialidade e número da licença são obrigatórios para profissionais');
+          throw new Error('Specialty and license number are required for professionals');
         }
         break;
       case UserType.INSTITUTION:
         if (!userData.institutionInfo?.type || !userData.institutionInfo?.address) {
-          throw new Error('Tipo e endereço são obrigatórios para instituições');
+          throw new Error('Type and address are required for institutions');
         }
         break;
     }
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Check if the authentication was successful
       if (!response.success) {
-        const errorMessage = response.error || 'Erro no login';
+        const errorMessage = response.error || 'Login error';
         console.error('🚨 ERRO NO HOOK useAuth - Login negado:', {
           error: errorMessage,
           credentials: {
@@ -155,8 +155,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no login';
-      console.error('🚨 ERRO NO HOOK useAuth - Login falhou:', {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown login error';
+      console.error('🚨 ERROR IN useAuth HOOK - Login failed:', {
         error: errorMessage,
         credentials: {
           email: credentials.email,
@@ -193,8 +193,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(response.user));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no registro';
-      console.error('🚨 ERRO NO HOOK useAuth - Registro falhou:', {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown registration error';
+      console.error('🚨 ERROR IN useAuth HOOK - Registration failed:', {
         error: errorMessage,
         userData: {
           email: data.email,
@@ -229,7 +229,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         error: null,
       });
     } catch (error) {
-      console.error('Erro no logout:', error);
+      console.error('Logout error:', error);
       // Mesmo com erro, limpa o estado
       setAuthState({
         isAuthenticated: false,
@@ -238,7 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         token: null,
         refreshToken: null,
         isLoading: false,
-        error: 'Erro no logout',
+        error: 'Logout error',
       });
     }
   };
@@ -253,7 +253,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         error: null,
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar perfil';
+      const errorMessage = error instanceof Error ? error.message : 'Error updating profile';
       setAuthState(prev => ({
         ...prev,
         error: errorMessage,
@@ -272,7 +272,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         error: null,
       }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar preferências';
+      const errorMessage = error instanceof Error ? error.message : 'Error updating preferences';
       setAuthState(prev => ({
         ...prev,
         error: errorMessage,
@@ -285,7 +285,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       await AuthServiceFirebase.requestPasswordReset(data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao solicitar reset';
+      const errorMessage = error instanceof Error ? error.message : 'Error requesting reset';
       setAuthState(prev => ({
         ...prev,
         error: errorMessage,
@@ -298,7 +298,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       await AuthServiceFirebase.changePassword(data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao alterar senha';
+      const errorMessage = error instanceof Error ? error.message : 'Error changing password';
       setAuthState(prev => ({
         ...prev,
         error: errorMessage,
@@ -359,7 +359,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth deve ser usado dentro de AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };

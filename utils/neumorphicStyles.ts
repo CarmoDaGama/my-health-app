@@ -10,7 +10,7 @@ interface NeumorphicOptions {
 }
 
 /**
- * Gera estilos neumórficos para componentes
+ * Generates neumorphic styles for components
  */
 export const createNeumorphicStyle = ({
   size = 'medium',
@@ -36,7 +36,7 @@ export const createNeumorphicStyle = ({
     backgroundColor,
     borderRadius: borderRadiusValue,
     ...(elevated && !pressed && shadowStyle),
-    // Adicionar sombra clara para o efeito neumórfico completo no iOS
+    // Add light shadow for complete neumorphic effect on iOS
     ...(elevated && !pressed && {
       shadowColor: Colors.neumorphic.lightShadow,
       shadowOffset: {
@@ -50,7 +50,7 @@ export const createNeumorphicStyle = ({
 };
 
 /**
- * Estilos pré-definidos para botões neumórficos
+ * Pre-defined styles for neumorphic buttons
  */
 export const neumorphicButton = {
   default: createNeumorphicStyle({ size: 'medium' }),
@@ -61,7 +61,7 @@ export const neumorphicButton = {
 };
 
 /**
- * Estilos pré-definidos para cards neumórficos
+ * Pre-defined styles for neumorphic cards
  */
 export const neumorphicCard = {
   default: createNeumorphicStyle({ 
@@ -126,7 +126,7 @@ export const neumorphicGradients = {
 };
 
 /**
- * Animações para efeitos neumórficos
+ * Animations for neumorphic effects
  */
 export const neumorphicAnimations = {
   pressIn: {
@@ -144,7 +144,7 @@ export const neumorphicAnimations = {
 };
 
 /**
- * Utilitário para criar texto com sombra neumórfica
+ * Utility for creating text with neumorphic shadow
  */
 export const neumorphicTextShadow = {
   light: {

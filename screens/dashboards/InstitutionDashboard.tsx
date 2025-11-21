@@ -131,7 +131,7 @@ export const InstitutionDashboard: React.FC = () => {
   const handleLogout = () => {
     Alert.alert(
       t('auth.logout'),
-      t('auth.logoutConfirm') || 'Tem certeza que deseja sair?',
+      t('auth.logoutConfirm') || 'Are you sure you want to logout?',
       [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('auth.logout'), onPress: logout, style: 'destructive' }
@@ -253,9 +253,9 @@ export const InstitutionDashboard: React.FC = () => {
         <View style={styles.headerTop}>
           <View style={styles.greeting}>
             <Text style={styles.greetingText}>
-              {t('institution.welcome') || 'Painel Institucional'}
+              {t('institution.welcome') || 'Institution Dashboard'}
             </Text>
-            <Text style={styles.institutionName}>{user?.name || 'Instituição'}</Text>
+            <Text style={styles.institutionName}>{user?.name || 'Institution'}</Text>
           </View>
           <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
             <Ionicons name="business" size={32} color={Colors.primary} />
@@ -263,7 +263,7 @@ export const InstitutionDashboard: React.FC = () => {
         </View>
         
         <Text style={styles.subtitle}>
-          {t('institution.subtitle') || 'Gerencie sua instituição e serviços'}
+          {t('institution.subtitle') || 'Manage your institution and services'}
         </Text>
       </View>
 
@@ -273,7 +273,7 @@ export const InstitutionDashboard: React.FC = () => {
       {/* Estatísticas principais */}
       <View style={styles.statsSection}>
         <Text style={styles.sectionTitle}>
-          {t('institution.overview') || 'Visão Geral'}
+          {t('institution.overview') || 'Overview'}
         </Text>
         <View style={styles.statsContainer}>
           {renderStatCard(
@@ -301,13 +301,13 @@ export const InstitutionDashboard: React.FC = () => {
       {/* Ações rápidas */}
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
-          {t('institution.quickActions') || 'Ações Rápidas'}
+          {t('institution.quickActions') || 'Quick Actions'}
         </Text>
         
         {renderQuickAction(
           'search',
-          t('dashboard.findServices') || 'Buscar Serviços',
-          t('dashboard.findServicesDesc') || 'Encontre profissionais próximos',
+          t('dashboard.findServices') || 'Find Services',
+          t('dashboard.findServicesDesc') || 'Find nearby professionals',
           navigateToMap,
           Colors.info
         )}
@@ -317,20 +317,20 @@ export const InstitutionDashboard: React.FC = () => {
       <View style={styles.servicesSection}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {t('institution.myServices') || 'Meus Serviços'}
+            {t('institution.myServices') || 'My Services'}
           </Text>
           <TouchableOpacity onPress={() => {
             setShowServiceManagement(true);
           }}>
             <Text style={styles.seeAllText}>
-              {t('common.seeAll') || 'Ver todos'}
+              {t('common.seeAll') || 'See all'}
             </Text>
           </TouchableOpacity>
         </View>
         
           {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
+            <Text style={styles.loadingText}>{t('common.loading') || 'Loading...'}</Text>
           </View>
         ) : myServices.length > 0 ? (
           <ScrollView 
@@ -344,17 +344,17 @@ export const InstitutionDashboard: React.FC = () => {
           <View style={styles.emptyContainer}>
             <Ionicons name="medical-outline" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>
-              {t('institution.noServices') || 'Nenhum serviço cadastrado'}
+              {t('institution.noServices') || 'No services registered'}
             </Text>
             <TouchableOpacity 
               style={styles.addServiceButton}
               onPress={() => {
                 // TODO: Implementar navegação para criação de serviços
-                console.log(t('institution.addFirstServiceLog') || 'Navegação para criação de serviços em desenvolvimento');
+                console.log(t('institution.addFirstServiceLog') || 'Navigation to service creation in development');
               }}
             >
               <Text style={styles.addServiceButtonText}>
-                {t('institution.addFirstService') || 'Cadastrar Primeiro Serviço'}
+                {t('institution.addFirstService') || 'Register First Service'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -366,7 +366,7 @@ export const InstitutionDashboard: React.FC = () => {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={20} color={Colors.error} />
           <Text style={styles.logoutButtonText}>
-            {t('auth.logout') || 'Sair'}
+            {t('auth.logout') || 'Logout'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -377,14 +377,14 @@ export const InstitutionDashboard: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t('institution.manageServices') || 'Gerenciar Serviços'}</Text>
+                <Text style={styles.modalTitle}>{t('institution.manageServices') || 'Manage Services'}</Text>
               <TouchableOpacity onPress={() => setShowServiceManagement(false)}>
                 <Ionicons name="close" size={24} color={Colors.text} />
               </TouchableOpacity>
             </View>
             <View style={styles.modalContent}>
               <Text style={styles.modalText}>
-                {t('institution.manageServicesDescription') || 'Funcionalidade de gerenciamento de tipos de serviços em desenvolvimento.'}
+                {t('institution.manageServicesDescription') || 'Service type management feature in development.'}
               </Text>
             </View>
           </View>

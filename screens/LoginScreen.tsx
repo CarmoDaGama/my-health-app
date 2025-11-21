@@ -125,7 +125,7 @@ export default function LoginScreen() {
               onChangeText={(text: string) => handleInputChange('email', text)}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholder={t('auth.emailPlaceholder') || 'Digite seu email'}
+              placeholder={t('auth.emailPlaceholder') || 'Enter your email'}
               placeholderTextColor={Colors.textSecondary}
             />
             {formErrors.email && (
@@ -134,13 +134,13 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t('auth.password') || 'Senha'}</Text>
+            <Text style={styles.inputLabel}>{t('auth.password') || 'Password'}</Text>
             <TextInput
               style={[styles.textInput, formErrors.password && styles.inputError]}
               value={formData.password}
               onChangeText={(text: string) => handleInputChange('password', text)}
               secureTextEntry
-              placeholder={t('auth.passwordPlaceholder') || 'Digite sua senha'}
+              placeholder={t('auth.passwordPlaceholder') || 'Enter your password'}
               placeholderTextColor={Colors.textSecondary}
             />
             {formErrors.password && (

@@ -52,8 +52,8 @@ const ServiceFilters: React.FC<ServiceFiltersProps> = ({
 
   const availabilityOptions = [
     { value: undefined, label: 'Qualquer Disponibilidade' },
-    { value: true, label: 'Disponível' },
-    { value: false, label: 'Indisponível' }
+    { value: true, label: 'Available' },
+    { value: false, label: 'Unavailable' }
   ];
 
   const updateFilter = (key: keyof ServiceFiltersType, value: any) => {

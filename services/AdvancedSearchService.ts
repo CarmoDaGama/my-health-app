@@ -173,21 +173,28 @@ export class AdvancedSearchService {
       
       const service: HealthService = {
         id: doc.id,
-        name: data.name || '',
+        name: typeof data.name === 'string' ? data.name : '',
         type: data.type || data.serviceType || 'clinic',
-        address: data.address || '',
-        city: data.city || '',
-        state: data.state || '',
+        address: typeof data.address === 'string' ? data.address : '',
+        city: typeof data.city === 'string' ? data.city : '',
+        state: typeof data.state === 'string' ? data.state : data.province || '',
         country: data.country || 'Angola',
         coordinates,
-        phone: data.phone || '',
-        description: data.description || '',
-        rating: data.rating || 0,
-        reviews: data.reviews || 0,
-        services: data.services || [],
-        specialty: data.specialty || data.specialization,
+        phone: typeof data.phone === 'string' ? data.phone : data.contactPhone || '',
+        description: typeof data.description === 'string' ? data.description : '',
+        rating: typeof data.rating === 'number' ? data.rating : 0,
+        reviews: typeof data.reviews === 'number' ? data.reviews : data.reviewCount || 0,
+        services: Array.isArray(data.services) ? data.services.filter(s => typeof s === 'string') : [],
+        specialty: typeof data.specialty === 'string' ? data.specialty : data.specialization || undefined,
         status: serviceStatus,
-        ...data
+        isActive: data.isActive !== false,
+        createdBy: data.createdBy,
+        institutionId: data.institutionId,
+        email: typeof data.email === 'string' ? data.email : data.contactEmail || undefined,
+        schedule: data.schedule || data.workingHours || undefined,
+        education: typeof data.education === 'string' ? data.education : undefined,
+        experience: typeof data.experience === 'string' ? data.experience : undefined,
+        reviewCount: typeof data.reviewCount === 'number' ? data.reviewCount : data.totalReviews || 0
       };
       
       // ✅ APLICAR BUSCA POR TEXTO MANUALMENTE

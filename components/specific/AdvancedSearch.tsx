@@ -199,7 +199,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
   // Stable handlers with useCallback
   const handleInputFocus = useCallback(() => {
-    console.log('🔍 Input focused - handler called');
     shouldMaintainFocus.current = true;
     setIsSearchFocused(true);
     setShowSuggestions(true);
@@ -211,8 +210,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   }, []);
 
   const handleInputBlur = useCallback(() => {
-    console.log('🔍 Input blurred - handler called');
-    
     // Only proceed with blur if we're not trying to maintain focus
     if (!shouldMaintainFocus.current) {
       focusTimeout.current = setTimeout(() => {
@@ -233,6 +230,27 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     setSearchQuery(text);
     shouldMaintainFocus.current = true; // Maintain focus while typing
   }, []);
+
+  // Handler for service selection with proper keyboard dismissal
+  const handleServiceSelect = useCallback((service: HealthService) => {
+    // Immediately close suggestions to prevent any UI conflicts
+    setShowSuggestions(false);
+    setIsSearchFocused(false);
+    shouldMaintainFocus.current = false;
+    
+    // Force dismiss keyboard 
+    Keyboard.dismiss();
+    
+    // Blur the input as well
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
+    
+    // Call the parent handler with a slight delay to ensure proper navigation
+    setTimeout(() => {
+      onServiceSelect?.(service);
+    }, 100);
+  }, [onServiceSelect]);
 
 
 
@@ -571,12 +589,12 @@ const AdvancedFiltersModal: React.FC<AdvancedFiltersModalProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexShrink: 0,
   },
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     alignItems: 'center',
     gap: spacing.sm,
   },
@@ -650,11 +668,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   quickFiltersContainer: {
-    maxHeight: 50,
+    maxHeight: 45,
   },
   quickFiltersContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
+    paddingTop: spacing.xs,
     gap: spacing.sm,
   },
   quickFilterChip: {
@@ -716,7 +735,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   resultsText: {
     fontSize: fontSize.sm,

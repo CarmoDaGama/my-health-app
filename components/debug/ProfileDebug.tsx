@@ -16,7 +16,7 @@ export const ProfileDebug: React.FC<ProfileDebugProps> = ({ user }) => {
         <Text style={styles.item}>ID: {user.id}</Text>
         <Text style={styles.item}>Email: {user.email}</Text>
         <Text style={styles.item}>Nome: {user.name || 'N/A'}</Text>
-        <Text style={styles.item}>Telefone: {user.phone || 'N/A'}</Text>
+        <Text style={styles.item}>Phone: {user.phone || 'N/A'}</Text>
         <Text style={styles.item}>Tipo: {user.userType}</Text>
         <Text style={styles.item}>Ativo: {user.isActive ? 'Sim' : 'Não'}</Text>
         <Text style={styles.item}>Verificado: {user.isVerified ? 'Sim' : 'Não'}</Text>
@@ -31,7 +31,7 @@ export const ProfileDebug: React.FC<ProfileDebugProps> = ({ user }) => {
             <Text style={styles.subtitle}>Dados de Usuário Normal:</Text>
             <Text style={styles.item}>Data Nascimento: {user.dateOfBirth || 'N/A'}</Text>
             <Text style={styles.item}>Gênero: {user.gender || 'N/A'}</Text>
-            <Text style={styles.item}>Endereço: {user.address || 'N/A'}</Text>
+            <Text style={styles.item}>Address: {user.address || 'N/A'}</Text>
             <Text style={styles.item}>Contato Emergência: {user.emergencyContact ? 'Configurado' : 'N/A'}</Text>
             {user.emergencyContact && (
               <View style={styles.subItem}>

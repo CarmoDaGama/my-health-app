@@ -383,9 +383,9 @@ export default function AdminDashboardScreen() {
         
         {renderActionCard(
           'settings-outline',
-          t('admin.systemSettings') || 'Configurações',
+          t('admin.systemSettings') || 'Settings',
           'Configurar sistema e políticas',
-          () => Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve'),
+          () => Alert.alert(t('common.comingSoon') || 'Coming Soon', t('common.featureSoon') || 'Feature coming soon'),
           Colors.textSecondary
         )}
       </View>
@@ -394,9 +394,9 @@ export default function AdminDashboardScreen() {
       <View style={styles.activitiesSection}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {t('admin.recentActivities') || 'Atividades Recentes'}
+            {t('admin.recentActivities') || 'Recent Activities'}
           </Text>
-          <TouchableOpacity onPress={() => Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve')}>
+          <TouchableOpacity onPress={() => Alert.alert(t('common.comingSoon') || 'Coming Soon', t('common.featureSoon') || 'Feature coming soon')}>
             <Text style={styles.seeAllText}>
               {t('common.seeAll') || 'Ver todas'}
             </Text>
@@ -444,7 +444,7 @@ export default function AdminDashboardScreen() {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={20} color={Colors.error} />
           <Text style={styles.logoutButtonText}>
-            {t('auth.logout') || 'Sair'}
+            {t('auth.logout') || 'Logout'}
           </Text>
         </TouchableOpacity>
       </View>

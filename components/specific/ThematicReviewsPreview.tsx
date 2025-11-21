@@ -139,8 +139,14 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
   };
 
   const renderTopCategories = (categoryRatings: Record<string, number>) => {
-    // Pegar as 2 categorias com melhores notas
+    // Validar se categoryRatings é um objeto válido
+    if (!categoryRatings || typeof categoryRatings !== 'object') {
+      return null;
+    }
+    
+    // Get the 2 categories with the best ratings
     const sortedCategories = Object.entries(categoryRatings)
+      .filter(([category, rating]) => typeof category === 'string' && typeof rating === 'number')
       .sort(([,a], [,b]) => b - a)
       .slice(0, 2);
 
@@ -149,9 +155,9 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
         {sortedCategories.map(([categoryId, rating]) => (
           <View key={categoryId} style={styles.categoryTag}>
             <Text style={styles.categoryName}>
-              {categoryId.replace('_', ' ')}
+              {typeof categoryId === 'string' ? categoryId.replace('_', ' ') : 'Category'}
             </Text>
-            <Text style={styles.categoryRating}>{rating}/5</Text>
+            <Text style={styles.categoryRating}>{typeof rating === 'number' ? rating : 0}/5</Text>
           </View>
         ))}
       </View>
@@ -167,18 +173,18 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
           <View style={styles.reviewUserInfo}>
             <View style={styles.reviewAvatar}>
               <Text style={styles.reviewAvatarText}>
-                {review.userName.charAt(0).toUpperCase()}
+                {typeof review.userName === 'string' ? review.userName.charAt(0).toUpperCase() : '?'}
               </Text>
             </View>
             <View style={styles.reviewUserDetails}>
-              <Text style={styles.reviewUserName}>{review.userName}</Text>
+              <Text style={styles.reviewUserName}>{typeof review.userName === 'string' ? review.userName : 'Usuário Anônimo'}</Text>
               <Text style={styles.reviewDate}>{formatDate(review.createdAt)}</Text>
             </View>
           </View>
           
           <View style={styles.reviewRatingContainer}>
             {renderStars(review.overallRating)}
-            <Text style={styles.reviewRatingText}>{review.overallRating}/5</Text>
+            <Text style={styles.reviewRatingText}>{typeof review.overallRating === 'number' ? review.overallRating : 0}/5</Text>
           </View>
         </View>
 
@@ -186,7 +192,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
         {renderTopCategories(review.categoryRatings)}
 
         {/* General Comment if available */}
-        {review.generalComment && (
+        {review.generalComment && typeof review.generalComment === 'string' && (
           <Text style={styles.reviewComment} numberOfLines={2}>
             {review.generalComment}
           </Text>
@@ -199,7 +205,9 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
             <Text style={styles.visitContextText}>
               {typeof review.visitContext === 'string' 
                 ? review.visitContext 
-                : review.visitContext.visitType || 'Visita'
+                : (review.visitContext && typeof review.visitContext === 'object' && typeof review.visitContext.visitType === 'string' 
+                  ? review.visitContext.visitType 
+                  : 'Visita')
               }
             </Text>
           </View>
@@ -245,7 +253,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
         <Ionicons name="star-outline" size={48} color="#ccc" />
         <Text style={styles.emptyTitle}>Nenhuma avaliação temática ainda</Text>
         <Text style={styles.emptyText}>
-          Seja o primeiro a avaliar este serviço por categorias!
+          Be the first to rate this service by categories!
         </Text>
       </View>
     );
@@ -265,9 +273,9 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
         {reviews.length > 0 && (
           <View style={styles.statItem}>
             <View style={styles.avgRatingContainer}>
-              {renderStars(reviews.reduce((sum, r) => sum + r.overallRating, 0) / reviews.length)}
+              {renderStars(reviews.reduce((sum, r) => sum + (typeof r.overallRating === 'number' ? r.overallRating : 0), 0) / reviews.length)}
               <Text style={styles.avgRatingText}>
-                {(reviews.reduce((sum, r) => sum + r.overallRating, 0) / reviews.length).toFixed(1)}
+                {(reviews.reduce((sum, r) => sum + (typeof r.overallRating === 'number' ? r.overallRating : 0), 0) / reviews.length).toFixed(1)}
               </Text>
             </View>
             <Text style={styles.statLabel}>Média geral</Text>

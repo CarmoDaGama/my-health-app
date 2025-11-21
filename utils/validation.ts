@@ -1,8 +1,8 @@
 /**
- * Utilitários de validação para dados angolanos e coordenadas geográficas
+ * Validation utilities for Angolan data and geographic coordinates
  */
 
-// Validação de números de telefone angolanos
+// Validation of Angolan phone numbers
 export interface PhoneValidationResult {
   isValid: boolean;
   formatted?: string;

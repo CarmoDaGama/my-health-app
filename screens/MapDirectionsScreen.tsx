@@ -132,8 +132,8 @@ export const MapDirectionsScreen: React.FC<MapDirectionsScreenProps> = ({
       
       if (errorMessage.includes('403') || errorMessage.includes('401')) {
         Alert.alert(
-          'Serviço Temporariamente Indisponível',
-          'O serviço de rotas está temporariamente indisponível. Uma rota aproximada será exibida.',
+          'Service Temporarily Unavailable',
+          'The routing service is temporarily unavailable. An approximate route will be displayed.',
           [{ text: 'Entendi' }]
         );
       } else if (errorMessage.includes('Network') || errorMessage.includes('fetch')) {

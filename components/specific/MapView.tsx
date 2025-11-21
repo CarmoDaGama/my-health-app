@@ -134,7 +134,7 @@ export const MapView: React.FC<MapViewProps> = ({
           attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Adicionar marcador do usuário se disponível
+        // Add user marker if available
         ${userLocation ? `
           const userIcon = L.divIcon({
             className: 'user-marker',

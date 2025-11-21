@@ -110,7 +110,7 @@ export const ProfessionalDashboard: React.FC = () => {
   const handleLogout = () => {
     Alert.alert(
       t('auth.logout'),
-      t('auth.logoutConfirm') || 'Tem certeza que deseja sair?',
+      t('auth.logoutConfirm') || 'Are you sure you want to logout?',
       [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('auth.logout'), onPress: logout, style: 'destructive' }
@@ -187,9 +187,9 @@ export const ProfessionalDashboard: React.FC = () => {
         <View style={styles.headerTop}>
           <View style={styles.greeting}>
             <Text style={styles.greetingText}>
-              {t('professional.welcome') || 'Painel Profissional'}
+              {t('professional.welcome') || 'Professional Dashboard'}
             </Text>
-            <Text style={styles.userName}>{user?.name || 'Profissional'}</Text>
+            <Text style={styles.userName}>{user?.name || 'Professional'}</Text>
           </View>
           <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
             <Ionicons name="person-circle" size={32} color={Colors.primary} />
@@ -197,14 +197,14 @@ export const ProfessionalDashboard: React.FC = () => {
         </View>
         
         <Text style={styles.subtitle}>
-          {t('professional.subtitle') || 'Gerencie seu perfil e serviços profissionais'}
+          {t('professional.subtitle') || 'Manage your profile and professional services'}
         </Text>
       </View>
 
       {/* Estatísticas principais */}
       <View style={styles.statsSection}>
         <Text style={styles.sectionTitle}>
-          {t('professional.overview') || 'Visão Geral'}
+          {t('professional.overview') || 'Overview'}
         </Text>
         <View style={styles.statsContainer}>
           {renderStatCard(
@@ -232,13 +232,13 @@ export const ProfessionalDashboard: React.FC = () => {
       {/* Ações rápidas */}
       <View style={styles.quickActionsSection}>
         <Text style={styles.sectionTitle}>
-          {t('professional.quickActions') || 'Ações Rápidas'}
+          {t('professional.quickActions') || 'Quick Actions'}
         </Text>
         
         {renderQuickAction(
           'search',
-          t('dashboard.findServices') || 'Buscar Serviços',
-          t('dashboard.findServicesDesc') || 'Encontre profissionais próximos',
+          t('dashboard.findServices') || 'Find Services',
+          t('dashboard.findServicesDesc') || 'Find nearby professionals',
           navigateToMap,
           Colors.info
         )}
@@ -248,27 +248,27 @@ export const ProfessionalDashboard: React.FC = () => {
       <View style={styles.servicesSection}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {t('professional.myServices') || 'Meus Serviços'}
+            {t('professional.myServices') || 'My Services'}
           </Text>
           <TouchableOpacity onPress={() => {
-            Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+            Alert.alert(t('common.comingSoon') || 'Coming Soon', t('common.featureSoon') || 'Feature coming soon');
           }}>
             <Text style={styles.seeAllText}>
-              {t('common.seeAll') || 'Ver todos'}
+              {t('common.seeAll') || 'See all'}
             </Text>
           </TouchableOpacity>
         </View>
         
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
+            <Text style={styles.loadingText}>{t('common.loading') || 'Loading...'}</Text>
           </View>
         ) : myService ? (
           <View style={styles.servicesContainer}>
             <TouchableOpacity 
               style={styles.serviceCard}
               onPress={() => {
-                Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+                Alert.alert(t('common.comingSoon') || 'Coming Soon', t('common.featureSoon') || 'Feature coming soon');
               }}
             >
               <View style={styles.serviceHeader}>
@@ -309,16 +309,16 @@ export const ProfessionalDashboard: React.FC = () => {
           <View style={styles.emptyContainer}>
             <Ionicons name="medical-outline" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyText}>
-              {t('professional.noServices') || 'Nenhum serviço cadastrado'}
+              {t('professional.noServices') || 'No services registered'}
             </Text>
             <TouchableOpacity 
               style={styles.addServiceButton}
               onPress={() => {
-                Alert.alert(t('common.comingSoon') || 'Em Desenvolvimento', t('common.featureSoon') || 'Funcionalidade em breve');
+                Alert.alert(t('common.comingSoon') || 'Coming Soon', t('common.featureSoon') || 'Feature coming soon');
               }}
             >
               <Text style={styles.addServiceButtonText}>
-                {t('professional.addFirstService') || 'Cadastrar Primeiro Serviço'}
+                {t('professional.addFirstService') || 'Register First Service'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -330,7 +330,7 @@ export const ProfessionalDashboard: React.FC = () => {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={20} color={Colors.error} />
           <Text style={styles.logoutButtonText}>
-            {t('auth.logout') || 'Sair'}
+            {t('auth.logout') || 'Logout'}
           </Text>
         </TouchableOpacity>
       </View>

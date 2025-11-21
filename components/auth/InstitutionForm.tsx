@@ -110,7 +110,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
   const handleAddressChange = async (field: string, value: string) => {
     handleNestedChange(field, value);
     
-    // Geocoding automático quando temos um endereço completo
+    // Automatic geocoding when we have a complete address
     if (field === 'address.street' && value.length > 5) {
       const currentAddress = data.address || {};
       const fullAddress = `${value}, ${currentAddress.city || ''}, ${currentAddress.state || ''}, Angola`.trim();

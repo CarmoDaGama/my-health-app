@@ -39,6 +39,17 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const { checkUserReview } = useReviews();
   const { t } = useTranslation();
   
+  // Debug: verificar se há objetos sendo renderizados como texto
+  React.useEffect(() => {
+    // Verificar apenas campos que podem causar problemas de renderização
+    Object.keys(service).forEach(key => {
+      const value = (service as any)[key];
+      if (typeof value === 'object' && value !== null && !Array.isArray(value) && key !== 'coordinates' && key !== 'schedule') {
+        console.warn(`⚠️ [ServiceDetailScreen] Field ${key} is an unexpected object:`, value);
+      }
+    });
+  }, [service]);
+  
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [userReview, setUserReview] = useState<Review | null>(null);
@@ -56,17 +67,26 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   };
 
   const handleCall = () => {
-    Linking.openURL(`tel:${service.phone}`);
+    const phone = typeof service.phone === 'string' ? service.phone : '';
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    }
   };
 
   const handleEmail = () => {
-    if (service.email) {
+    if (service.email && typeof service.email === 'string') {
       Linking.openURL(`mailto:${service.email}`);
     }
   };
 
   const handleDirections = () => {
-    navigation.navigate('MapDirections', { service });
+    // Criar uma cópia segura do service sem objetos problemáticos no texto
+    const safeService = {
+      ...service,
+      coordinates: service.coordinates, // Manter como objeto para navegação
+      schedule: service.schedule // Manter como objeto para processamento
+    };
+    navigation.navigate('MapDirections', { service: safeService });
   };
 
   const handleBack = () => {
@@ -145,38 +165,43 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   };
 
   const formatSchedule = (schedule: any) => {
-    if (!schedule) return 'Não informado';
+    if (!schedule || typeof schedule !== 'object') return 'Not informed';
     
     const days = {
-      monday: 'Segunda',
-      tuesday: 'Terça', 
-      wednesday: 'Quarta',
-      thursday: 'Quinta',
-      friday: 'Sexta',
-      saturday: 'Sábado',
-      sunday: 'Domingo'
+      monday: 'Monday',
+      tuesday: 'Tuesday', 
+      wednesday: 'Wednesday',
+      thursday: 'Thursday',
+      friday: 'Friday',
+      saturday: 'Saturday',
+      sunday: 'Sunday'
     };
 
-    return Object.entries(schedule)
-      .filter(([_, time]) => time)
-      .map(([day, time]) => `${days[day as keyof typeof days]}: ${time}`)
-      .join('\n');
+    try {
+      return Object.entries(schedule)
+        .filter(([_, time]) => time && typeof time === 'string')
+        .map(([day, time]) => `${days[day as keyof typeof days] || day}: ${time}`)
+        .join('\n') || 'Not informed';
+    } catch (error) {
+      console.warn('Error formatting schedule:', error);
+      return 'Not informed';
+    }
   };
 
   const renderProfessionalDetails = () => (
     <>
-      {/* Avaliações */}
+      {/* Reviews */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Avaliações</Text>
-          {service.rating && (
+          <Text style={styles.sectionTitle}>Reviews</Text>
+          {service.rating && typeof service.rating === 'number' && (
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingText}>
                 {service.rating}/5.0
               </Text>
               <Text style={styles.reviewsText}>
-                ({service.reviews || 0})
+                ({typeof service.reviews === 'number' ? service.reviews : 0})
               </Text>
             </View>
           )}
@@ -220,8 +245,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           {(() => {
             console.log('🔍 [ServiceDetailScreen - Professional] Renderizando Reviews Preview:', {
               activeReviewTab,
-              serviceId: service.id,
-              serviceName: service.name,
+              serviceId: typeof service.id === 'string' ? service.id : 'N/A',
+              serviceName: typeof service.name === 'string' ? service.name : 'N/A',
               isThematic: activeReviewTab === 'thematic'
             });
             
@@ -244,7 +269,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       </View>
 
       {/* Especialidade */}
-      {service.specialty && (
+      {service.specialty && typeof service.specialty === 'string' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('serviceDetail.specialty')}</Text>
           <Text style={styles.sectionContent}>{service.specialty}</Text>
@@ -252,7 +277,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       )}
 
       {/* Clínica */}
-      {service.clinic && (
+      {service.clinic && typeof service.clinic === 'string' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('details.services')}</Text>
           <Text style={styles.sectionContent}>{service.clinic}</Text>
@@ -260,10 +285,10 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       )}
 
       {/* Serviços */}
-      {service.services && service.services.length > 0 && (
+      {service.services && Array.isArray(service.services) && service.services.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Serviços Oferecidos</Text>
-          {service.services.map((serviceItem, index) => (
+          <Text style={styles.sectionTitle}>Services Offered</Text>
+          {service.services.filter(item => typeof item === 'string').map((serviceItem, index) => (
             <View key={index} style={styles.serviceItem}>
               <Ionicons name="checkmark-circle" size={16} color={Colors.primary} />
               <Text style={styles.serviceItemText}>{serviceItem}</Text>
@@ -281,17 +306,17 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       )}
 
       {/* Formação */}
-      {service.education && (
+      {service.education && typeof service.education === 'string' && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Formação</Text>
+          <Text style={styles.sectionTitle}>Education</Text>
           <Text style={styles.sectionContent}>{service.education}</Text>
         </View>
       )}
 
       {/* Experiência */}
-      {service.experience && (
+      {service.experience && typeof service.experience === 'string' && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Experiência</Text>
+          <Text style={styles.sectionTitle}>Experience</Text>
           <Text style={styles.sectionContent}>{service.experience}</Text>
         </View>
       )}
@@ -301,10 +326,10 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   const renderInstitutionDetails = () => (
     <>
       {/* Serviços */}
-      {service.services && service.services.length > 0 && (
+      {service.services && Array.isArray(service.services) && service.services.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Serviços Disponíveis</Text>
-          {service.services.map((serviceItem, index) => (
+          <Text style={styles.sectionTitle}>Available Services</Text>
+          {service.services.filter(item => typeof item === 'string').map((serviceItem, index) => (
             <View key={index} style={styles.serviceItem}>
               <Ionicons name="medical" size={16} color={Colors.primary} />
               <Text style={styles.serviceItemText}>{serviceItem}</Text>
@@ -313,18 +338,18 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
         </View>
       )}
 
-      {/* Avaliações */}
+      {/* Reviews */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Avaliações</Text>
-          {service.rating && (
+          <Text style={styles.sectionTitle}>Reviews</Text>
+          {service.rating && typeof service.rating === 'number' && (
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingText}>
                 {service.rating}/5.0
               </Text>
               <Text style={styles.reviewsText}>
-                ({service.reviews || 0})
+                ({typeof service.reviews === 'number' ? service.reviews : 0})
               </Text>
             </View>
           )}
@@ -368,8 +393,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           {(() => {
             console.log('🔍 [ServiceDetailScreen - Institution] Renderizando Reviews Preview:', {
               activeReviewTab,
-              serviceId: service.id,
-              serviceName: service.name,
+              serviceId: typeof service.id === 'string' ? service.id : 'N/A',
+              serviceName: typeof service.name === 'string' ? service.name : 'N/A',
               isThematic: activeReviewTab === 'thematic'
             });
             
@@ -407,37 +432,37 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
                 color={Colors.primary} 
               />
             </View>
-            <Text style={styles.serviceName}>{service.name}</Text>
+            <Text style={styles.serviceName}>{typeof service.name === 'string' ? service.name : 'Name not available'}</Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('details.address')}</Text>
             <Text style={styles.sectionContent}>
-              {service.address}
+              {typeof service.address === 'string' ? service.address : 'Address not available'}
               {'\n'}
-              {service.city}, {service.state}
-              {service.country && `, ${service.country}`}
+              {typeof service.city === 'string' ? service.city : 'City not available'}, {typeof service.state === 'string' ? service.state : 'State not available'}
+              {service.country && typeof service.country === 'string' && `, ${service.country}`}
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('details.description')}</Text>
-            <Text style={styles.sectionContent}>{service.description}</Text>
+            <Text style={styles.sectionContent}>{typeof service.description === 'string' ? service.description : 'Description not available'}</Text>
           </View>
 
           {service.type === 'professional' ? renderProfessionalDetails() : renderInstitutionDetails()}
         </View>
 
-        {/* Contatos */}
+        {/* Contact */}
         <View style={styles.contactCard}>
-          <Text style={styles.contactTitle}>Contatos</Text>
+          <Text style={styles.contactTitle}>Contact</Text>
           
           <TouchableOpacity style={styles.contactItem} onPress={handleCall}>
             <Ionicons name="call" size={20} color={Colors.primary} />
-            <Text style={styles.contactText}>{service.phone}</Text>
+            <Text style={styles.contactText}>{typeof service.phone === 'string' ? service.phone : 'Phone not available'}</Text>
           </TouchableOpacity>
 
-          {service.email && (
+          {service.email && typeof service.email === 'string' && (
             <TouchableOpacity style={styles.contactItem} onPress={handleEmail}>
               <Ionicons name="mail" size={20} color={Colors.primary} />
               <Text style={styles.contactText}>{service.email}</Text>
@@ -446,13 +471,13 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
 
           <TouchableOpacity style={styles.contactItem} onPress={handleDirections}>
             <Ionicons name="navigate" size={20} color={Colors.primary} />
-            <Text style={styles.contactText}>Obter direções</Text>
+            <Text style={styles.contactText}>Get directions</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.actionsContainer}>
           <Button
-            title="Ligar Agora"
+            title="Call Now"
             onPress={handleCall}
             variant="primary"
             size="large"
@@ -461,7 +486,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           <View style={styles.actionSpacing} />
           
           <Button
-            title="Obter Direções"
+            title="Get Directions"
             onPress={handleDirections}
             variant="secondary"
             size="large"
@@ -471,8 +496,8 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       
       {/* Review Form Modal */}
       <ReviewForm
-        serviceId={service.id}
-        serviceName={service.name}
+        serviceId={typeof service.id === 'string' ? service.id : ''}
+        serviceName={typeof service.name === 'string' ? service.name : 'Service'}
         visible={showReviewForm}
         onClose={handleCloseReviewForm}
         onSuccess={handleReviewSuccess}
@@ -507,7 +532,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               >
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
-              <Text style={styles.modalTitle}>Avaliações Temáticas</Text>
+              <Text style={styles.modalTitle}>Thematic Reviews</Text>
               <View style={styles.modalPlaceholder} />
             </View>
             <ServiceReviews
@@ -536,7 +561,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
               <View style={styles.modalPlaceholder} />
             </View>
             <ReviewsList
-              serviceId={service.id}
+              serviceId={typeof service.id === 'string' ? service.id : ''}
               onEditReview={handleEditReview}
               showFilters={true}
             />

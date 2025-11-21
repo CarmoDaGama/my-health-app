@@ -42,14 +42,14 @@ export default function UserProfileScreen() {
       await updateProfile(formData);
       setIsEditing(false);
       Alert.alert(
-        t('profile.success') || 'Sucesso',
-        t('profile.profileUpdated') || 'Perfil atualizado com sucesso',
+        t('profile.success') || 'Success',
+        t('profile.profileUpdated') || 'Profile updated successfully',
         [{ text: t('common.ok') || 'OK' }]
       );
     } catch (error) {
       Alert.alert(
-        t('profile.error') || 'Erro',
-        error instanceof Error ? error.message : t('profile.updateError') || 'Erro ao atualizar perfil',
+        t('profile.error') || 'Error',
+        error instanceof Error ? error.message : t('profile.updateError') || 'Error updating profile',
         [{ text: t('common.ok') || 'OK' }]
       );
     } finally {
@@ -67,15 +67,15 @@ export default function UserProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      t('profile.logout') || 'Sair',
-      t('profile.logoutConfirmation') || 'Tem certeza que deseja sair da sua conta?',
+      t('profile.logout') || 'Logout',
+      t('profile.logoutConfirmation') || 'Are you sure you want to logout?',
       [
         {
-          text: t('common.cancel') || 'Cancelar',
+          text: t('common.cancel') || 'Cancel',
           style: 'cancel',
         },
         {
-          text: t('profile.logout') || 'Sair',
+          text: t('profile.logout') || 'Logout',
           style: 'destructive',
           onPress: () => logout(),
         },
@@ -87,7 +87,7 @@ export default function UserProfileScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>{t('profile.loading') || 'Carregando...'}</Text>
+        <Text style={styles.loadingText}>{t('profile.loading') || 'Loading...'}</Text>
       </View>
     );
   }
@@ -110,19 +110,19 @@ export default function UserProfileScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {t('profile.personalInfo') || 'Informações Pessoais'}
+            {t('profile.personalInfo') || 'Personal Information'}
           </Text>
           {!isEditing ? (
             <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
               <Text style={styles.editButtonText}>
-                {t('profile.edit') || 'Editar'}
+                {t('profile.edit') || 'Edit'}
               </Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.editActions}>
               <TouchableOpacity style={styles.cancelButton} onPress={handleCancelEdit}>
                 <Text style={styles.cancelButtonText}>
-                  {t('common.cancel') || 'Cancelar'}
+                  {t('common.cancel') || 'Cancel'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -134,7 +134,7 @@ export default function UserProfileScreen() {
                   <ActivityIndicator size="small" color={Colors.textOnPrimary} />
                 ) : (
                   <Text style={styles.saveButtonText}>
-                    {t('common.save') || 'Salvar'}
+                    {t('common.save') || 'Save'}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -144,14 +144,14 @@ export default function UserProfileScreen() {
 
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>
-            {t('profile.name') || 'Nome'}
+            {t('profile.name') || 'Name'}
           </Text>
           {isEditing ? (
             <TextInput
               style={styles.textInput}
               value={formData.name}
               onChangeText={(text) => handleInputChange('name', text)}
-              placeholder={t('profile.namePlaceholder') || 'Digite seu nome'}
+              placeholder={t('profile.namePlaceholder') || 'Enter your name'}
               placeholderTextColor={Colors.textSecondary}
             />
           ) : (
@@ -168,21 +168,21 @@ export default function UserProfileScreen() {
           </Text>
           {!isEditing && (
             <Text style={styles.fieldNote}>
-              {t('profile.emailNote') || 'Email não pode ser alterado'}
+              {t('profile.emailNote') || 'Email cannot be changed'}
             </Text>
           )}
         </View>
 
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>
-            {t('profile.phone') || 'Telefone'}
+            {t('profile.phone') || 'Phone'}
           </Text>
           {isEditing ? (
             <TextInput
               style={styles.textInput}
               value={formData.phone}
               onChangeText={(text) => handleInputChange('phone', text)}
-              placeholder={t('profile.phonePlaceholder') || 'Digite seu telefone'}
+              placeholder={t('profile.phonePlaceholder') || 'Enter your phone number'}
               placeholderTextColor={Colors.textSecondary}
               keyboardType="phone-pad"
             />
@@ -221,7 +221,7 @@ export default function UserProfileScreen() {
       <View style={styles.actions}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>
-            {t('profile.logout') || 'Sair da Conta'}
+            {t('profile.logout') || 'Logout'}
           </Text>
         </TouchableOpacity>
       </View>

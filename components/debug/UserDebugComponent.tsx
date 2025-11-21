@@ -33,7 +33,7 @@ export const UserDebugComponent: React.FC<UserDebugComponentProps> = ({ user }) 
         <Text style={styles.debugText}>ID: {user.id}</Text>
         <Text style={styles.debugText}>Email: {(user as any).email || 'N/A'}</Text>
         <Text style={styles.debugText}>Nome: {(user as any).name || 'N/A'}</Text>
-        <Text style={styles.debugText}>Telefone: {(user as any).phone || 'N/A'}</Text>
+        <Text style={styles.debugText}>Phone: {(user as any).phone || 'N/A'}</Text>
         <Text style={styles.debugText}>Tipo: {user.userType}</Text>
         <Text style={styles.debugText}>Ativo: {String((user as any).isActive)}</Text>
         <Text style={styles.debugText}>Verificado: {String((user as any).isVerified)}</Text>
@@ -52,7 +52,7 @@ export const UserDebugComponent: React.FC<UserDebugComponentProps> = ({ user }) 
             <Text style={styles.sectionTitle}>Dados de Usuário Normal</Text>
             <Text style={styles.debugText}>Data nascimento: {(user as NormalUser).dateOfBirth || 'N/A'}</Text>
             <Text style={styles.debugText}>Gênero: {(user as NormalUser).gender || 'N/A'}</Text>
-            <Text style={styles.debugText}>Endereço: {(user as NormalUser).address || 'N/A'}</Text>
+            <Text style={styles.debugText}>Address: {(user as NormalUser).address || 'N/A'}</Text>
             <Text style={styles.debugText}>Tem contato emergência: {String(!!(user as NormalUser).emergencyContact)}</Text>
           </View>
           

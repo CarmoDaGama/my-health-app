@@ -47,8 +47,8 @@ export const MainTabNavigator: React.FC = () => {
           backgroundColor: Colors.surface,
           borderTopWidth: 0,
           height: 70,
-          paddingBottom: 12,
-          paddingTop: 12,
+          paddingBottom: 10,
+          paddingTop: 8,
           paddingHorizontal: 16,
           ...shadows.neumorphic.medium,
           borderRadius: 20,
@@ -58,16 +58,21 @@ export const MainTabNavigator: React.FC = () => {
           bottom: 0,
           left: 0,
           right: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: 2,
+          textAlign: 'center',
         },
         tabBarItemStyle: {
           borderRadius: 12,
           marginHorizontal: 4,
           paddingVertical: 4,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         headerStyle: {
           backgroundColor: Colors.background,
@@ -97,13 +102,13 @@ export const MainTabNavigator: React.FC = () => {
           title: 'Search',
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}
         options={{
           title: 'Favorites',
         }}
-      />
+      /> */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

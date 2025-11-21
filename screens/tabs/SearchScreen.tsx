@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize, borderRadius, shadows } from '../../constants';
@@ -28,11 +29,39 @@ export const SearchScreen: React.FC = () => {
   };
 
   const handleServiceSelect = (service: HealthService) => {
-    // Navigate to service detail
-    (navigation as any).navigate('ServiceDetail', { service });
+    // Close keyboard before navigation to prevent focus issues
+    Keyboard.dismiss();
+    
+    // Use setTimeout to ensure keyboard is fully dismissed before navigation
+    setTimeout(() => {
+      (navigation as any).navigate('ServiceDetail', { service });
+    }, 100);
   };
 
-  const renderServiceItem = ({ item }: { item: HealthService }) => (
+  // Helper function to safely format address
+  const formatAddress = (address: any, city?: string) => {
+    if (typeof address === 'string') {
+      return address;
+    }
+    if (typeof address === 'object' && address !== null) {
+      const { street, city: addrCity, state } = address;
+      return `${street || ''}, ${addrCity || city || ''}`;
+    }
+    return 'N/A';
+  };
+
+  const renderServiceItem = ({ item }: { item: HealthService }) => {
+    // Debug: verificar estrutura dos dados
+    if (typeof item.address === 'object' || typeof item.name === 'object') {
+      console.warn('⚠️ Dados inválidos detectados no item:', {
+        id: item.id,
+        name: typeof item.name,
+        address: typeof item.address,
+        addressValue: item.address
+      });
+    }
+    
+    return (
     <NeumorphicCard
       variant="default"
       onPress={() => handleServiceSelect(item)}
@@ -40,8 +69,8 @@ export const SearchScreen: React.FC = () => {
     >
       <View style={styles.serviceHeader}>
         <View style={styles.serviceInfo}>
-          <Text style={styles.serviceName}>{item.name || 'N/A'}</Text>
-          <Text style={styles.serviceType}>{item.type || 'N/A'}</Text>
+          <Text style={styles.serviceName}>{typeof item.name === 'string' ? item.name : 'N/A'}</Text>
+          <Text style={styles.serviceType}>{typeof item.type === 'string' ? item.type : 'N/A'}</Text>
         </View>
         <View style={styles.serviceActions}>
           {item.rating ? (
@@ -55,20 +84,21 @@ export const SearchScreen: React.FC = () => {
       </View>
       
       <Text style={styles.serviceAddress} numberOfLines={1}>
-        📍 {item.address || 'N/A'}, {item.city || 'N/A'}
+        📍 {formatAddress(item.address, item.city)}, {typeof item.city === 'string' ? item.city : 'N/A'}
       </Text>
       
-      {item.specialty ? (
-        <Text style={styles.serviceSpecialty}>🔬 {item.specialty || 'N/A'}</Text>
+      {item.specialty && typeof item.specialty === 'string' ? (
+        <Text style={styles.serviceSpecialty}>🔬 {item.specialty}</Text>
       ) : null}
       
-      {item.services && item.services.length > 0 ? (
+      {item.services && Array.isArray(item.services) && item.services.length > 0 ? (
         <Text style={styles.serviceServices} numberOfLines={1}>
-          💼 {item.services.slice(0, 3).join(', ')}{item.services.length > 3 ? '...' : ''}
+          💼 {item.services.filter(s => typeof s === 'string').slice(0, 3).join(', ')}{item.services.length > 3 ? '...' : ''}
         </Text>
       ) : null}
     </NeumorphicCard>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -87,11 +117,13 @@ export const SearchScreen: React.FC = () => {
           style={styles.resultsList}
           contentContainerStyle={styles.resultsContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         />
       ) : (
         <View style={styles.emptyState}>
           <NeumorphicCard variant="elevated" style={styles.iconContainer}>
-            <Ionicons name="search-outline" size={64} color={Colors.primary} />
+            <Ionicons name="search-outline" size={48} color={Colors.primary} />
           </NeumorphicCard>
           <Text style={styles.title}>Advanced Search</Text>
           <Text style={styles.description}>
@@ -124,16 +156,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+    paddingTop: spacing.xs,
   },
   resultsList: {
     flex: 1,
+    marginTop: spacing.sm,
   },
   resultsContent: {
-    paddingBottom: spacing.xl,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.lg,
   },
   serviceItem: {
     marginHorizontal: spacing.md,
-    marginVertical: spacing.xs,
+    marginVertical: spacing.xs / 2,
+    paddingVertical: spacing.sm,
   },
   serviceHeader: {
     flexDirection: 'row',
@@ -187,13 +223,14 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl * 2,
   },
   iconContainer: {
-    marginBottom: spacing.lg,
-    padding: spacing.xl,
+    marginBottom: spacing.md,
+    padding: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -209,8 +246,8 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: spacing.xl,
+    lineHeight: 22,
+    marginBottom: spacing.lg,
   },
   tipsContainer: {
     alignSelf: 'stretch',

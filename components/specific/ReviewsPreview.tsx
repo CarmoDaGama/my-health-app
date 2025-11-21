@@ -73,23 +73,23 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
           <View style={styles.reviewUserInfo}>
             <View style={styles.reviewAvatar}>
               <Text style={styles.reviewAvatarText}>
-                {review.userName.charAt(0).toUpperCase()}
+                {typeof review.userName === 'string' ? review.userName.charAt(0).toUpperCase() : '?'}
               </Text>
             </View>
             <View style={styles.reviewUserDetails}>
-              <Text style={styles.reviewUserName}>{review.userName}</Text>
+              <Text style={styles.reviewUserName}>{typeof review.userName === 'string' ? review.userName : 'Usuário Anônimo'}</Text>
               <Text style={styles.reviewDate}>{formatDate(new Date(review.createdAt))}</Text>
             </View>
           </View>
           
           <View style={styles.reviewRatingContainer}>
-            {renderStars(review.rating)}
-            <Text style={styles.reviewRatingText}>{review.rating}/5</Text>
+            {renderStars(typeof review.rating === 'number' ? review.rating : 0)}
+            <Text style={styles.reviewRatingText}>{typeof review.rating === 'number' ? review.rating : 0}/5</Text>
           </View>
         </View>
 
         <Text style={styles.reviewComment} numberOfLines={2}>
-          {review.comment}
+          {typeof review.comment === 'string' ? review.comment : 'Comment not available'}
         </Text>
 
         {isOwnReview && onEditReview && (

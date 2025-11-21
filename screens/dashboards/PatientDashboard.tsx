@@ -307,11 +307,11 @@ export const PatientDashboard: React.FC = () => {
     switch (activeTab) {
       case 'professionals':
         data = getProfessionals();
-        title = t('dashboard.professionals') || 'Profissionais Disponíveis';
+        title = t('dashboard.professionals') || 'Available Professionals';
         break;
       case 'institutions':
         data = getInstitutions();
-        title = t('dashboard.institutions') || 'Instituições de Saúde';
+        title = t('dashboard.institutions') || 'Health Institutions';
         break;
       default:
         return null;
@@ -354,7 +354,7 @@ export const PatientDashboard: React.FC = () => {
           <View style={styles.emptyState}>
             <Ionicons name="search" size={48} color={Colors.textSecondary} />
             <Text style={styles.emptyStateText}>
-              {t('dashboard.noResults') || 'Nenhum resultado encontrado'}
+              {t('dashboard.noResults') || 'No results found'}
             </Text>
           </View>
         )}
@@ -434,7 +434,7 @@ export const PatientDashboard: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>{t('common.loading') || 'Carregando...'}</Text>
+        <Text style={styles.loadingText}>{t('common.loading') || 'Loading...'}</Text>
       </View>
     );
   }
@@ -479,7 +479,7 @@ export const PatientDashboard: React.FC = () => {
               <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
               <TextInput
                 style={styles.searchInput}
-                placeholder={t('app.searchPlaceholder') || 'Buscar serviços de saúde...'}
+                placeholder={t('app.searchPlaceholder') || 'Search health services...'}
                 placeholderTextColor={Colors.textSecondary}
                 value={searchQuery}
                 onChangeText={handleSearch}
@@ -517,7 +517,7 @@ export const PatientDashboard: React.FC = () => {
                   styles.tabButtonText,
                   activeTab === 'professionals' && styles.activeTabButtonText
                 ]}>
-                  {t('dashboard.professionals') || 'Profissionais'}
+                  {t('dashboard.professionals') || 'Professionals'}
                 </Text>
               </TouchableOpacity>
 
@@ -537,7 +537,7 @@ export const PatientDashboard: React.FC = () => {
                   styles.tabButtonText,
                   activeTab === 'institutions' && styles.activeTabButtonText
                 ]}>
-                  {t('dashboard.institutions') || 'Instituições'}
+                  {t('dashboard.institutions') || 'Institutions'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -566,7 +566,7 @@ export const PatientDashboard: React.FC = () => {
           {!isExpanded ? (
             <View style={styles.resultsInfo}>
               <Text style={styles.resultsText}>
-                {String(filteredServices.length || 0)} {t('app.servicesFound') || 'serviços encontrados'}
+                {String(filteredServices.length || 0)} {t('app.servicesFound') || 'services found'}
               </Text>
             </View>
           ) : null}

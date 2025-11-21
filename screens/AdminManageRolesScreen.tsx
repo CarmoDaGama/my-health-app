@@ -120,14 +120,14 @@ export default function AdminManageRolesScreen() {
 
   const confirmAddAdmin = async () => {
     if (!newAdminEmail.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe o email do usuário.');
+      Alert.alert('Warning', 'Please provide the user email.');
       return;
     }
 
     // Validação básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newAdminEmail)) {
-      Alert.alert('Atenção', 'Por favor, informe um email válido.');
+      Alert.alert('Warning', 'Please provide a valid email.');
       return;
     }
 
@@ -137,7 +137,7 @@ export default function AdminManageRolesScreen() {
 
       if (result.success) {
         Alert.alert(
-          'Sucesso!',
+          'Success!',
           `${newAdminEmail} foi adicionado como ${newAdminRole === 'admin' ? 'Admin' : 'Moderador'}.`,
           [{ text: 'OK' }]
         );

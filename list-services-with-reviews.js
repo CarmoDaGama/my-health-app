@@ -22,12 +22,12 @@ async function getServicesWithReviews() {
     console.log('🏥 SERVICES COM THEMATIC REVIEWS DISPONÍVEIS');
     console.log('============================================');
     
-    // Buscar todos os services
+    // Find all services
     const servicesSnapshot = await getDocs(collection(db, 'healthServices'));
     
     console.log(`📊 Total de services no banco: ${servicesSnapshot.size}`);
     
-    // Buscar todos os reviews temáticos
+    // Find all thematic reviews
     const reviewsSnapshot = await getDocs(collection(db, 'thematicReviews'));
     
     console.log(`📋 Total de thematic reviews: ${reviewsSnapshot.size}`);
@@ -52,7 +52,7 @@ async function getServicesWithReviews() {
       console.log(`\\n🏥 ${firstReview.serviceName}`);
       console.log(`   📍 Service ID: ${serviceId}`);
       console.log(`   📊 Total Reviews: ${reviews.length}`);
-      console.log(`   👥 Usuários: ${reviews.map(r => r.userName).join(', ')}`);
+      console.log(`   👥 Users: ${reviews.map(r => r.userName).join(', ')}`);
       console.log(`   ⭐ Notas: ${reviews.map(r => r.overallRating).join(', ')}`);
       
       // Verificar se o service existe na collection services
@@ -62,14 +62,14 @@ async function getServicesWithReviews() {
         console.log(`   ✅ Service existe: ${serviceData.name}`);
         console.log(`   📱 Para testar no app: Procure por "${serviceData.name}"`);
       } else {
-        console.log(`   ⚠️ Service não encontrado na collection healthServices`);
+        console.log(`   ⚠️ Service not found in healthServices collection`);
       }
     }
     
     console.log('\\n📱 COMO TESTAR NO APP:');
     console.log('1. Execute: expo start');
-    console.log('2. Procure por um dos serviços listados acima');
-    console.log('3. Abra os detalhes do serviço');
+    console.log('2. Search for one of the services listed above');
+    console.log('3. Open service details');
     console.log('4. Verifique se a tab "Temáticas" está selecionada');
     console.log('5. Os reviews devem aparecer');
     
@@ -81,7 +81,7 @@ async function getServicesWithReviews() {
     console.log('• [ThematicReviewsPreview] Reviews carregados');
     
   } catch (error) {
-    console.error('❌ Erro:', error);
+    console.error('❌ Error:', error);
   }
 }
 
@@ -89,6 +89,6 @@ getServicesWithReviews().then(() => {
   console.log('\\n✅ Lista concluída');
   process.exit(0);
 }).catch(error => {
-  console.error('❌ Falha:', error);
+  console.error('❌ Failure:', error);
   process.exit(1);
 });

@@ -108,7 +108,7 @@ export default function ForgotPasswordScreen() {
             {t('auth.forgotPassword') || 'Esqueceu a senha?'}
           </Text>
           <Text style={styles.subtitle}>
-            {t('auth.forgotPasswordSubtitle') || 'Digite seu email para receber um link de recuperação'}
+            {t('auth.forgotPasswordSubtitle') || 'Enter your email to receive a recovery link'}
           </Text>
         </View>
 
@@ -124,7 +124,7 @@ export default function ForgotPasswordScreen() {
               }}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholder={t('auth.emailPlaceholder') || 'Digite seu email'}
+              placeholder={t('auth.emailPlaceholder') || 'Enter your email'}
               placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
             />

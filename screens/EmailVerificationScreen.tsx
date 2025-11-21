@@ -110,7 +110,7 @@ export default function EmailVerificationScreen() {
           'Email verificado com sucesso! Você será redirecionado.',
           [{ 
             text: t('common.ok'), 
-            onPress: () => navigation.navigate('Home')
+            onPress: () => navigation.navigate('MainTabs')
           }]
         );
       } else {

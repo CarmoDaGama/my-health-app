@@ -181,14 +181,24 @@ export class AuthServiceFirebase {
       };
       
       // Adicionar aos serviços de saúde se for profissional ou instituição
-      // FASE 2: Usar registeredServices (aguardar aprovação) ao invés de healthServices direto
+      // Registro direto em healthServices com status ativo e verificado
       if (data.userType === UserType.PROFESSIONAL || data.userType === UserType.INSTITUTION) {
         try {
-          console.log('🏥 Registrando serviço para aprovação...', data.userType);
-          await this.addToRegisteredServices(newUser, data);
-          console.log('✅ Serviço registrado e aguardando aprovação!');
+          console.log('🏥 Registrando serviço diretamente em healthServices...', {
+            userType: data.userType,
+            userId: newUser.id,
+            email: data.email,
+            isAuthenticated: !!auth.currentUser
+          });
+          await this.addToHealthServices(newUser, data);
+          console.log('✅ Serviço registrado e ativo em healthServices!');
         } catch (error) {
-          console.error('❌ Erro ao registrar serviço:', error);
+          console.error('❌ Erro ao registrar serviço:', {
+            error: error,
+            errorMessage: error instanceof Error ? error.message : 'Erro desconhecido',
+            userId: newUser.id,
+            userType: data.userType
+          });
           // Não falha o registro se houver erro na adição aos serviços
         }
       }
@@ -455,11 +465,24 @@ export class AuthServiceFirebase {
   }
 
   /**
-   * Add professional/institution to registeredServices (pending approval)
-   * FASE 2: Novo fluxo de aprovação
+   * Add professional/institution to healthServices (active and verified)
+   * Registro direto em healthServices com status ativo
    */
-  static async addToRegisteredServices(user: any, data: RegisterData): Promise<void> {
+  static async addToHealthServices(user: any, data: RegisterData): Promise<void> {
     try {
+      // Verificar se o usuário está autenticado
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.warn('⚠️ Usuário não autenticado ao criar serviço. Tentando novamente...');
+        // Aguardar um momento para a autenticação se completar
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const retryUser = auth.currentUser;
+        if (!retryUser) {
+          throw new Error('Usuário não autenticado para criar serviço');
+        }
+      }
+      
       const professionalInfo = data.professionalInfo || {};
       const institutionInfo = data.institutionInfo || {};
       
@@ -483,25 +506,66 @@ export class AuthServiceFirebase {
         contactEmail: data.email,
         contactPhone: data.phone || professionalInfo.phone || institutionInfo.phone || '',
         
-        // Metadata de registro
+        // Metadata de registro - ATIVO E VERIFICADO
         createdBy: user.id,
-        createdAt: serverTimestamp(),
-        status: 'suspended', // Status inicial: suspenso até aprovação
-        verified: false, // Campo adicional para controle interno
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'active', // Status ativo imediatamente
+        verified: true, // Verificado automaticamente
+        isActive: true,
+        
+        // Informações de avaliação
+        rating: 0,
+        reviewCount: 0,
+        totalReviews: 0,
         
         // Informações adicionais
         userType: data.userType,
-        professionalInfo: data.professionalInfo || null,
-        institutionInfo: data.institutionInfo || null,
+        userId: user.id, // Referência ao usuário
+        
+        // Serviços oferecidos (para instituições)
+        services: data.userType === UserType.INSTITUTION ? 
+          (data.institutionInfo?.services || []) : 
+          [professionalInfo.specialty || 'Consulta Geral'],
+        
+        // Horários de funcionamento
+        workingHours: professionalInfo.workingHours || institutionInfo.workingHours || {
+          monday: { start: '08:00', end: '17:00', available: true },
+          tuesday: { start: '08:00', end: '17:00', available: true },
+          wednesday: { start: '08:00', end: '17:00', available: true },
+          thursday: { start: '08:00', end: '17:00', available: true },
+          friday: { start: '08:00', end: '17:00', available: true },
+          saturday: { start: '08:00', end: '12:00', available: false },
+          sunday: { start: '00:00', end: '00:00', available: false }
+        },
+        
+        // Informações de seguro e emergência
+        acceptsInsurance: professionalInfo.acceptsInsurance || institutionInfo.acceptsInsurance || false,
+        emergencyService: institutionInfo.emergencyService || false,
       };
 
-      // Criar documento em registeredServices com ID do usuário
-      const serviceRef = doc(db, 'registeredServices', user.id);
+      // Criar documento em healthServices com ID do usuário
+      const serviceRef = doc(db, 'healthServices', user.id);
+      
+      console.log('💾 Tentando salvar em healthServices:', {
+        userId: user.id,
+        serviceName: serviceData.name,
+        status: serviceData.status,
+        verified: serviceData.verified,
+        currentUser: auth.currentUser?.uid
+      });
+      
       await setDoc(serviceRef, serviceData);
 
-      console.log('✅ Serviço registrado em registeredServices:', user.id);
+      console.log('✅ Serviço registrado em healthServices:', user.id);
     } catch (error) {
-      console.error('❌ Erro ao adicionar a registeredServices:', error);
+      console.error('❌ Erro ao adicionar a healthServices:', {
+        error: error,
+        errorMessage: error instanceof Error ? error.message : 'Erro desconhecido',
+        errorCode: (error as any)?.code,
+        userId: user.id,
+        currentUser: auth.currentUser?.uid
+      });
       throw error;
     }
   }

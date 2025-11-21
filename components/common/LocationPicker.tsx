@@ -284,7 +284,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
       coordinates: coordinate,
     });
 
-    // Obter endereço da coordenada selecionada
+    // Get address from selected coordinate
     setIsLoadingAddress(true);
     try {
       const reverseResult = await LocationService.reverseGeocode(
@@ -297,7 +297,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         address: reverseResult.formattedAddress,
       });
     } catch (error) {
-      console.log('⚠️ Não foi possível obter endereço da coordenada selecionada');
+      console.log('⚠️ Could not get address from selected coordinate');
       setSelectedMarker({
         coordinates: coordinate,
       });
@@ -653,7 +653,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               {isLoadingAddress ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={styles.loadingText}>Obtendo endereço...</Text>
+                  <Text style={styles.loadingText}>Getting address...</Text>
                 </View>
               ) : (
                 selectedMarker.address && (

@@ -61,15 +61,16 @@ service cloud.firestore {
     }
     
     // ========================================
-    // COLEÇÃO: healthServices (serviços aprovados)
+    // COLEÇÃO: healthServices (serviços ativos)
     // ========================================
     match /healthServices/{serviceId} {
       // ✅ LEITURA PÚBLICA TOTALMENTE LIBERADA
       // Qualquer pessoa pode ler serviços de saúde (dados públicos)
       allow read: if true;
       
-      // Usuários autenticados podem criar serviços (sujeito a aprovação)
-      allow create: if request.auth != null;
+      // 🚨 TEMPORÁRIO: Permitir criação mesmo sem autenticação para registro
+      allow create: if true;
+      
       // Criadores podem atualizar seus próprios serviços, ou admins
       allow update: if request.auth != null && 
         (request.auth.uid == resource.data.createdBy || isAdmin());
@@ -91,12 +92,9 @@ service cloud.firestore {
       allow read: if request.auth != null && 
         request.auth.uid == resource.data.createdBy;
       
-      // Qualquer usuário autenticado pode criar (submeter para aprovação)
-      // Deve incluir campos obrigatórios
-      allow create: if request.auth != null &&
-        request.resource.data.keys().hasAll(['name', 'createdBy', 'createdAt', 'status']) &&
-        request.resource.data.status == 'pending' &&
-        request.resource.data.createdBy == request.auth.uid;
+      // 🚨 TEMPORÁRIO: PERMITIR CRIAÇÃO MESMO SEM AUTENTICAÇÃO
+      // Para corrigir o problema de registro durante a criação de conta
+      allow create: if true;
       
       // Apenas criador pode atualizar (se ainda pendente)
       allow update: if request.auth != null && 

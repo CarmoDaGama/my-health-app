@@ -166,7 +166,7 @@ export default function AdminPendingServicesScreen() {
     if (!selectedService) return;
 
     if (!rejectionReason.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe o motivo da rejeição.');
+      Alert.alert('Warning', 'Please provide the reason for rejection.');
       return;
     }
 
@@ -176,8 +176,8 @@ export default function AdminPendingServicesScreen() {
 
       if (result.success) {
         Alert.alert(
-          'Rejeitado',
-          `${selectedService.name} foi rejeitado.`,
+          'Rejected',
+          `${selectedService.name} has been rejected.`,
           [{ text: 'OK' }]
         );
         setShowRejectModal(false);

@@ -1,5 +1,5 @@
 /**
- * TESTE COMPLETO: Verificar timestamp e estrutura de dados
+ * COMPLETE TEST: Verify timestamp and data structure
  */
 
 const { initializeApp } = require('firebase/app');
@@ -24,7 +24,7 @@ async function testTimestampProcessing() {
     
     const serviceId = 'Ha7CiMKH0DEEJYHbi61p';
     
-    // Buscar reviews
+    // Find reviews
     const q = query(
       collection(db, 'thematicReviews'),
       where('serviceId', '==', serviceId)

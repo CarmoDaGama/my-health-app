@@ -117,49 +117,49 @@ export const REVIEW_CATEGORIES: Record<ServiceType, ReviewCategory[]> = {
   hospital: [
     {
       id: 'infrastructure',
-      name: 'Infraestrutura',
+      name: 'Infrastructure',
       icon: 'business',
-      description: 'Instalações, equipamentos e ambiente físico',
+      description: 'Facilities, equipment and physical environment',
       weight: 0.2,
       applicableToTypes: ['hospital', 'clinic', 'laboratory', 'rehabilitation']
     },
     {
       id: 'medical_care',
-      name: 'Atendimento Médico',
+      name: 'Medical Care',
       icon: 'medical',
-      description: 'Qualidade do atendimento médico e enfermagem',
+      description: 'Quality of medical and nursing care',
       weight: 0.3,
       applicableToTypes: ['hospital', 'clinic', 'emergency', 'professional']
     },
     {
       id: 'wait_time',
-      name: 'Tempo de Espera',
+      name: 'Wait Time',
       icon: 'time',
-      description: 'Tempo entre chegada e atendimento',
+      description: 'Time between arrival and service',
       weight: 0.2,
       applicableToTypes: ['hospital', 'clinic', 'emergency', 'laboratory']
     },
     {
       id: 'cleanliness',
-      name: 'Limpeza e Higiene',
+      name: 'Cleanliness and Hygiene',
       icon: 'shield-checkmark',
-      description: 'Limpeza das instalações e protocolos de higiene',
+      description: 'Facility cleanliness and hygiene protocols',
       weight: 0.15,
       applicableToTypes: ['hospital', 'clinic', 'laboratory', 'pharmacy']
     },
     {
       id: 'cost_benefit',
-      name: 'Custo-Benefício',
+      name: 'Cost-Benefit',
       icon: 'card',
-      description: 'Relação entre preço cobrado e qualidade do serviço',
+      description: 'Relationship between price charged and service quality',
       weight: 0.1,
       applicableToTypes: ['hospital', 'clinic', 'professional', 'pharmacy']
     },
     {
       id: 'accessibility',
-      name: 'Acessibilidade',
+      name: 'Accessibility',
       icon: 'accessibility',
-      description: 'Facilidades para pessoas com necessidades especiais',
+      description: 'Facilities for people with special needs',
       weight: 0.05,
       applicableToTypes: ['hospital', 'clinic', 'pharmacy', 'laboratory']
     }
@@ -167,41 +167,41 @@ export const REVIEW_CATEGORIES: Record<ServiceType, ReviewCategory[]> = {
   clinic: [
     {
       id: 'medical_care',
-      name: 'Atendimento Médico',
+      name: 'Medical Care',
       icon: 'medical',
-      description: 'Qualidade do atendimento médico',
+      description: 'Quality of medical care',
       weight: 0.35,
       applicableToTypes: ['clinic', 'professional']
     },
     {
       id: 'wait_time',
-      name: 'Pontualidade',
+      name: 'Punctuality',
       icon: 'time',
-      description: 'Respeito aos horários marcados',
+      description: 'Respect for scheduled appointments',
       weight: 0.25,
       applicableToTypes: ['clinic', 'professional']
     },
     {
       id: 'infrastructure',
-      name: 'Instalações',
+      name: 'Facilities',
       icon: 'business',
-      description: 'Qualidade das instalações e equipamentos',
+      description: 'Quality of facilities and equipment',
       weight: 0.2,
       applicableToTypes: ['clinic']
     },
     {
       id: 'communication',
-      name: 'Comunicação',
+      name: 'Communication',
       icon: 'chatbubbles',
-      description: 'Clareza na comunicação e explicações',
+      description: 'Clarity in communication and explanations',
       weight: 0.15,
       applicableToTypes: ['clinic', 'professional']
     },
     {
       id: 'cost_benefit',
-      name: 'Custo-Benefício',
+      name: 'Cost-Benefit',
       icon: 'card',
-      description: 'Relação entre preço e qualidade',
+      description: 'Relationship between price and quality',
       weight: 0.05,
       applicableToTypes: ['clinic', 'professional']
     }
@@ -211,23 +211,23 @@ export const REVIEW_CATEGORIES: Record<ServiceType, ReviewCategory[]> = {
       id: 'availability',
       name: 'Disponibilidade',
       icon: 'checkmark-circle',
-      description: 'Medicamentos sempre em estoque',
+      description: 'Medications always in stock',
       weight: 0.4,
       applicableToTypes: ['pharmacy']
     },
     {
       id: 'service_speed',
-      name: 'Rapidez no Atendimento',
+      name: 'Service Speed',
       icon: 'flash',
-      description: 'Velocidade do atendimento',
+      description: 'Speed of service',
       weight: 0.25,
       applicableToTypes: ['pharmacy']
     },
     {
       id: 'staff_knowledge',
-      name: 'Conhecimento da Equipe',
+      name: 'Staff Knowledge',
       icon: 'school',
-      description: 'Conhecimento sobre medicamentos e orientações',
+      description: 'Knowledge about medications and guidance',
       weight: 0.2,
       applicableToTypes: ['pharmacy']
     },
@@ -235,15 +235,15 @@ export const REVIEW_CATEGORIES: Record<ServiceType, ReviewCategory[]> = {
       id: 'cleanliness',
       name: 'Organização',
       icon: 'library',
-      description: 'Organização e limpeza da farmácia',
+      description: 'Organization and cleanliness of pharmacy',
       weight: 0.1,
       applicableToTypes: ['pharmacy']
     },
     {
       id: 'pricing',
-      name: 'Preços',
+      name: 'Prices',
       icon: 'pricetag',
-      description: 'Preços justos e competitivos',
+      description: 'Fair and competitive prices',
       weight: 0.05,
       applicableToTypes: ['pharmacy']
     }
@@ -251,33 +251,33 @@ export const REVIEW_CATEGORIES: Record<ServiceType, ReviewCategory[]> = {
   laboratory: [
     {
       id: 'accuracy',
-      name: 'Precisão dos Exames',
+      name: 'Test Accuracy',
       icon: 'analytics',
-      description: 'Confiabilidade e precisão dos resultados',
+      description: 'Reliability and accuracy of results',
       weight: 0.4,
       applicableToTypes: ['laboratory']
     },
     {
       id: 'delivery_time',
-      name: 'Prazo de Entrega',
+      name: 'Delivery Time',
       icon: 'time',
-      description: 'Cumprimento dos prazos prometidos',
+      description: 'Compliance with promised deadlines',
       weight: 0.25,
       applicableToTypes: ['laboratory']
     },
     {
       id: 'collection_process',
-      name: 'Processo de Coleta',
+      name: 'Collection Process',
       icon: 'medical',
-      description: 'Qualidade e conforto durante a coleta',
+      description: 'Quality and comfort during collection',
       weight: 0.2,
       applicableToTypes: ['laboratory']
     },
     {
       id: 'cleanliness',
-      name: 'Higiene',
+      name: 'Hygiene',
       icon: 'shield-checkmark',
-      description: 'Limpeza e protocolos de segurança',
+      description: 'Cleanliness and security protocols',
       weight: 0.1,
       applicableToTypes: ['laboratory']
     },
@@ -285,7 +285,7 @@ export const REVIEW_CATEGORIES: Record<ServiceType, ReviewCategory[]> = {
       id: 'cost_benefit',
       name: 'Custo-Benefício',
       icon: 'card',
-      description: 'Preço vs qualidade do serviço',
+      description: 'Price vs service quality',
       weight: 0.05,
       applicableToTypes: ['laboratory']
     }

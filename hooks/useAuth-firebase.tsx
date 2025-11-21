@@ -258,7 +258,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setFirebaseUser(null);
         setIsGuestMode(false);
         
-        // Não limpar preferências de idioma no logout
+        // Don't clear language preferences on logout
         // O sistema usará detecção automática do sistema operativo
       }
       
@@ -417,7 +417,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return response;
     } catch (error) {
       console.error('Update preferences error:', error);
-      return { success: false, error: 'Erro ao atualizar preferências' };
+      return { success: false, error: 'Error updating preferences' };
     }
   };
 

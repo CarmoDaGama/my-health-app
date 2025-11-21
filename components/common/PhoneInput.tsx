@@ -19,7 +19,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChangeText,
   onValidationChange,
-  label = 'Número de Telefone',
+  label = 'Phone Number',
   placeholder = '+244 9XX XXX XXX',
   containerStyle,
   required = false,
