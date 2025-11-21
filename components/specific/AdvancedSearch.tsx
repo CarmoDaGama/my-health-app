@@ -3,7 +3,7 @@
  * MENDLINK Phase 2: Intelligent search interface with filters and auto-suggestions
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, borderRadius, fontSize, shadows } from '../../constants';
@@ -54,6 +55,12 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
+  // Refs and control variables
+  const inputRef = useRef<TextInput>(null);
+  const shouldMaintainFocus = useRef(false);
+  const focusTimeout = useRef<NodeJS.Timeout>();
 
   // Get user location on mount
   useEffect(() => {
@@ -66,14 +73,18 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       .catch((error: any) => console.log('Location not available:', error));
   }, []);
 
-  // Perform search when filters change
+  // Perform search when filters change (with debounce for searchQuery)
   useEffect(() => {
-    if (searchQuery.trim() || Object.keys(filters).length > 0) {
-      performSearch();
-    } else {
-      setResults(null);
-      onResultsChange?.([]);
-    }
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim() || Object.keys(filters).length > 0) {
+        performSearch();
+      } else {
+        setResults(null);
+        onResultsChange?.([]);
+      }
+    }, searchQuery.trim() ? 500 : 0); // Debounce search when typing
+
+    return () => clearTimeout(timeoutId);
   }, [searchQuery, filters]);
 
   // Generate suggestions when query changes
@@ -85,9 +96,35 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     }
   }, [searchQuery]);
 
+  // Handle closing suggestions when input loses focus
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (!isSearchFocused && showSuggestions) {
+      timeoutId = setTimeout(() => {
+        setShowSuggestions(false);
+        shouldMaintainFocus.current = false;
+      }, 500); // Increased delay to prevent accidental closes
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [isSearchFocused, showSuggestions]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (focusTimeout.current) {
+        clearTimeout(focusTimeout.current);
+      }
+    };
+  }, []);
+
   const performSearch = async () => {
     setIsLoading(true);
-    setShowSuggestions(false);
 
     try {
       const searchFilters: SearchFilters = {
@@ -129,6 +166,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const handleSuggestionPress = (suggestion: SearchSuggestion) => {
     setSearchQuery(suggestion.text);
     setShowSuggestions(false);
+    setIsSearchFocused(false);
     
     // Apply filters based on suggestion type
     if (suggestion.type === 'specialty') {
@@ -151,51 +189,98 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     setSearchQuery('');
     setResults(null);
     onResultsChange?.([]);
+    // Don't automatically dismiss keyboard or close suggestions
+    // Let the user continue interacting
   };
 
   const activeFiltersCount = useMemo(() => {
     return Object.keys(filters).length + (searchQuery.trim() ? 1 : 0);
   }, [filters, searchQuery]);
 
+  // Stable handlers with useCallback
+  const handleInputFocus = useCallback(() => {
+    console.log('🔍 Input focused - handler called');
+    shouldMaintainFocus.current = true;
+    setIsSearchFocused(true);
+    setShowSuggestions(true);
+    
+    // Clear any existing timeout
+    if (focusTimeout.current) {
+      clearTimeout(focusTimeout.current);
+    }
+  }, []);
+
+  const handleInputBlur = useCallback(() => {
+    console.log('🔍 Input blurred - handler called');
+    
+    // Only proceed with blur if we're not trying to maintain focus
+    if (!shouldMaintainFocus.current) {
+      focusTimeout.current = setTimeout(() => {
+        setIsSearchFocused(false);
+      }, 150);
+    } else {
+      // Reset the flag and try to refocus
+      shouldMaintainFocus.current = false;
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 50);
+    }
+  }, []);
+
+  const handleInputChange = useCallback((text: string) => {
+    setSearchQuery(text);
+    shouldMaintainFocus.current = true; // Maintain focus while typing
+  }, []);
+
+
+
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <NeumorphicInput
-          placeholder="Search services, doctors, specialties..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          autoCapitalize="words"
-          autoCorrect={false}
-          icon="search"
-          containerStyle={styles.searchBar}
-        />
-        {isLoading && (
-          <ActivityIndicator size="small" color={Colors.primary} style={styles.loadingIndicator} />
-        )}
-        {searchQuery.length > 0 && !isLoading && (
-          <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
-            <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-        )}
-
-        {/* Filter Button */}
-        <View style={styles.filterButtonContainer}>
-          <NeumorphicButton
-            icon="options"
-            variant={activeFiltersCount > 0 ? 'primary' : 'tertiary'}
-            onPress={() => setShowFilters(true)}
-            style={styles.filterButton}
-          />
-          {activeFiltersCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{String(activeFiltersCount || 0)}</Text>
-            </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Ionicons name="search" size={18} color={Colors.textSecondary} style={styles.searchIcon} />
+            <TextInput
+              ref={inputRef}
+              placeholder="Search services, doctors, specialties..."
+              value={searchQuery}
+              onChangeText={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              autoCapitalize="words"
+              autoCorrect={false}
+              blurOnSubmit={false}
+              returnKeyType="search"
+              style={styles.searchInputNative}
+              placeholderTextColor={Colors.textTertiary}
+            />
+          </View>
+          {isLoading && (
+            <ActivityIndicator size="small" color={Colors.primary} style={styles.loadingIndicator} />
           )}
+          {searchQuery.length > 0 && !isLoading && (
+            <TouchableOpacity onPress={clearFilters} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+
+          {/* Filter Button */}
+          <View style={styles.filterButtonContainer}>
+            <NeumorphicButton
+              icon="options"
+              variant={activeFiltersCount > 0 ? 'primary' : 'tertiary'}
+              onPress={() => setShowFilters(true)}
+              style={styles.filterButton}
+            />
+            {activeFiltersCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{String(activeFiltersCount || 0)}</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
 
       {/* Quick Filters */}
       {!showSuggestions && (
@@ -267,7 +352,8 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
               </TouchableOpacity>
             )}
             style={styles.suggestionsList}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="always"
+            nestedScrollEnabled={true}
           />
         </View>
       ) : null}
@@ -504,6 +590,25 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minHeight: 44,
+  },
+  searchInputNative: {
+    flex: 1,
+    fontSize: fontSize.md,
+    color: Colors.text,
+    fontWeight: '500',
+    marginLeft: spacing.sm,
   },
   searchIcon: {
     marginRight: spacing.sm,

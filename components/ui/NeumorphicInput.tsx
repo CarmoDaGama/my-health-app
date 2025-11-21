@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 import {
   TextInput,
   View,
@@ -21,16 +21,19 @@ interface NeumorphicInputProps extends TextInputProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-export const NeumorphicInput: React.FC<NeumorphicInputProps> = ({
-  label,
-  error,
-  icon,
-  iconPosition = 'left',
-  containerStyle,
-  inputStyle,
-  size = 'medium',
-  ...textInputProps
-}) => {
+export const NeumorphicInput = forwardRef<TextInput, NeumorphicInputProps>((
+  {
+    label,
+    error,
+    icon,
+    iconPosition = 'left',
+    containerStyle,
+    inputStyle,
+    size = 'medium',
+    ...textInputProps
+  },
+  ref
+) => {
   const [isFocused, setIsFocused] = useState(false);
 
   const getInputContainerStyle = (): ViewStyle => {
@@ -121,6 +124,7 @@ export const NeumorphicInput: React.FC<NeumorphicInputProps> = ({
         )}
         
         <TextInput
+          ref={ref}
           {...textInputProps}
           style={[
             {
@@ -166,4 +170,6 @@ export const NeumorphicInput: React.FC<NeumorphicInputProps> = ({
       )}
     </View>
   );
-};
+});
+
+NeumorphicInput.displayName = 'NeumorphicInput';
