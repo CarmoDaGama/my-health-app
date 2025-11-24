@@ -8,6 +8,7 @@ import {
   Institution,
   UserType,
   UserPreferences,
+  Coordinates,
   isNormalUser,
   isProfessional,
   isInstitution
@@ -47,13 +48,10 @@ export interface UpdateProfileData {
   // Campos específicos para instituições
   institutionInfo?: {
     type?: 'hospital' | 'clinic' | 'laboratory' | 'pharmacy' | 'other';
-    address?: {
-      street: string;
-      city: string;
-      state: string;
-      zipCode: string;
-      coordinates?: { lat: number; lng: number };
-    };
+    address?: string;
+    city?: string;
+    state?: string;
+    coordinates?: Coordinates;
     services?: string[];
     workingHours?: {
       [key: string]: { start: string; end: string; available: boolean };
@@ -254,12 +252,7 @@ export class UserProfileService {
     if (!user.institutionInfo) {
       user.institutionInfo = {
         type: 'clinic',
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          zipCode: '',
-        },
+        address: '',
         services: [],
         workingHours: {
           monday: { start: '', end: '', available: false },
@@ -343,9 +336,7 @@ export class UserProfileService {
           services[serviceIndex].services = user.institutionInfo.services;
           services[serviceIndex].schedule = user.institutionInfo.workingHours;
           if (user.institutionInfo.address) {
-            services[serviceIndex].address = `${user.institutionInfo.address.street}, ${user.institutionInfo.address.city}`;
-            services[serviceIndex].city = user.institutionInfo.address.city;
-            services[serviceIndex].state = user.institutionInfo.address.state;
+            services[serviceIndex].address = user.institutionInfo.address;
           }
         }
         
@@ -395,9 +386,8 @@ export class UserProfileService {
     
     // Validações para instituições
     if (updateData.institutionInfo?.address) {
-      const { street, city, state, zipCode } = updateData.institutionInfo.address;
-      if (!street?.trim() || !city?.trim() || !state?.trim() || !zipCode?.trim()) {
-        throw new Error('Todos os campos de endereço são obrigatórios');
+      if (!updateData.institutionInfo.address.trim()) {
+        throw new Error('Endereço é obrigatório');
       }
     }
   }

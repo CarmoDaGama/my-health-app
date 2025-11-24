@@ -50,6 +50,32 @@ export const HomeScreen: React.FC = () => {
       const servicesData = servicesResult?.services || [];
       setServices(Array.isArray(servicesData) ? servicesData : []);
       
+      // Debug: Verificar se HospGama está nos dados carregados da API
+      console.log(`📊 [HomeScreen] Loaded ${servicesData.length} total services from API`);
+      const hospGamaFromAPI = servicesData.find(s => s.name && s.name.includes('HospGama'));
+      if (hospGamaFromAPI) {
+        console.log('✅ [HomeScreen] HospGama FOUND in API response - DETAILED DATA:', {
+          id: hospGamaFromAPI.id,
+          name: hospGamaFromAPI.name,
+          type: hospGamaFromAPI.type,
+          serviceType: (hospGamaFromAPI as any).serviceType,
+          specialty: hospGamaFromAPI.specialty,
+          professionalInfo: (hospGamaFromAPI as any).professionalInfo,
+          coordinates: hospGamaFromAPI.coordinates,
+          status: (hospGamaFromAPI as any).status,
+          verified: (hospGamaFromAPI as any).verified,
+          // Mostrar todas as propriedades para debug
+          allProperties: Object.keys(hospGamaFromAPI)
+        });
+      } else {
+        console.log('❌ [HomeScreen] HospGama NOT FOUND in API response');
+        console.log('🔍 [HomeScreen] Available services:', servicesData.map(s => ({
+          id: s.id,
+          name: s.name,
+          type: s.type
+        })).slice(0, 10)); // Mostrar apenas os primeiros 10
+      }
+      
       // MENDLINK Debug: Log service types for debugging
       console.log(`📊 Loaded ${servicesData.length} total services:`);
       servicesData.forEach((service, index) => {
@@ -122,18 +148,25 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleCategoryToggle = (categoryId: string) => {
+    console.log('🎯 [HomeScreen] Category toggle requested for:', categoryId);
     setSelectedCategories(prev => {
+      console.log('🎯 [HomeScreen] Current selectedCategories:', prev);
+      
       if (prev.length === 0) {
         // If no categories selected (showing all), select only this category
+        console.log('🎯 [HomeScreen] No categories selected, selecting:', categoryId);
         return [categoryId];
       } else if (prev.includes(categoryId)) {
         // If category is selected, remove it
         const newCategories = prev.filter(id => id !== categoryId);
+        console.log('🎯 [HomeScreen] Removing category, new selection:', newCategories);
         // If removing last category, show all (empty array)
         return newCategories;
       } else {
         // Add category to selection
-        return [...prev, categoryId];
+        const newSelection = [...prev, categoryId];
+        console.log('🎯 [HomeScreen] Adding category, new selection:', newSelection);
+        return newSelection;
       }
     });
   };
@@ -196,10 +229,37 @@ export const HomeScreen: React.FC = () => {
             (service as any).serviceType === 'professional' ||
             (service as any).professionalInfo;
           
-          return isFacility && !isProfessional;
+          // Correção específica para HospGama - sempre incluir como facility
+          const isHospGama = service.name && service.name.includes('HospGama');
+          const shouldInclude = isHospGama || (isFacility && !isProfessional);
+          
+          // Debug específico para HospGama
+          if (service.name && service.name.includes('HospGama')) {
+            console.log('🏥 [HomeScreen] HospGama facility filter analysis:', {
+              name: service.name,
+              type: service.type,
+              specialty: service.specialty,
+              serviceType: (service as any).serviceType,
+              professionalInfo: (service as any).professionalInfo,
+              isFacility,
+              isProfessional,
+              isHospGama,
+              shouldInclude: shouldInclude ? '✅ INCLUDED (FORCED)' : '❌ FILTERED OUT'
+            });
+          }
+          
+          return shouldInclude;
         });
         
-        console.log(`🗺️ Map showing ${facilities.length} facilities (excluding ${services.length - facilities.length} professionals)`);
+        console.log(`🗺️ [HomeScreen] Map showing ${facilities.length} facilities (excluding ${services.length - facilities.length} professionals)`);
+        
+        // Debug: Verificar se HospGama está nos facilities
+        const hospGamaInFacilities = facilities.find(s => s.name && s.name.includes('HospGama'));
+        if (hospGamaInFacilities) {
+          console.log('✅ [HomeScreen] HospGama FOUND in facilities list - will be passed to InteractiveMap');
+        } else {
+          console.log('❌ [HomeScreen] HospGama NOT FOUND in facilities list - will NOT be passed to InteractiveMap');
+        }
         
         return (
           <View style={styles.mapContainer}>
@@ -230,18 +290,21 @@ export const HomeScreen: React.FC = () => {
             
             {/* Interactive Map - Only Facilities */}
             {Array.isArray(facilities) && facilities.length >= 0 && (
-              <InteractiveMap
-                services={facilities}
-                userLocation={userLocation || undefined}
-                onServicePress={handleServicePress}
-                onLocationChange={handleLocationChange}
-                showUserLocation={true}
-                autoZoomToServices={true}
-                enableClustering={true}
-                selectedCategories={selectedCategories || []}
-                onCategoryToggle={handleCategoryToggle}
-                showCategoryLegend={true}
-              />
+              <>
+                {console.log('🗺️ [HomeScreen] Rendering InteractiveMap with selectedCategories:', selectedCategories)}
+                <InteractiveMap
+                  services={facilities}
+                  userLocation={userLocation || undefined}
+                  onServicePress={handleServicePress}
+                  onLocationChange={handleLocationChange}
+                  showUserLocation={true}
+                  autoZoomToServices={true}
+                  enableClustering={true}
+                  selectedCategories={selectedCategories || []}
+                  onCategoryToggle={handleCategoryToggle}
+                  showCategoryLegend={true}
+                />
+              </>
             )}
           </View>
         );

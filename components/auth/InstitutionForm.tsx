@@ -107,28 +107,23 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
     onChange('services', updatedServices);
   };
 
-  const handleAddressChange = async (field: string, value: string) => {
-    handleNestedChange(field, value);
+  const handleAddressChange = async (address: string) => {
+    onChange('address', address);
     
     // Automatic geocoding when we have a complete address
-    if (field === 'address.street' && value.length > 5) {
-      const currentAddress = data.address || {};
-      const fullAddress = `${value}, ${currentAddress.city || ''}, ${currentAddress.state || ''}, Angola`.trim();
-      
-      if (fullAddress.length > 10) {
-        setIsGeocodingAddress(true);
-        try {
-          const result = await GeocodingService.getCoordinatesFromAddress(fullAddress);
-          if (result) {
-            setCoordinates(result.coordinates);
-            onChange('coordinates', result.coordinates);
-            console.log('✅ Coordenadas obtidas automaticamente:', result.coordinates);
-          }
-        } catch (error) {
-          console.log('⚠️ Geocoding automático falhou, usuário pode usar GPS ou mapa');
-        } finally {
-          setIsGeocodingAddress(false);
+    if (address.length > 10) {
+      setIsGeocodingAddress(true);
+      try {
+        const result = await GeocodingService.getCoordinatesFromAddress(address);
+        if (result) {
+          setCoordinates(result.coordinates);
+          onChange('coordinates', result.coordinates);
+          console.log('✅ Coordenadas obtidas automaticamente:', result.coordinates);
         }
+      } catch (error) {
+        console.log('⚠️ Geocoding automático falhou, usuário pode usar GPS ou mapa');
+      } finally {
+        setIsGeocodingAddress(false);
       }
     }
   };
@@ -140,6 +135,11 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       if (location) {
         setCoordinates(location.coordinates);
         onChange('coordinates', location.coordinates);
+        
+        // If we got an address from GPS, update it as well
+        if (location.address) {
+          onChange('address', location.address);
+        }
         
         Alert.alert(
           t('common.success') || 'Localização Obtida!',
@@ -160,6 +160,13 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
   const handleLocationSelect = (coords: Coordinates, address?: string) => {
     setCoordinates(coords);
     onChange('coordinates', coords);
+    
+    // If the map provided an address, update it
+    if (address) {
+      onChange('address', address);
+    }
+    
+    setShowLocationPicker(false);
     console.log('✅ Localização da instituição selecionada manualmente:', coords);
   };
 
@@ -299,11 +306,13 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       
       <View style={styles.inputGroup}>
         <ValidatedInput
-          label={t('forms.street')}
-          value={data.address?.street || ''}
-          onChangeText={(value) => handleAddressChange('address.street', value)}
-          error={errors['address.street']}
-          placeholder={t('forms.streetPlaceholder')}
+          label={t('forms.fullAddress')}
+          value={data.address || ''}
+          onChangeText={handleAddressChange}
+          error={errors.address}
+          placeholder={t('forms.addressPlaceholder')}
+          multiline
+          numberOfLines={3}
           required
         />
         {isGeocodingAddress && (
@@ -316,18 +325,18 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
       
       <ValidatedInput
         label={t('forms.city')}
-        value={data.address?.city || ''}
-        onChangeText={(value) => handleNestedChange('address.city', value)}
-        error={errors['address.city']}
+        value={data.city || ''}
+        onChangeText={(value) => onChange('city', value)}
+        error={errors.city}
         placeholder={t('forms.cityPlaceholder')}
         required
       />
       
       <ValidatedInput
         label={t('forms.province')}
-        value={data.address?.state || ''}
-        onChangeText={(value) => handleNestedChange('address.state', value)}
-        error={errors['address.state']}
+        value={data.state || ''}
+        onChangeText={(value) => onChange('state', value)}
+        error={errors.state}
         placeholder={t('forms.provincePlaceholder')}
         required
       />

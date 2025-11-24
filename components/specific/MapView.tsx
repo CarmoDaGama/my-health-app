@@ -47,10 +47,51 @@ export const MapView: React.FC<MapViewProps> = ({
 
   // Otimização: limitar número de serviços e ordenar por proximidade se houver localização do usuário
   const optimizedServices = useMemo(() => {
+    console.log('🗺️ [MapView] Total services received:', services?.length || 0);
+    
     if (!services || !Array.isArray(services)) {
+      console.log('🗺️ [MapView] No services array provided');
       return [];
     }
+    
+    // Debug: verificar se HospGama está na lista
+    const hospGama = services.find(s => s.name && s.name.includes('HospGama'));
+    if (hospGama) {
+      console.log('🔍 [MapView] HospGama found in services:', {
+        id: hospGama.id,
+        name: hospGama.name,
+        coordinates: hospGama.coordinates,
+        hasCoordinates: !!hospGama.coordinates
+      });
+    } else {
+      console.log('❌ [MapView] HospGama NOT found in services list');
+    }
+    
     let processedServices = [...services];
+
+    // Filtrar serviços sem coordenadas válidas (incluindo coordenadas padrão de Luanda)
+    const validServices = processedServices.filter(service => {
+      const coords = service.coordinates;
+      
+      // Coordenadas válidas: números não-NaN e não-zero (exceto coordenadas padrão de Luanda)
+      const isValid = coords && 
+        typeof coords.latitude === 'number' && 
+        typeof coords.longitude === 'number' &&
+        !isNaN(coords.latitude) && 
+        !isNaN(coords.longitude) &&
+        (coords.latitude !== 0 || coords.longitude !== 0); // Aceitar coordenadas diferentes de (0,0)
+        
+      if (!isValid && service.name && service.name.includes('HospGama')) {
+        console.log('❌ [MapView] HospGama filtered out - invalid coordinates:', service.coordinates);
+      } else if (service.name && service.name.includes('HospGama')) {
+        console.log('✅ [MapView] HospGama passed coordinate validation:', service.coordinates);
+      }
+      
+      return isValid;
+    });
+    
+    console.log('🗺️ [MapView] Valid services after coordinate filter:', validServices.length);
+    processedServices = validServices;
 
     // Se há localização do usuário, ordenar por distância
     if (userLocation) {

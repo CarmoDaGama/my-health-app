@@ -40,7 +40,7 @@ interface RegisteredService {
   address: string;
   city: string;
   province: string;
-  location: {
+  coordinates: {
     latitude: number;
     longitude: number;
   };

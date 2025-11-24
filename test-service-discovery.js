@@ -35,7 +35,7 @@ async function testServiceDiscovery() {
       address: 'Rua de Teste, 123',
       city: 'Luanda',
       province: 'Luanda',
-      location: {
+      coordinates: {
         latitude: -8.8383,
         longitude: 13.2344
       },

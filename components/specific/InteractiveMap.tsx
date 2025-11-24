@@ -345,11 +345,68 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         return selectedCategories.includes(serviceCategory.id);
       });
 
-  const servicesJSON = JSON.stringify(filteredServices.map(service => ({
+  console.log('🗺️ [InteractiveMap] Services before filtering:', services.length);
+  console.log('🗺️ [InteractiveMap] Selected categories:', selectedCategories);
+  console.log('🗺️ [InteractiveMap] Services after category filter:', filteredServices.length);
+  
+  // Debug: verificar se HospGama está nos serviços ANTES da filtragem
+  // const hospGamaOriginal = services.find(s => s.name && s.name.includes('HospGama'));
+  // if (hospGamaOriginal) {
+  //   console.log('✅ [InteractiveMap] HospGama FOUND in original services:', {
+  //     id: hospGamaOriginal.id,
+  //     name: hospGamaOriginal.name,
+  //     // // type: hospGamaOriginal.type,
+  //     coordinates: hospGamaOriginal.coordinates
+  //   });
+    
+  //   // Verificar qual categoria seria atribuída ao HospGama
+  //   const hospGamaType = hospGamaOriginal.type || 'general';
+  //   const { getCategoryByType } = require('../../constants/categories');
+  //   const hospGamaCategory = getCategoryByType(hospGamaType);
+  //   console.log('🏥 [InteractiveMap] HospGama category info:', {
+  //     serviceType: hospGamaType,
+  //     categoryId: hospGamaCategory.id,
+  //     categoryName: hospGamaCategory.name,
+  //     isSelectedForFilter: selectedCategories.includes(hospGamaCategory.id)
+  //   });
+  // } else {
+  //   console.log('❌ [InteractiveMap] HospGama NOT FOUND in original services');
+  // }
+  
+  // // Debug: verificar se HospGama está nos serviços filtrados
+  // const hospGama = filteredServices.find(s => s.name && s.name.includes('HospGama'));
+  // if (hospGama) {
+  //   console.log('🔍 [InteractiveMap] HospGama in filtered services:', {
+  //     id: hospGama.id,
+  //     name: hospGama.name,
+  //     coordinates: hospGama.coordinates
+  //   });
+  // } else {
+  //   console.log('❌ [InteractiveMap] HospGama NOT in filtered services');
+  // }
+
+  // Debug: Verificar se HospGama está nos serviços que serão enviados para o WebView
+  const hospGamaInFiltered = filteredServices.find(s => s.name && s.name.includes('HospGama'));
+  if (hospGamaInFiltered) {
+    console.log('✅ [InteractiveMap] HospGama will be sent to WebView:', {
+      id: hospGamaInFiltered.id,
+      name: hospGamaInFiltered.name,
+      coordinates: hospGamaInFiltered.coordinates,
+      color: getServiceColorForMap(hospGamaInFiltered),
+      icon: getServiceIcon(hospGamaInFiltered.type || 'general')
+    });
+  } else {
+    console.log('❌ [InteractiveMap] HospGama will NOT be sent to WebView');
+  }
+
+  const servicesForWebView = filteredServices.map(service => ({
     ...service,
     color: getServiceColorForMap(service),
     icon: getServiceIcon(service.type || 'general')
-  })));
+  }));
+
+  const servicesJSON = JSON.stringify(servicesForWebView);
+  console.log(`🗺️ [InteractiveMap] Sending ${servicesForWebView.length} services to WebView`);
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -522,6 +579,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         function addServices() {
           const services = ${servicesJSON};
           
+          console.log('🗺️ [WebView] Received services:', services.length);
+          
+          // Debug: Verificar se HospGama chegou no WebView
+          const hospGamaInWebView = services.find(s => s.name && s.name.includes('HospGama'));
+          if (hospGamaInWebView) {
+            console.log('✅ [WebView] HospGama FOUND in services:', hospGamaInWebView);
+          } else {
+            console.log('❌ [WebView] HospGama NOT FOUND in services');
+            console.log('🔍 [WebView] Available services:', services.map(s => ({name: s.name, type: s.type})).slice(0, 5));
+          }
+          
           if (!services || services.length === 0) return;
           
           ${enableClustering ? `
@@ -540,8 +608,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           `}
           
           services.forEach(function(service) {
+            // Debug específico para HospGama
+            if (service.name && service.name.includes('HospGama')) {
+              console.log('🏥 [WebView] Adding HospGama marker:', {
+                name: service.name,
+                coordinates: service.coordinates,
+                hasValidCoords: !!(service.coordinates && service.coordinates.latitude && service.coordinates.longitude)
+              });
+            }
+            
             const icon = getServiceIcon(service.type);
             const color = service.color || '#2E7D32';
+            
+            // Validar coordenadas antes de criar marker
+            if (!service.coordinates || 
+                typeof service.coordinates.latitude !== 'number' || 
+                typeof service.coordinates.longitude !== 'number' ||
+                isNaN(service.coordinates.latitude) || 
+                isNaN(service.coordinates.longitude)) {
+              console.error('🚫 [WebView] Invalid coordinates for service:', service.name, service.coordinates);
+              return; // Pular este serviço
+            }
             
             const serviceIcon = L.divIcon({
               className: 'service-marker',
@@ -549,6 +636,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               iconSize: [32, 32],
               iconAnchor: [16, 16]
             });
+            
+            console.log('📍 [WebView] Creating marker for:', service.name, 'at', service.coordinates.latitude, service.coordinates.longitude);
             
             const marker = L.marker([service.coordinates.latitude, service.coordinates.longitude], {
               icon: serviceIcon

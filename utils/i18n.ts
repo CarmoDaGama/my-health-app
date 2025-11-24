@@ -583,6 +583,8 @@ const translations = {
       exactInstitutionLocation: 'Exact Institution Location',
       selectInstitutionLocation: 'Select Institution Location',
       institutionAddress: 'Institution Address',
+      fullAddress: 'Full Address',
+      addressPlaceholder: 'Street, number, neighborhood, city',
     },
     institutionTypes: {
       hospital: 'Hospital',
@@ -1377,6 +1379,8 @@ const translations = {
       exactInstitutionLocation: 'Localização Exata da Instituição',
       selectInstitutionLocation: 'Selecionar Localização da Instituição',
       institutionAddress: 'Endereço da Instituição',
+      fullAddress: 'Endereço Completo',
+      addressPlaceholder: 'Rua, número, bairro, cidade',
     },
     institutionTypes: {
       hospital: 'Hospital',

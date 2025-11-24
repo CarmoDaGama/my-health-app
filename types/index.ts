@@ -20,13 +20,14 @@ export interface HealthService {
   id: string;
   name: string;
   type: 'hospital' | 'clinic' | 'pharmacy' | 'emergency' | 'laboratory' | 'professional';
-  address: string;
+  address: string; // PADRONIZADO: sempre string (não objeto)
   city: string;
-  state: string;
+  state: string; // PADRONIZADO: usa city como fallback se undefined
   country?: string;
-  coordinates: Coordinates;
+  coordinates: Coordinates; // PADRONIZADO: sempre coordinates (não location)
   phone: string;
   description: string;
+  category?: string; // NOVO: categoria selecionável no registro
   rating?: number;
   reviews?: number;
   reviewCount?: number;
@@ -126,12 +127,7 @@ export interface Institution extends BaseUser {
   institutionInfo: {
     type: 'hospital' | 'clinic' | 'laboratory' | 'pharmacy' | 'other';
     coordinates?: Coordinates; // Padronizado: usar interface Coordinates
-    address: {
-      street: string;
-      city: string;
-      state: string;
-      zipCode: string;
-    };
+    address: string;
     services: string[];
     workingHours: {
       [key: string]: { start: string; end: string; available: boolean };

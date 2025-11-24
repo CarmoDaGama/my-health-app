@@ -285,10 +285,10 @@ export class AuthService {
       if (!data.institutionInfo?.type) {
         throw new Error('Tipo de instituição é obrigatório');
       }
-      if (!data.institutionInfo?.address?.street) {
+      if (!data.institutionInfo?.address) {
         throw new Error('Endereço da instituição é obrigatório');
       }
-      if (!data.institutionInfo?.address?.city) {
+      if (!data.institutionInfo?.city) {
         throw new Error('Cidade da instituição é obrigatória');
       }
     }
@@ -465,9 +465,9 @@ export class AuthService {
           userId: user.id, // Referência para o usuário
           name: user.name,
           type: data.institutionInfo?.type || 'clinic',
-          address: `${data.institutionInfo?.address?.street}, ${data.institutionInfo?.address?.city}`,
-          city: data.institutionInfo?.address?.city || 'Luanda',
-          state: data.institutionInfo?.address?.state || 'Luanda',
+          address: data.institutionInfo?.address || 'Endereço não informado',
+          city: data.institutionInfo?.city || 'Luanda',
+          state: data.institutionInfo?.state || 'Luanda',
           country: 'Angola',
           coordinates: data.institutionInfo?.coordinates || {
             latitude: -8.8379 + (Math.random() - 0.5) * 0.1,

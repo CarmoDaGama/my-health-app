@@ -34,7 +34,37 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   navigation,
   route,
 }) => {
-  const { service } = route.params;
+  // Sanitizar dados do serviço para evitar problemas de renderização
+  const sanitizeService = (rawService: HealthService) => {
+    const sanitized = { ...rawService };
+    
+    // Limpar nome (remover espaços extras)
+    if (typeof sanitized.name === 'string') {
+      sanitized.name = sanitized.name.trim();
+    }
+    
+    // Garantir que reviews seja sempre um número
+    if (typeof sanitized.reviews !== 'number') {
+      if (Array.isArray(sanitized.reviews)) {
+        (sanitized as any).reviews = (sanitized.reviews as any[]).length;
+      } else {
+        (sanitized as any).reviews = 0;
+      }
+    }
+    
+    // Converter schedule objeto para string se necessário
+    if (sanitized.schedule && typeof sanitized.schedule === 'object' && !Array.isArray(sanitized.schedule)) {
+      // Manter original para função formatSchedule, mas garantir que não seja renderizado diretamente
+      sanitized.schedule = sanitized.schedule;
+    }
+    
+    // Remover campos que podem causar problemas
+    const { metadata, ...cleanService } = sanitized as any;
+    
+    return cleanService as HealthService;
+  };
+
+  const service = sanitizeService(route.params.service);
   const { isAuthenticated } = useAuth();
   const { checkUserReview } = useReviews();
   const { t } = useTranslation();
@@ -165,7 +195,15 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
   };
 
   const formatSchedule = (schedule: any) => {
-    if (!schedule || typeof schedule !== 'object') return 'Not informed';
+    if (!schedule) return 'Not informed';
+    
+    // Se já é string, retornar diretamente
+    if (typeof schedule === 'string') {
+      return schedule.trim();
+    }
+    
+    // Se não é objeto, retornar 'Not informed'
+    if (typeof schedule !== 'object') return 'Not informed';
     
     const days = {
       monday: 'Monday',
@@ -194,14 +232,19 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Reviews</Text>
-          {service.rating && typeof service.rating === 'number' && (
+          {typeof service.rating === 'number' && (
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingText}>
                 {service.rating}/5.0
               </Text>
               <Text style={styles.reviewsText}>
-                ({typeof service.reviews === 'number' ? service.reviews : 0})
+                ({typeof service.reviews === 'number' 
+                  ? service.reviews 
+                  : (Array.isArray(service.reviews) 
+                    ? (service.reviews as any[]).length 
+                    : 0)
+                })
               </Text>
             </View>
           )}
@@ -252,13 +295,13 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             
             return activeReviewTab === 'thematic' ? (
               <ThematicReviewsPreview
-                serviceId={service.id}
+                serviceId={typeof service.id === 'string' ? service.id : String(service.id || '')}
                 maxReviews={3}
                 refreshTrigger={reviewsRefreshTrigger}
               />
             ) : (
               <ReviewsPreview
-                serviceId={service.id}
+                serviceId={typeof service.id === 'string' ? service.id : String(service.id || '')}
                 onEditReview={handleEditReview}
                 maxReviews={3}
                 refreshTrigger={reviewsRefreshTrigger}
@@ -342,14 +385,19 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Reviews</Text>
-          {service.rating && typeof service.rating === 'number' && (
+          {typeof service.rating === 'number' && (
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingText}>
                 {service.rating}/5.0
               </Text>
               <Text style={styles.reviewsText}>
-                ({typeof service.reviews === 'number' ? service.reviews : 0})
+                ({typeof service.reviews === 'number' 
+                  ? service.reviews 
+                  : (Array.isArray(service.reviews) 
+                    ? (service.reviews as any[]).length 
+                    : 0)
+                })
               </Text>
             </View>
           )}
@@ -400,13 +448,13 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
             
             return activeReviewTab === 'thematic' ? (
               <ThematicReviewsPreview
-                serviceId={service.id}
+                serviceId={typeof service.id === 'string' ? service.id : String(service.id || '')}
                 maxReviews={3}
                 refreshTrigger={reviewsRefreshTrigger}
               />
             ) : (
               <ReviewsPreview
-                serviceId={service.id}
+                serviceId={typeof service.id === 'string' ? service.id : String(service.id || '')}
                 onEditReview={handleEditReview}
                 maxReviews={3}
                 refreshTrigger={reviewsRefreshTrigger}

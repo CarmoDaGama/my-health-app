@@ -182,15 +182,10 @@ export const EditProfileScreen: React.FC = () => {
         type: 'clinic' as const,
         description: '',
         services: [],
-        acceptsInsurance: false,
+        acceptsInsurance: true,
         emergencyService: false,
         coordinates: undefined,
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          zipCode: ''
-        },
+        address: '',
         workingHours: {
           monday: { start: '', end: '', available: false },
           tuesday: { start: '', end: '', available: false },

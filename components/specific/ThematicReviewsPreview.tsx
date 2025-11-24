@@ -78,11 +78,11 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
         count: result.reviews.length,
         totalReviews: result.reviews.length,
         reviews: result.reviews.map(r => ({ 
-          id: r.id, 
-          userName: r.userName, 
-          rating: r.overallRating,
-          serviceId: r.serviceId,
-          serviceName: r.serviceName
+          id: typeof r.id === 'string' ? r.id : 'unknown',
+          userName: typeof r.userName === 'string' ? r.userName : 'unknown',
+          rating: typeof r.overallRating === 'number' ? r.overallRating : 0,
+          serviceId: typeof r.serviceId === 'string' ? r.serviceId : 'unknown',
+          serviceName: typeof r.serviceName === 'string' ? r.serviceName : 'unknown'
         }))
       });
       
@@ -150,6 +150,11 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
       .sort(([,a], [,b]) => b - a)
       .slice(0, 2);
 
+    // Se não há categorias, não renderizar nada
+    if (sortedCategories.length === 0) {
+      return null;
+    }
+
     return (
       <View style={styles.topCategories}>
         {sortedCategories.map(([categoryId, rating]) => (
@@ -157,7 +162,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
             <Text style={styles.categoryName}>
               {typeof categoryId === 'string' ? categoryId.replace('_', ' ') : 'Category'}
             </Text>
-            <Text style={styles.categoryRating}>{typeof rating === 'number' ? rating : 0}/5</Text>
+            <Text style={styles.categoryRating}>{typeof rating === 'number' ? rating.toFixed(1) : '0'}/5</Text>
           </View>
         ))}
       </View>
@@ -167,8 +172,13 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
   const renderReviewItem = (review: ThematicReview, index: number) => {
     const isOwnReview = user?.id === review.userId;
 
+    // Validar que temos um review válido
+    if (!review || !review.id) {
+      return null;
+    }
+
     return (
-      <View key={review.id} style={[styles.reviewItem, index > 0 && styles.reviewItemBorder]}>
+      <View key={`review-${review.id}-${index}`} style={[styles.reviewItem, index > 0 ? styles.reviewItemBorder : null]}>
         <View style={styles.reviewHeader}>
           <View style={styles.reviewUserInfo}>
             <View style={styles.reviewAvatar}>
@@ -213,7 +223,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
           </View>
         )}
 
-        {isOwnReview && onEditReview && (
+        {isOwnReview && onEditReview ? (
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => onEditReview(review)}
@@ -221,7 +231,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
             <Ionicons name="pencil-outline" size={14} color="#2196F3" />
             <Text style={styles.editButtonText}>{t('common.edit')}</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     );
   };
@@ -284,9 +294,10 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
       </View>
 
       {/* Reviews List */}
-      {reviews.slice(0, maxReviews).map((review, index) => 
-        renderReviewItem(review, index)
-      )}
+      {reviews.slice(0, maxReviews).map((review, index) => {
+        const reviewItem = renderReviewItem(review, index);
+        return reviewItem;
+      }).filter(Boolean)}
       
       {totalReviews > maxReviews && (
         <View style={styles.moreIndicator}>

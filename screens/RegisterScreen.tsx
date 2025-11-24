@@ -36,7 +36,7 @@ export default function RegisterScreen() {
     userType: UserType.NORMAL_USER,
     acceptTerms: false,
     professionalInfo: {},
-    institutionInfo: { address: {} },
+    institutionInfo: {},
   });
 
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -138,11 +138,11 @@ export default function RegisterScreen() {
       if (!formData.institutionInfo?.type) {
         newErrors.type = t('validation.institutionTypeRequired') || 'Tipo de instituição é obrigatório';
       }
-      if (!formData.institutionInfo?.address?.street) {
-        newErrors['address.street'] = t('validation.addressRequired') || 'Endereço é obrigatório';
+      if (!formData.institutionInfo?.address) {
+        newErrors.address = t('validation.addressRequired') || 'Endereço é obrigatório';
       }
-      if (!formData.institutionInfo?.address?.city) {
-        newErrors['address.city'] = t('validation.cityRequired') || 'Cidade é obrigatória';
+      if (!formData.institutionInfo?.city) {
+        newErrors.city = t('validation.cityRequired') || 'Cidade é obrigatória';
       }
     }
 
@@ -159,7 +159,8 @@ export default function RegisterScreen() {
       hasEmail: !!formData.email,
       hasPassword: !!formData.password,
       hasProfessionalInfo: formData.userType === UserType.PROFESSIONAL ? !!formData.professionalInfo : 'N/A',
-      hasInstitutionInfo: formData.userType === UserType.INSTITUTION ? !!formData.institutionInfo : 'N/A'
+      hasInstitutionInfo: formData.userType === UserType.INSTITUTION ? !!formData.institutionInfo : 'N/A',
+      institutionInfo: formData.userType === UserType.INSTITUTION ? formData.institutionInfo : 'N/A'
     });
 
     const result = await register(formData);

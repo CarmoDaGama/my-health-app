@@ -56,6 +56,22 @@ export class HealthServiceAPIFirebase {
       console.log('📡 Executando query em healthServices...');
       const healthServicesSnapshot = await getDocs(healthServicesQuery);
       console.log(`📋 healthServices retornou ${healthServicesSnapshot.size} documentos`);
+      
+      // Debug: Verificar se HospGama está nos documentos retornados
+      const hospGamaDoc = healthServicesSnapshot.docs.find(doc => {
+        const data = doc.data();
+        return data.name && data.name.includes('HospGama');
+      });
+      
+      if (hospGamaDoc) {
+        console.log('✅ [API] HospGama ENCONTRADO na query do Firestore:', hospGamaDoc.id);
+      } else {
+        console.log('❌ [API] HospGama NÃO ENCONTRADO na query do Firestore');
+        console.log('🔍 [API] Documentos disponíveis:', healthServicesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name
+        })).slice(0, 10));
+      }
 
       // 2. POR ENQUANTO: Usar apenas healthServices até resolver permissões
       // TODO: Reativar registeredServices quando as regras Firestore forem atualizadas
@@ -71,6 +87,20 @@ export class HealthServiceAPIFirebase {
       allSnapshots.forEach((doc) => {
         const data = doc.data();
         console.log(`📄 Processando documento: ${doc.id}`);
+        
+        // Debug específico para HospGama
+        const isHospGama = data.name && data.name.includes('HospGama');
+        if (isHospGama) {
+          console.log('🏥 [API] HospGama encontrado no Firestore - dados completos:', {
+            id: doc.id,
+            name: data.name,
+            type: data.type,
+            serviceType: data.serviceType,
+            status: data.status,
+            verified: data.verified,
+            rawData: data
+          });
+        }
         
         // FILTRO RIGOROSO PARA PROFISSIONAIS E INSTITUIÇÕES
         // Apenas serviços ativos E verificados devem aparecer
@@ -92,19 +122,35 @@ export class HealthServiceAPIFirebase {
           
           // Serviço deve estar ativo E verificado
           if (serviceStatus !== 'active' || !isVerified) {
-            console.log(`🚫 Serviço ${data.name} filtrado - Status: ${serviceStatus}, Verificado: ${isVerified}`);
+            if (isHospGama) {
+              console.log(`🚫 [API] HospGama FILTRADO como profissional/instituição - Status: ${serviceStatus}, Verificado: ${isVerified}`);
+            } else {
+              console.log(`🚫 Serviço ${data.name} filtrado - Status: ${serviceStatus}, Verificado: ${isVerified}`);
+            }
             return; // Pular este serviço
           }
           
-          console.log(`✅ Serviço profissional/instituição ${data.name} APROVADO`);
+          if (isHospGama) {
+            console.log(`✅ [API] HospGama APROVADO como profissional/instituição`);
+          } else {
+            console.log(`✅ Serviço profissional/instituição ${data.name} APROVADO`);
+          }
         } else {
           // Para outros tipos (hospital, clinic, pharmacy, etc), só verificar se está ativo
           if (serviceStatus !== 'active') {
-            console.log(`🚫 Serviço ${data.name} filtrado - Status inativo: ${serviceStatus}`);
+            if (isHospGama) {
+              console.log(`🚫 [API] HospGama FILTRADO por status inativo: ${serviceStatus}`);
+            } else {
+              console.log(`🚫 Serviço ${data.name} filtrado - Status inativo: ${serviceStatus}`);
+            }
             return; // Pular este serviço
           }
           
-          console.log(`✅ Serviço geral ${data.name} APROVADO - Status: ${serviceStatus}`);
+          if (isHospGama) {
+            console.log(`✅ [API] HospGama APROVADO como serviço geral - Status: ${serviceStatus}`);
+          } else {
+            console.log(`✅ Serviço geral ${data.name} APROVADO - Status: ${serviceStatus}`);
+          }
         }
         
         // Continuar processando o serviço aprovado
@@ -115,58 +161,140 @@ export class HealthServiceAPIFirebase {
           // Por agora, assumir que se chegou até aqui, está ok
         }
         
-        // Validar estrutura de coordinates
+        // CORREÇÃO: Padronizar campo coordinates (antes era location)
         const coordinates = (() => {
+          let lat = 0;
+          let lng = 0;
+          
+          // Prioridade 1: Campo coordinates (padrão correto)
           if (data.coordinates && typeof data.coordinates === 'object') {
+            lat = data.coordinates.latitude || 0;
+            lng = data.coordinates.longitude || 0;
+          }
+          // Prioridade 2: Campo location (compatibilidade com registros antigos)
+          else if (data.location && typeof data.location === 'object') {
+            lat = data.location.latitude || 0;
+            lng = data.location.longitude || 0;
+            
+            // Log para identificar registros com estrutura antiga
+            console.warn(`📍 Serviço ${data.name} usando campo 'location' (deve ser 'coordinates')`);
+          }
+          
+          // Se não há coordenadas válidas, usar coordenadas padrão de Luanda
+          if (!lat || !lng || lat === 0 || lng === 0) {
+            console.warn(`⚠️ Documento ${doc.id} (${data.name}) sem coordenadas válidas - usando coordenadas padrão de Luanda`);
             return {
-              latitude: data.coordinates.latitude || data.location?.latitude || 0,
-              longitude: data.coordinates.longitude || data.location?.longitude || 0
-            };
-          } else if (data.location && typeof data.location === 'object') {
-            // Fallback para campo location (estrutura antiga)
-            return {
-              latitude: data.location.latitude || 0,
-              longitude: data.location.longitude || 0
-            };
-          } else {
-            // Fallback se não houver coordenadas
-            console.warn(`⚠️ Documento ${doc.id} sem coordenadas válidas`);
-            return {
-              latitude: 0,
-              longitude: 0
+              latitude: -8.8390526,
+              longitude: 13.2894116
             };
           }
+          
+          return {
+            latitude: lat,
+            longitude: lng
+          };
         })();
         
-        // Validar campos obrigatórios antes de adicionar
-        if (!data.name || !data.type || !data.address) {
-          console.warn(`⚠️ Documento ${doc.id} com campos obrigatórios ausentes:`, {
-            hasName: !!data.name,
-            hasType: !!data.type,
-            hasAddress: !!data.address
-          });
+        // CORREÇÃO: Normalizar campo address (objeto -> string)
+        let normalizedAddress = '';
+        if (typeof data.address === 'string') {
+          // Address já é string (formato correto)
+          normalizedAddress = data.address;
+        } else if (data.address && typeof data.address === 'object') {
+          // Address é objeto (compatibilidade com registros antigos)
+          const addr = data.address;
+          const parts = [
+            addr.street || addr.rua,
+            addr.city || addr.cidade,
+            addr.state || addr.estado || addr.provincia,
+            addr.country || addr.pais
+          ].filter(Boolean);
+          
+          normalizedAddress = parts.length > 0 ? parts.join(', ') : 'Endereço não especificado';
+          console.warn(`📍 Serviço ${data.name} usando address como objeto (deve ser string)`);
+        } else {
+          // Usar city como fallback se address não existir
+          normalizedAddress = data.city || 'Luanda, Angola';
+          console.warn(`📍 Serviço ${data.name} sem address, usando city como fallback: ${normalizedAddress}`);
+        }
+        
+        // Validar campos obrigatórios (agora com address normalizado)
+        if (!data.name || !data.type || !normalizedAddress) {
+          if (isHospGama) {
+            console.warn(`⚠️ [API] HospGama FILTRADO por campos obrigatórios ausentes:`, {
+              hasName: !!data.name,
+              hasType: !!data.type,
+              hasAddress: !!normalizedAddress
+            });
+          } else {
+            console.warn(`⚠️ Documento ${doc.id} com campos obrigatórios ausentes:`, {
+              hasName: !!data.name,
+              hasType: !!data.type,
+              hasAddress: !!normalizedAddress
+            });
+          }
           return; // Pular este serviço
         }
         
         // Validar tipos dos campos obrigatórios
-        if (typeof data.name !== 'string' || typeof data.type !== 'string' || typeof data.address !== 'string') {
-          console.warn(`⚠️ Documento ${doc.id} com campos obrigatórios de tipo inválido:`, {
-            nameType: typeof data.name,
-            typeType: typeof data.type,
-            addressType: typeof data.address
-          });
+        if (typeof data.name !== 'string' || typeof data.type !== 'string') {
+          if (isHospGama) {
+            console.warn(`⚠️ [API] HospGama FILTRADO por campos de tipo inválido:`, {
+              nameType: typeof data.name,
+              typeType: typeof data.type,
+              normalizedAddress: normalizedAddress
+            });
+          } else {
+            console.warn(`⚠️ Documento ${doc.id} com campos obrigatórios de tipo inválido:`, {
+              nameType: typeof data.name,
+              typeType: typeof data.type,
+              normalizedAddress: normalizedAddress
+            });
+          }
           return; // Pular este serviço
         }
         
-        services.push({
-          id: doc.id,
+        // CORREÇÃO: Normalizar campos e adicionar campos ausentes
+        const finalService = {
           ...data,
-          coordinates
-        } as HealthService);
+          id: doc.id,
+          address: normalizedAddress, // Address sempre como string
+          coordinates, // Coordinates padronizado
+          // CORREÇÃO: Usar city como fallback para state
+          state: data.state || data.city || 'Luanda',
+          city: data.city || 'Luanda',
+          // CORREÇÃO: Garantir que category existe (mapeado do type se ausente)
+          category: data.category || data.type || 'general'
+        } as unknown as HealthService;
+        
+        if (isHospGama) {
+          console.log(`✅ [API] HospGama ADICIONADO à lista final de serviços:`, {
+            id: finalService.id,
+            name: finalService.name,
+            type: finalService.type,
+            coordinates: finalService.coordinates
+          });
+        }
+        
+        services.push(finalService);
         newLastDoc = doc;
       });
 
-      console.log(`✅ Processados ${services.length} serviços com sucesso`);
+      console.log(`✅ [API] Processados ${services.length} serviços com sucesso`);
+      
+      // Debug: Verificar se HospGama está na lista final
+      const hospGamaInFinal = services.find(s => s.name && s.name.includes('HospGama'));
+      if (hospGamaInFinal) {
+        console.log('✅ [API] HospGama FOUND in final services list:', {
+          id: hospGamaInFinal.id,
+          name: hospGamaInFinal.name,
+          type: hospGamaInFinal.type,
+          coordinates: hospGamaInFinal.coordinates
+        });
+      } else {
+        console.log('❌ [API] HospGama NOT FOUND in final services list');
+      }
+      
       return { services, lastDoc: newLastDoc };
     } catch (error) {
       console.error('❌ Error fetching services:', error);
