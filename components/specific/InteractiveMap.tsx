@@ -219,8 +219,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     };
     
     setMapRegion(newRegion);
-  updateMapView(newRegion, currentUserLocation);
+    updateMapView(newRegion, currentUserLocation);
   }, [services, currentUserLocation]);
+
+
 
   const handleShowAllServices = () => {
     console.log('📊 Mostrando todos os serviços...');
@@ -230,7 +232,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setInitialAutoZoomDone(true);
     // Release any location lock so auto-zoom/fits can operate again
     userLocationLockRef.current = false;
-    fitToServices();
+    
+    // If user location is available, show services around user location with intelligent zoom
+    if (currentUserLocation && filteredServices.length > 0) {
+      fitToServicesAroundUser();
+    } else {
+      fitToServices();
+    }
   };
 
   const updateMapView = (region: Region, userLoc: Coordinates | null, forceUpdate: boolean = false) => {
@@ -344,6 +352,65 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         const serviceCategory = getCategoryByType(serviceType);
         return selectedCategories.includes(serviceCategory.id);
       });
+
+  const fitToServicesAroundUser = useCallback(() => {
+    if (!currentUserLocation || filteredServices.length === 0) return;
+    
+    console.log('📍 Ajustando mapa para mostrar serviços ao redor do usuário');
+    
+    // Include user location in the calculation
+    const allLats = [
+      currentUserLocation.latitude,
+      ...filteredServices.map(s => s.coordinates.latitude)
+    ];
+    const allLngs = [
+      currentUserLocation.longitude,
+      ...filteredServices.map(s => s.coordinates.longitude)
+    ];
+    
+    const minLat = Math.min(...allLats);
+    const maxLat = Math.max(...allLats);
+    const minLng = Math.min(...allLngs);
+    const maxLng = Math.max(...allLngs);
+    
+    // Calculate bounds with intelligent padding
+    let deltaLat = (maxLat - minLat) * 1.4; // 40% padding for better view
+    let deltaLng = (maxLng - minLng) * 1.4;
+    
+    // Ensure minimum zoom level (not too close)
+    const minDelta = 0.005; // Minimum zoom level
+    const maxDelta = 0.1;   // Maximum zoom level for "show all services"
+    
+    deltaLat = Math.max(Math.min(deltaLat, maxDelta), minDelta);
+    deltaLng = Math.max(Math.min(deltaLng, maxDelta), minDelta);
+    
+    // Center should be biased towards user location but include services
+    const userWeight = 0.3; // Give more weight to user location
+    const servicesWeight = 0.7;
+    
+    const servicesCenterLat = filteredServices.reduce((sum, s) => sum + s.coordinates.latitude, 0) / filteredServices.length;
+    const servicesCenterLng = filteredServices.reduce((sum, s) => sum + s.coordinates.longitude, 0) / filteredServices.length;
+    
+    const centerLat = (currentUserLocation.latitude * userWeight) + (servicesCenterLat * servicesWeight);
+    const centerLng = (currentUserLocation.longitude * userWeight) + (servicesCenterLng * servicesWeight);
+    
+    const newRegion = {
+      latitude: centerLat,
+      longitude: centerLng,
+      latitudeDelta: deltaLat,
+      longitudeDelta: deltaLng
+    };
+    
+    console.log('🗺️ Nova região calculada:', {
+      center: [centerLat, centerLng],
+      delta: [deltaLat, deltaLng],
+      userLocation: [currentUserLocation.latitude, currentUserLocation.longitude],
+      servicesCount: filteredServices.length
+    });
+    
+    setMapRegion(newRegion);
+    updateMapView(newRegion, currentUserLocation);
+  }, [currentUserLocation, filteredServices]);
 
   console.log('🗺️ [InteractiveMap] Services before filtering:', services.length);
   console.log('🗺️ [InteractiveMap] Selected categories:', selectedCategories);
@@ -719,12 +786,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       {/* Control Buttons */}
       <View style={styles.controlButtons}>
         {/* Show All Services Button */}
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.showAllButton}
           onPress={handleShowAllServices}
         >
           <Ionicons name="apps" size={24} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         
         {/* Locate Me Button */}
         <TouchableOpacity

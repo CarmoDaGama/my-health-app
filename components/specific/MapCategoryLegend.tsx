@@ -33,7 +33,7 @@ export const MapCategoryLegend: React.FC<MapCategoryLegendProps> = ({
   position = 'top-right',
   collapsible = true,
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
 
   const toggleCollapse = () => {
@@ -60,9 +60,9 @@ export const MapCategoryLegend: React.FC<MapCategoryLegendProps> = ({
       case 'top-right':
         return { ...baseStyle, top: spacing.md, right: spacing.md };
       case 'bottom-left':
-        return { ...baseStyle, bottom: spacing.xl, left: spacing.md };
+        return { ...baseStyle, bottom: spacing.xl + spacing.lg, left: spacing.md };
       case 'bottom-right':
-        return { ...baseStyle, bottom: spacing.xl, right: spacing.md };
+        return { ...baseStyle, bottom: spacing.xl + spacing.lg, right: spacing.md };
       default:
         return { ...baseStyle, top: spacing.md, right: spacing.md };
     }
@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: borderRadius.lg,
     padding: spacing.sm,
+    paddingBottom: spacing.md,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -169,6 +170,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     maxWidth: 200,
     minWidth: 150,
+    marginBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',

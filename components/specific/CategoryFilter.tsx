@@ -40,6 +40,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   horizontal = true,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [collapsed, setCollapsed] = useState(true); // Start collapsed by default
   const categories = getAllCategories();
   
   const getStatsForCategory = (categoryId: string): CategoryStats | undefined => {
@@ -124,21 +125,36 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   if (horizontal) {
     return (
       <View style={styles.container}>
-        {/* Control buttons */}
+        {/* Control buttons with expand/collapse */}
         <View style={styles.headerRow}>
           <Text style={styles.sectionTitle}>Filter by Category</Text>
-          {renderControlButtons()}
+          <View style={styles.headerControls}>
+            <TouchableOpacity
+              style={styles.expandToggle}
+              onPress={() => setCollapsed(!collapsed)}
+            >
+              <Text style={styles.expandToggleText}>
+                {collapsed ? 'Show Filters' : 'Hide Filters'}
+              </Text>
+              <Text style={styles.expandToggleIcon}>
+                {collapsed ? '▼' : '▲'}
+              </Text>
+            </TouchableOpacity>
+            {!collapsed && renderControlButtons()}
+          </View>
         </View>
         
-        {/* Horizontal scrollable categories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalContainer}
-          style={styles.horizontalScroll}
-        >
-          {categories.map(renderCategoryChip)}
-        </ScrollView>
+        {/* Horizontal scrollable categories - only show when not collapsed */}
+        {!collapsed && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalContainer}
+            style={styles.horizontalScroll}
+          >
+            {categories.map(renderCategoryChip)}
+          </ScrollView>
+        )}
       </View>
     );
   }
@@ -172,18 +188,45 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
 const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing.md,
+    minHeight: 60, // Ensure minimum container height
+    backgroundColor: Colors.background, // Add background color
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm, // Reduced from md to sm
     paddingHorizontal: spacing.md,
+  },
+  headerControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   sectionTitle: {
     fontSize: fontSize.md,
     fontWeight: 'bold',
     color: Colors.text,
+  },
+  expandToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    backgroundColor: Colors.primary + '10',
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+    gap: spacing.xs,
+  },
+  expandToggleText: {
+    fontSize: fontSize.sm,
+    color: Colors.primary,
+    fontWeight: '500',
+  },
+  expandToggleIcon: {
+    fontSize: fontSize.xs,
+    color: Colors.primary,
   },
   controlButtons: {
     flexDirection: 'row',
@@ -218,10 +261,14 @@ const styles = StyleSheet.create({
   },
   horizontalScroll: {
     flexGrow: 0,
+    minHeight: 60, // Ensure minimum height to prevent clipping
+    marginBottom: spacing.sm, // Add bottom margin
   },
   horizontalContainer: {
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs, // Add vertical padding
     gap: spacing.sm,
+    alignItems: 'center', // Center align items
   },
   verticalContainer: {
     flexDirection: 'row',
@@ -232,9 +279,10 @@ const styles = StyleSheet.create({
   categoryChip: {
     borderRadius: 25,
     borderWidth: 1.5,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    marginVertical: spacing.xs / 2,
+    paddingHorizontal: spacing.md, // Increased padding
+    paddingVertical: spacing.sm, // Increased padding
+    marginVertical: 0, // Remove margin to prevent layout issues
+    minHeight: 40, // Ensure minimum height
   },
   chipContent: {
     flexDirection: 'row',
@@ -250,14 +298,16 @@ const styles = StyleSheet.create({
   },
   statsBadge: {
     paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 20,
+    paddingVertical: 3, // Slightly increased
+    borderRadius: 12,
+    minWidth: 22, // Slightly larger
     alignItems: 'center',
+    justifyContent: 'center', // Center content
   },
   statsText: {
     fontSize: fontSize.xs,
     fontWeight: 'bold',
+    lineHeight: fontSize.xs + 2, // Improve text alignment
   },
   expandButton: {
     paddingHorizontal: spacing.md,
