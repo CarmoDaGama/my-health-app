@@ -111,21 +111,21 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
     onChange('address', address);
     
     // Automatic geocoding when we have a complete address
-    if (address.length > 10) {
-      setIsGeocodingAddress(true);
-      try {
-        const result = await GeocodingService.getCoordinatesFromAddress(address);
-        if (result) {
-          setCoordinates(result.coordinates);
-          onChange('coordinates', result.coordinates);
-          console.log('✅ Coordenadas obtidas automaticamente:', result.coordinates);
-        }
-      } catch (error) {
-        console.log('⚠️ Geocoding automático falhou, usuário pode usar GPS ou mapa');
-      } finally {
-        setIsGeocodingAddress(false);
-      }
-    }
+    // if (address.length > 10) {
+    //   setIsGeocodingAddress(true);
+    //   try {
+    //     const result = await GeocodingService.getCoordinatesFromAddress(address);
+    //     if (result) {
+    //       setCoordinates(result.coordinates);
+    //       onChange('coordinates', result.coordinates);
+    //       console.log('✅ Coordenadas obtidas automaticamente:', result.coordinates);
+    //     }
+    //   } catch (error) {
+    //     console.log('⚠️ Geocoding automático falhou, usuário pode usar GPS ou mapa');
+    //   } finally {
+    //     setIsGeocodingAddress(false);
+    //   }
+    // }
   };
 
   const handleUseGPS = async () => {

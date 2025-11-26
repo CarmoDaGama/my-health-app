@@ -355,6 +355,11 @@ export class AuthServiceFirebase {
         });
       }
       
+      // Se for profissional ou instituição, atualizar também em healthServices
+      if (cleanUpdates.professionalInfo || cleanUpdates.institutionInfo) {
+        await this.updateHealthService(userId, cleanUpdates);
+      }
+      
       return { success: true };
     } catch (error: any) {
       console.error('❌ Profile update error detalhado:', {
@@ -465,6 +470,84 @@ export class AuthServiceFirebase {
   }
 
   /**
+   * Update health service data when user profile is updated
+   */
+  static async updateHealthService(userId: string, updates: any): Promise<void> {
+    try {
+      console.log('🏥 Atualizando dados do serviço de saúde para usuário:', userId);
+      console.log('📝 Updates recebidos:', JSON.stringify(updates, null, 2));
+      
+      // Verificar se o serviço existe em healthServices
+      const serviceRef = doc(db, 'healthServices', userId);
+      const serviceDoc = await getDoc(serviceRef);
+      
+      if (!serviceDoc.exists()) {
+        console.log('⚠️ Serviço não encontrado em healthServices, pulando atualização');
+        return;
+      }
+      
+      const serviceUpdates: any = {
+        updatedAt: serverTimestamp()
+      };
+      
+      // Atualizar campos básicos
+      if (updates.name) {
+        serviceUpdates.name = updates.name;
+      }
+      if (updates.phone) {
+        serviceUpdates.contactPhone = updates.phone;
+      }
+      
+      // Atualizar campos específicos de profissionais
+      if (updates.professionalInfo) {
+        const prof = updates.professionalInfo;
+        if (prof.specialty) serviceUpdates.specialty = prof.specialty;
+        if (prof.bio) serviceUpdates.description = prof.bio;
+        if (prof.address) serviceUpdates.address = prof.address;
+        if (prof.coordinates) serviceUpdates.coordinates = prof.coordinates;
+        if (prof.workingHours) serviceUpdates.workingHours = prof.workingHours;
+        if (prof.acceptsInsurance !== undefined) serviceUpdates.acceptsInsurance = prof.acceptsInsurance;
+        if (prof.services) serviceUpdates.services = prof.services;
+      }
+      
+      // Atualizar campos específicos de instituições
+      if (updates.institutionInfo) {
+        const inst = updates.institutionInfo;
+        if (inst.type) {
+          serviceUpdates.type = inst.type; // Campo 'type' correto
+        }
+        if (inst.description) serviceUpdates.description = inst.description;
+        if (inst.address && inst.address.street) {
+          // Converter objeto address para string
+          const addressParts = [
+            inst.address.street,
+            inst.address.city,
+            inst.address.state
+          ].filter(Boolean);
+          serviceUpdates.address = addressParts.join(', ');
+        }
+        if (inst.address && inst.address.city) serviceUpdates.city = inst.address.city;
+        if (inst.address && inst.address.state) serviceUpdates.province = inst.address.state;
+        if (inst.coordinates) {
+          serviceUpdates.coordinates = inst.coordinates; // Campo 'coordinates' correto
+        }
+        if (inst.workingHours) serviceUpdates.workingHours = inst.workingHours;
+        if (inst.acceptsInsurance !== undefined) serviceUpdates.acceptsInsurance = inst.acceptsInsurance;
+        if (inst.emergencyService !== undefined) serviceUpdates.emergencyService = inst.emergencyService;
+        if (inst.services) serviceUpdates.services = inst.services;
+      }
+      
+      console.log('🔄 Atualizando healthServices com:', JSON.stringify(serviceUpdates, null, 2));
+      await updateDoc(serviceRef, serviceUpdates);
+      
+      console.log('✅ Dados do serviço de saúde atualizados com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar serviço de saúde:', error);
+      // Não fazer throw do erro para não quebrar a atualização do perfil
+    }
+  }
+
+  /**
    * Add professional/institution to healthServices (active and verified)
    * Registro direto em healthServices com status ativo
    */
@@ -489,6 +572,7 @@ export class AuthServiceFirebase {
       const serviceData = {
         // Informações do serviço
         name: institutionInfo.name || professionalInfo.name || data.name,
+        type: data.userType === UserType.PROFESSIONAL ? 'professional' : (institutionInfo.type || 'clinic'),
         serviceType: data.userType === UserType.PROFESSIONAL ? 'professional' : 'institution',
         specialty: professionalInfo.specialty || institutionInfo.specialty || 'Geral',
         description: professionalInfo.description || institutionInfo.description || '',
@@ -497,7 +581,7 @@ export class AuthServiceFirebase {
         address: professionalInfo.address || institutionInfo.address || '',
         city: professionalInfo.city || institutionInfo.city || 'Luanda',
         province: professionalInfo.province || institutionInfo.province || 'Luanda',
-        location: professionalInfo.location || institutionInfo.location || { 
+        coordinates: professionalInfo.coordinates || institutionInfo.coordinates || { 
           latitude: -8.8383, 
           longitude: 13.2344 
         },
