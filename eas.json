@@ -20,6 +20,9 @@
     "preview": {
       "distribution": "internal",
       "node": "18.19.0",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "NODE_ENV": "production"
       }
