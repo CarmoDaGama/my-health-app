@@ -457,6 +457,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButtonTextDisabled: {
-    color: '#999',
+    color: '#2196F3',
   },
 });

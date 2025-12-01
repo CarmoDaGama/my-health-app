@@ -84,12 +84,12 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
 
   const handleReport = () => {
     Alert.alert(
-      'Denunciar Avaliação',
-      'Você deseja denunciar esta avaliação por conteúdo inadequado?',
+      t('reviews.reportTitle') || 'Report Review',
+      t('reviews.reportMessage') || 'Do you want to report this review for inappropriate content?',
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Denunciar',
+          text: t('reviews.report') || 'Report',
           style: 'destructive',
           onPress: () => onReport?.(review.id),
         },
@@ -178,7 +178,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
               >
                 <Ionicons name="trash-outline" size={16} color="#f44336" />
                 <Text style={[styles.actionText, { color: '#f44336' }]}>
-                  Deletar
+                  {t('common.delete') || 'Delete'}
                 </Text>
               </TouchableOpacity>
             </>
@@ -189,7 +189,7 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
             >
               <Ionicons name="flag-outline" size={16} color="#ff9800" />
               <Text style={[styles.actionText, { color: '#ff9800' }]}>
-                Denunciar
+                {t('reviews.report') || 'Report'}
               </Text>
             </TouchableOpacity>
           )}
@@ -298,11 +298,11 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
     if (!showFilters) return null;
 
     const filters = [
-      { key: 'newest', label: 'Mais Recentes' },
-      { key: 'oldest', label: 'Mais Antigas' },
-      { key: 'rating_high', label: 'Maior Nota' },
-      { key: 'rating_low', label: 'Menor Nota' },
-      { key: 'helpful', label: 'Mais Úteis' },
+      { key: 'newest', label: t('reviews.filters.newest') || 'Most Recent' },
+      { key: 'oldest', label: t('reviews.filters.oldest') || 'Oldest' },
+      { key: 'rating_high', label: t('reviews.filters.highestRating') || 'Highest Rating' },
+      { key: 'rating_low', label: t('reviews.filters.lowestRating') || 'Lowest Rating' },
+      { key: 'helpful', label: t('reviews.filters.mostHelpful') || 'Most Helpful' },
     ];
 
     return (
@@ -339,7 +339,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
     <View style={styles.header}>
       <View style={styles.statsContainer}>
         <Text style={styles.statsTitle}>
-          {stats.totalReviews} avaliação{stats.totalReviews !== 1 ? 'ões' : ''}
+          {stats.totalReviews} {stats.totalReviews !== 1 ? (t('reviews.reviews') || 'reviews') : (t('reviews.review') || 'review')}
         </Text>
         {stats.averageRating > 0 && (
           <View style={styles.averageRating}>
@@ -359,7 +359,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({
       <Ionicons name="chatbubble-outline" size={48} color="#CCC" />
       <Text style={styles.emptyTitle}>{t('reviews.noReviews')}</Text>
       <Text style={styles.emptyText}>
-        Seja o primeiro a avaliar este serviço e ajude outros usuários!
+        Be the first to rate this service and help other users!
       </Text>
     </View>
   );

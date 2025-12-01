@@ -260,7 +260,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onMarkHelpful }) => {
               style={styles.showMoreButton}
             >
               <Text style={styles.showMoreText}>
-                {showFullComment ? 'Ver menos' : 'Ver mais'}
+                {showFullComment ? (t('common.showLess') || 'Show less') : (t('common.showMore') || 'Show more')}
               </Text>
             </TouchableOpacity>
           )}
@@ -275,14 +275,14 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, onMarkHelpful }) => {
         >
           <Ionicons name="thumbs-up-outline" size={16} color={Colors.textSecondary} />
           <Text style={styles.helpfulText}>
-            Útil ({review.helpful})
+            {t('reviews.helpful') || 'Helpful'} ({review.helpful})
           </Text>
         </TouchableOpacity>
         
         {review.verified && (
           <View style={styles.verifiedBadge}>
             <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-            <Text style={styles.verifiedText}>Verificado</Text>
+            <Text style={styles.verifiedText}>{t('reviews.verified') || 'Verified'}</Text>
           </View>
         )}
       </View>
@@ -366,10 +366,10 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
     >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Avaliações de {typeof service.name === 'string' ? service.name : 'Serviço'}</Text>
+        <Text style={styles.title}>{t('reviews.reviewsOf') || 'Reviews of'} {typeof service.name === 'string' ? service.name : (t('common.service') || 'Service')}</Text>
         <TouchableOpacity style={styles.writeReviewButton} onPress={onWriteReview}>
           <Ionicons name="create" size={20} color={Colors.surface} />
-          <Text style={styles.writeReviewText}>Avaliar</Text>
+          <Text style={styles.writeReviewText}>{t('actions.rate') || 'Rate'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -384,7 +384,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
       {/* Reviews List */}
       <View style={styles.reviewsSection}>
         <Text style={styles.reviewsSectionTitle}>
-          Avaliações Recentes ({reviews.length})
+          {t('reviews.recentReviews') || 'Recent Reviews'} ({reviews.length})
         </Text>
         
         {reviews.length > 0 ? (
@@ -398,9 +398,9 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
         ) : (
           <View style={styles.emptyState}>
             <Ionicons name="chatbubbles-outline" size={48} color={Colors.textSecondary} />
-            <Text style={styles.emptyStateTitle}>Nenhuma avaliação ainda</Text>
+              <Text style={styles.emptyStateTitle}>No reviews yet</Text>
             <Text style={styles.emptyStateText}>
-              Seja o primeiro a avaliar este serviço e ajude outros usuários!
+                Be the first to rate this service and help other users!
             </Text>
             <TouchableOpacity style={styles.firstReviewButton} onPress={onWriteReview}>
               <Text style={styles.firstReviewButtonText}>Fazer Primeira Avaliação</Text>

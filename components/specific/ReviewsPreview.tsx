@@ -139,7 +139,7 @@ export const ReviewsPreview: React.FC<ReviewsPreviewProps> = ({
       {stats.totalReviews > maxReviews && (
         <View style={styles.moreIndicator}>
           <Text style={styles.moreText}>
-            +{stats.totalReviews - maxReviews} avaliação{stats.totalReviews - maxReviews !== 1 ? 'ões' : ''}
+            +{stats.totalReviews - maxReviews} {stats.totalReviews - maxReviews !== 1 ? (t('reviews.moreReviews') || 'more reviews') : (t('reviews.moreReview') || 'more review')}
           </Text>
         </View>
       )}

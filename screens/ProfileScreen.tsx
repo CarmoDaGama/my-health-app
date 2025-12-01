@@ -69,7 +69,7 @@ export const ProfileScreen: React.FC = () => {
     
     const currentLanguage = user.preferences.language || 'en';
     const newLanguage = currentLanguage === 'pt' ? 'en' : 'pt';
-    const newLanguageName = newLanguage === 'pt' ? 'Português' : 'English';
+    const newLanguageName = newLanguage === 'pt' ? (t('language.portuguese') || 'Portuguese') : (t('language.english') || 'English');
     
     Alert.alert(
       t('profile.changeLanguage') || 'Change Language',

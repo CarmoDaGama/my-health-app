@@ -261,7 +261,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
     return (
       <View style={styles.emptyContainer}>
         <Ionicons name="star-outline" size={48} color="#ccc" />
-        <Text style={styles.emptyTitle}>Nenhuma avaliação temática ainda</Text>
+        <Text style={styles.emptyTitle}>No thematic reviews yet</Text>
         <Text style={styles.emptyText}>
           Be the first to rate this service by categories!
         </Text>
@@ -276,7 +276,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{reviews.length}</Text>
           <Text style={styles.statLabel}>
-            Avaliação{reviews.length !== 1 ? 'ões' : ''}
+            {reviews.length !== 1 ? (t('reviews.reviews') || 'Reviews') : (t('reviews.review') || 'Review')}
           </Text>
         </View>
         
@@ -288,7 +288,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
                 {(reviews.reduce((sum, r) => sum + (typeof r.overallRating === 'number' ? r.overallRating : 0), 0) / reviews.length).toFixed(1)}
               </Text>
             </View>
-            <Text style={styles.statLabel}>Média geral</Text>
+            <Text style={styles.statLabel}>{t('reviews.overallAverage') || 'Overall Average'}</Text>
           </View>
         )}
       </View>
@@ -302,7 +302,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
       {totalReviews > maxReviews && (
         <View style={styles.moreIndicator}>
           <Text style={styles.moreText}>
-            +{totalReviews - maxReviews} avaliação{totalReviews - maxReviews !== 1 ? 'ões' : ''} temática{totalReviews - maxReviews !== 1 ? 's' : ''}
+            +{totalReviews - maxReviews} {totalReviews - maxReviews !== 1 ? (t('reviews.moreThematicReviews') || 'more thematic reviews') : (t('reviews.moreThematicReview') || 'more thematic review')}
           </Text>
         </View>
       )}

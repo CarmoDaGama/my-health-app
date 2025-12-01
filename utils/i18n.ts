@@ -307,6 +307,9 @@ const translations = {
       notAvailable: 'Not available',
       notProvided: 'Not provided',
       seeAll: 'See All',
+      service: 'Service',
+      showMore: 'Show more',
+      showLess: 'Show less',
     },
     
     // Time
@@ -461,7 +464,26 @@ const translations = {
         routine: 'Routine',
         exam: 'Exam',
         procedure: 'Procedure'
-      }
+      },
+      filters: {
+        newest: 'Most Recent',
+        oldest: 'Oldest',
+        highestRating: 'Highest Rating',
+        lowestRating: 'Lowest Rating',
+        mostHelpful: 'Most Helpful'
+      },
+      reviewsOf: 'Reviews of',
+      recentReviews: 'Recent Reviews',
+      overallAverage: 'Overall Average',
+      review: 'Review',
+      reviewCount: 'review',
+      moreReviews: 'more reviews',
+      moreReview: 'more review',
+      moreThematicReviews: 'more thematic reviews',
+      moreThematicReview: 'more thematic review',
+      reportTitle: 'Report Review',
+      reportMessage: 'Do you want to report this review for inappropriate content?',
+      report: 'Report'
     },
     screens: {
       home: 'Home',
@@ -487,6 +509,7 @@ const translations = {
       clearCache: 'Clear Cache',
       viewAll: 'View All',
       loading: 'Loading...',
+      rate: 'Rate',
     },
     details: {
       phone: 'Phone',
@@ -658,6 +681,10 @@ const translations = {
       selectLanguage: 'Select Language',
       guestLanguageNote: 'Language preference will be saved for your next visit',
       languageChanged: 'Language changed successfully',
+    },
+    language: {
+      portuguese: 'Portuguese',
+      english: 'English',
     },
     
     // Guest dashboard translations
@@ -1124,6 +1151,9 @@ const translations = {
       notAvailable: 'Não disponível',
       notProvided: 'Não fornecido',
       seeAll: 'Ver Todas',
+      service: 'Serviço',
+      showMore: 'Ver mais',
+      showLess: 'Ver menos',
     },
     
     // Time
@@ -1259,7 +1289,26 @@ const translations = {
         routine: 'Rotina',
         exam: 'Exame',
         procedure: 'Procedimento'
-      }
+      },
+      filters: {
+        newest: 'Mais Recentes',
+        oldest: 'Mais Antigas',
+        highestRating: 'Maior Nota',
+        lowestRating: 'Menor Nota',
+        mostHelpful: 'Mais Úteis'
+      },
+      reviewsOf: 'Avaliações de',
+      recentReviews: 'Avaliações Recentes',
+      overallAverage: 'Média Geral',
+      review: 'Avaliação',
+      reviewCount: 'avaliação',
+      moreReviews: 'mais avaliações',
+      moreReview: 'mais avaliação',
+      moreThematicReviews: 'mais avaliações temáticas',
+      moreThematicReview: 'mais avaliação temática',
+      reportTitle: 'Denunciar Avaliação',
+      reportMessage: 'Você deseja denunciar esta avaliação por conteúdo inadequado?',
+      report: 'Denunciar'
     },
     screens: {
       home: 'Início',
@@ -1284,6 +1333,7 @@ const translations = {
       dismiss: 'Dispensar',
       clearCache: 'Limpar Cache',
       viewAll: 'Ver Todas',
+      rate: 'Avaliar',
     },
     details: {
       phone: 'Telefone',
@@ -1454,6 +1504,10 @@ const translations = {
       selectLanguage: 'Selecionar Idioma',
       guestLanguageNote: 'A preferência de idioma será salva para sua próxima visita',
       languageChanged: 'Idioma alterado com sucesso',
+    },
+    language: {
+      portuguese: 'Português',
+      english: 'Inglês',
     },
     
     // Guest dashboard translations
@@ -1721,7 +1775,7 @@ export const setLanguage = (language: string): void => {
  */
 export const getAvailableLanguages = () => {
   return [
-    { code: 'pt', name: 'Português', nativeName: 'Português' },
+    { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
     { code: 'en', name: 'English', nativeName: 'English' }
   ];
 };
