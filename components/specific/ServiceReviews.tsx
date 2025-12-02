@@ -187,6 +187,7 @@ const InsightsCard: React.FC<{ insights: ServiceInsights }> = ({ insights }) => 
 };
 
 const ReviewCard: React.FC<ReviewCardProps> = ({ review, onMarkHelpful }) => {
+  const { t } = useTranslation();
   const [showFullComment, setShowFullComment] = useState(false);
   const serviceType = review.serviceType as ServiceType;
   const categories = REVIEW_CATEGORIES[serviceType] || [];
@@ -294,6 +295,12 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
   service,
   onWriteReview,
 }) => {
+  console.log('🎬 [ServiceReviews] Componente renderizado com service:', {
+    id: service.id,
+    name: typeof service.name === 'string' ? service.name : 'N/A',
+    type: service.type
+  });
+
   const { t } = useTranslation();
   const [reviews, setReviews] = useState<ThematicReview[]>([]);
   const [insights, setInsights] = useState<ServiceInsights | null>(null);
@@ -302,20 +309,32 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
 
   const loadData = async () => {
     try {
+      console.log('🔄 [ServiceReviews] Iniciando carregamento de dados para service:', service.id);
       setLoading(true);
 
       // Carregar reviews
+      console.log('📡 [ServiceReviews] Chamando ThematicReviewService.getServiceReviews...');
       const reviewsResult = await ThematicReviewService.getServiceReviews(service.id);
+      
+      console.log('📊 [ServiceReviews] Reviews carregados:', {
+        count: reviewsResult.reviews.length,
+        reviews: reviewsResult.reviews.map(r => ({ id: r.id, userName: r.userName, rating: r.overallRating }))
+      });
+      
       setReviews(reviewsResult.reviews);
 
       // Gerar insights se houver reviews
       if (reviewsResult.reviews.length > 0) {
+        console.log('🧠 [ServiceReviews] Gerando insights para', reviewsResult.reviews.length, 'reviews...');
         const serviceInsights = await ThematicReviewService.generateServiceInsights(service.id);
         setInsights(serviceInsights);
+        console.log('✅ [ServiceReviews] Insights gerados:', serviceInsights);
+      } else {
+        console.log('⚠️ [ServiceReviews] Nenhum review encontrado para gerar insights');
       }
 
     } catch (error) {
-      console.error('Erro ao carregar reviews:', error);
+      console.error('❌ [ServiceReviews] Erro ao carregar reviews:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -323,6 +342,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
   };
 
   useEffect(() => {
+    console.log('🎬 [ServiceReviews] useEffect disparado para service.id:', service.id);
     loadData();
   }, [service.id]);
 

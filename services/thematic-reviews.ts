@@ -10,6 +10,7 @@ import {
   getDoc, 
   addDoc, 
   updateDoc, 
+  setDoc,
   deleteDoc, 
   query, 
   where, 
@@ -345,7 +346,14 @@ export class ThematicReviewService {
       };
 
       // Salvar insights no Firestore
-      await this.saveInsights(serviceInsights);
+      try {
+        console.log('💾 [ServiceInsights] Salvando insights para serviceId:', serviceId);
+        await this.saveInsights(serviceInsights);
+        console.log('✅ [ServiceInsights] Insights salvos com sucesso');
+      } catch (saveError) {
+        console.error('⚠️ [ServiceInsights] Erro ao salvar insights (continuando sem salvar):', saveError);
+        // Não bloquear o retorno dos insights se houver erro ao salvar
+      }
 
       console.log('🎯 Insights gerados com sucesso');
       return serviceInsights;
@@ -544,11 +552,21 @@ export class ThematicReviewService {
   }
 
   private static async saveInsights(insights: ServiceInsights) {
-    const insightsRef = doc(db, 'serviceInsights', insights.serviceId);
-    await updateDoc(insightsRef, {
-      ...insights,
-      lastUpdated: serverTimestamp()
-    });
+    try {
+      console.log('🔥 [saveInsights] Criando referência para serviceId:', insights.serviceId);
+      const insightsRef = doc(db, 'serviceInsights', insights.serviceId);
+      
+      console.log('📤 [saveInsights] Salvando documento com setDoc...');
+      await setDoc(insightsRef, {
+        ...insights,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
+      
+      console.log('✅ [saveInsights] Documento salvo com sucesso');
+    } catch (error) {
+      console.error('❌ [saveInsights] Erro ao salvar insights:', error);
+      throw error;
+    }
   }
 
   private static getSortField(sortBy: string): string {

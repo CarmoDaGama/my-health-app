@@ -1775,7 +1775,7 @@ export const setLanguage = (language: string): void => {
  */
 export const getAvailableLanguages = () => {
   return [
-    { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
+    { code: 'pt', name: 'Portuguese', nativeName: 'Portuguese' },
     { code: 'en', name: 'English', nativeName: 'English' }
   ];
 };

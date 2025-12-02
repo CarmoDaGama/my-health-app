@@ -274,7 +274,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           
           <TouchableOpacity
             style={[styles.reviewButton, styles.viewAllButton]}
-            onPress={() => setShowAllReviews(true)}
+            onPress={handleShowReviews}
           >
             <Ionicons name="list" size={16} color="#666" />
             <Text style={[styles.reviewButtonText, { color: '#666' }]}>
@@ -427,7 +427,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
           
           <TouchableOpacity
             style={[styles.reviewButton, styles.viewAllButton]}
-            onPress={() => setShowAllReviews(true)}
+            onPress={handleShowReviews}
           >
             <Ionicons name="list" size={16} color="#666" />
             <Text style={[styles.reviewButtonText, { color: '#666' }]}>
