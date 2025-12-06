@@ -6,6 +6,7 @@ import i18n, {
   saveUserLanguagePreference
 } from '../utils/i18n';
 import { getLocales } from 'expo-localization';
+import { getCountryConfig, DEFAULT_COUNTRY } from '../utils/countries';
 
 // Estado global para forçar re-render quando idioma muda
 let globalTranslationUpdateId = 0;
@@ -132,20 +133,36 @@ export const useTranslation = () => {
   };
 };
 
-// Hook para formatação de números e datas no contexto angolano
+// Hook para formatação de números e datas internacionais
 export const useLocalization = () => {
   const { locale } = useTranslation();
 
-  const formatCurrency = (amount: number) => {
-    // Formato de moeda angolana (Kwanza)
-    return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'pt-AO', {
+  const formatCurrency = (amount: number, countryCode?: string) => {
+    // Obter configuração do país atual ou padrão
+    const targetCountry = countryCode || DEFAULT_COUNTRY;
+    const countryConfig = getCountryConfig(targetCountry);
+    
+    if (!countryConfig) {
+      // Fallback para formato angolano
+      return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'pt-AO', {
+        style: 'currency',
+        currency: 'AOA',
+      }).format(amount);
+    }
+
+    // Usar configuração do país
+    return new Intl.NumberFormat(countryConfig.locale, {
       style: 'currency',
-      currency: 'AOA',
+      currency: countryConfig.currency,
     }).format(amount);
   };
 
-  const formatNumber = (number: number, decimals = 0) => {
-    return new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'pt-AO', {
+  const formatNumber = (number: number, decimals = 0, countryCode?: string) => {
+    const targetCountry = countryCode || DEFAULT_COUNTRY;
+    const countryConfig = getCountryConfig(targetCountry);
+    const targetLocale = countryConfig?.locale || (locale === 'en' ? 'en-US' : 'pt-AO');
+    
+    return new Intl.NumberFormat(targetLocale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(number);

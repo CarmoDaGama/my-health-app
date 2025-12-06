@@ -1,83 +1,88 @@
 /**
- * Validation utilities for Angolan data and geographic coordinates
+ * Validation utilities for international data and geographic coordinates
  */
 
-// Validation of Angolan phone numbers
+import { 
+  getCountryConfig, 
+  detectCountryByPhone, 
+  isValidGlobalCoordinates,
+  DEFAULT_COUNTRY 
+} from './countries';
+
+// Validation of international phone numbers
 export interface PhoneValidationResult {
   isValid: boolean;
   formatted?: string;
   error?: string;
-  operator?: 'Unitel' | 'Movicel' | 'Africell' | 'Unknown';
+  operator?: string;
+  country?: string;
 }
 
 /**
- * Valida números de telefone angolanos
- * Formatos aceitos:
- * - +244 9XX XXX XXX (formato internacional)
- * - 9XX XXX XXX (formato nacional)
- * - 2XX XXX XXX (fixos)
+ * Valida números de telefone internacionais
+ * Suporta múltiplos países através do sistema de configuração
  */
-export const validateAngolanPhoneNumber = (phone: string): PhoneValidationResult => {
+export const validateInternationalPhone = (phone: string, countryCode?: string): PhoneValidationResult => {
   if (!phone) {
     return { isValid: false, error: 'Número de telefone é obrigatório' };
   }
 
-  // Remover espaços, hífens e parênteses
-  const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+  // Remover espaços, hífens e parênteses para validação
+  const cleanPhone = phone.replace(/[\s\-\(\)\.]/g, '');
 
   // Verificar se contém apenas números e + no início
   if (!/^\+?[0-9]+$/.test(cleanPhone)) {
     return { isValid: false, error: 'Número deve conter apenas dígitos' };
   }
 
-  let nationalNumber = '';
-  
-  // Verificar formato internacional (+244)
-  if (cleanPhone.startsWith('+244')) {
-    nationalNumber = cleanPhone.substring(4);
-  } else if (cleanPhone.startsWith('244')) {
-    nationalNumber = cleanPhone.substring(3);
-  } else {
-    nationalNumber = cleanPhone;
+  // Detectar país automaticamente ou usar o fornecido
+  const detectedCountry = countryCode || detectCountryByPhone(cleanPhone) || DEFAULT_COUNTRY;
+  const countryConfig = getCountryConfig(detectedCountry);
+
+  if (!countryConfig) {
+    return { 
+      isValid: false, 
+      error: `País ${detectedCountry} não suportado`,
+      country: detectedCountry 
+    };
   }
 
-  // Validar comprimento (9 dígitos para móveis, 9 para fixos)
-  if (nationalNumber.length !== 9) {
-    return { isValid: false, error: 'Número deve ter 9 dígitos' };
-  }
+  // Validar contra o padrão do país
+  const isValid = countryConfig.phone.regex.test(phone);
 
-  // Verificar prefixos válidos
-  const firstThreeDigits = nationalNumber.substring(0, 3);
-  let operator: PhoneValidationResult['operator'] = 'Unknown';
-
-  // Móveis
-  if (['923', '924', '925', '926', '927', '928', '929'].includes(firstThreeDigits)) {
-    operator = 'Unitel';
-  } else if (['930', '931', '932', '933', '934', '935', '936', '937'].includes(firstThreeDigits)) {
-    operator = 'Movicel';
-  } else if (['940', '941', '942', '943', '944', '945', '946', '947'].includes(firstThreeDigits)) {
-    operator = 'Africell';
-  } 
-  // Fixos Luanda (2XX)
-  else if (nationalNumber.startsWith('2')) {
-    const secondDigit = nationalNumber.charAt(1);
-    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(secondDigit)) {
-      operator = 'Unknown'; // Telefones fixos
-    } else {
-      return { isValid: false, error: 'Prefixo de telefone fixo inválido' };
-    }
-  } else {
-    return { isValid: false, error: 'Prefixo não reconhecido para Angola' };
+  if (!isValid) {
+    return {
+      isValid: false,
+      error: `Formato de telefone inválido para ${countryConfig.name}. Use o formato: ${countryConfig.phone.format}`,
+      country: detectedCountry
+    };
   }
 
   // Formatar número
-  const formatted = `+244 ${nationalNumber.substring(0, 3)} ${nationalNumber.substring(3, 6)} ${nationalNumber.substring(6)}`;
+  let formattedPhone = cleanPhone;
+  const countryCodeNum = countryConfig.phone.countryCode.substring(1);
+  
+  if (!formattedPhone.startsWith('+')) {
+    if (formattedPhone.startsWith(countryCodeNum)) {
+      formattedPhone = '+' + formattedPhone;
+    } else {
+      formattedPhone = countryConfig.phone.countryCode + formattedPhone;
+    }
+  }
 
   return {
     isValid: true,
-    formatted,
-    operator
+    formatted: formattedPhone,
+    country: detectedCountry,
+    operator: 'Valid'
   };
+};
+
+/**
+ * Função legada para compatibilidade - valida números angolanos
+ */
+export const validateAngolanPhoneNumber = (phone: string): PhoneValidationResult => {
+  return validateInternationalPhone(phone, 'AO');
 };
 
 // Validação de coordenadas geográficas
@@ -91,15 +96,14 @@ export interface CoordinateValidationResult {
 }
 
 /**
- * Valida coordenadas geográficas para Angola
- * Angola fica entre:
- * - Latitude: -18.0 a -4.0
- * - Longitude: 11.0 a 24.0
+ * Valida coordenadas geográficas internacionais
+ * Suporta validação para qualquer país através do sistema de configuração
  */
-export const validateAngolanCoordinates = (
+export const validateInternationalCoordinates = (
   latitude: number | string, 
-  longitude: number | string
-): CoordinateValidationResult => {
+  longitude: number | string,
+  countryCode?: string
+): CoordinateValidationResult & { country?: string } => {
   const lat = typeof latitude === 'string' ? parseFloat(latitude) : latitude;
   const lng = typeof longitude === 'string' ? parseFloat(longitude) : longitude;
 
@@ -107,6 +111,7 @@ export const validateAngolanCoordinates = (
     return { isValid: false, error: 'Coordenadas devem ser números válidos' };
   }
 
+  // Validações básicas globais
   if (lat < -90 || lat > 90) {
     return { isValid: false, error: 'Latitude deve estar entre -90 e 90 graus' };
   }
@@ -115,19 +120,60 @@ export const validateAngolanCoordinates = (
     return { isValid: false, error: 'Longitude deve estar entre -180 e 180 graus' };
   }
 
-  // Verificar se as coordenadas estão dentro de Angola (aproximadamente)
-  const isInAngola = lat >= -18.5 && lat <= -4.0 && lng >= 11.0 && lng <= 24.5;
+  // Se não há país especificado, usar validação global
+  if (!countryCode) {
+    return {
+      isValid: true,
+      coordinates: { latitude: lat, longitude: lng },
+      country: 'Global'
+    };
+  }
+
+  const countryConfig = getCountryConfig(countryCode);
   
-  if (!isInAngola) {
+  if (!countryConfig) {
+    // Se país não suportado, permitir coordenadas globais
+    return {
+      isValid: true,
+      coordinates: { latitude: lat, longitude: lng },
+      country: countryCode
+    };
+  }
+
+  // Verificar se as coordenadas estão dentro do país
+  const bounds = countryConfig.coordinates;
+  const isInCountry = lat <= bounds.north && 
+                     lat >= bounds.south && 
+                     lng <= bounds.east && 
+                     lng >= bounds.west;
+  
+  if (!isInCountry) {
     return { 
       isValid: false, 
-      error: 'Coordenadas estão fora do território angolano' 
+      error: `Coordenadas estão fora do território de ${countryConfig.name}`,
+      country: countryCode
     };
   }
 
   return {
     isValid: true,
-    coordinates: { latitude: lat, longitude: lng }
+    coordinates: { latitude: lat, longitude: lng },
+    country: countryCode
+  };
+};
+
+/**
+ * Função legada para compatibilidade - valida coordenadas angolanas
+ */
+export const validateAngolanCoordinates = (
+  latitude: number | string, 
+  longitude: number | string
+): CoordinateValidationResult => {
+  const result = validateInternationalCoordinates(latitude, longitude, 'AO');
+  return {
+    isValid: result.isValid,
+    error: result.error,
+    coordinates: result.coordinates
   };
 };
 

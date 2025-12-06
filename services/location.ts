@@ -1,6 +1,7 @@
 import { Alert, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { Coordinates } from '../types';
+import { getCountryConfig, detectCountryByCoordinates, DEFAULT_COUNTRY } from '../utils/countries';
 
 export interface LocationResult {
   coordinates: Coordinates;
@@ -124,14 +125,17 @@ export class LocationService {
         throw new Error('Coordenadas inválidas');
       }
       
-      // Verificar se as coordenadas estão em Angola (para o contexto da aplicação)
-      if (!this.isLocationInAngola(result.coordinates)) {
-        console.log('⚠️ Localização fora de Angola:', result.coordinates);
+      // Detectar país baseado nas coordenadas
+      const detectedCountry = detectCountryByCoordinates(result.coordinates.latitude, result.coordinates.longitude);
+      const countryConfig = getCountryConfig(detectedCountry);
+      
+      if (detectedCountry !== DEFAULT_COUNTRY) {
+        console.log(`🌍 Localização detectada em: ${countryConfig?.name || detectedCountry}`);
         
-        // Ainda retornamos a localização real, mas log da situação
+        // Informar sobre o país detectado
         Alert.alert(
           'Localização Detectada',
-          'Você parece estar fora de Angola. Os serviços mostrados podem ser limitados.',
+          `Você está em ${countryConfig?.name || detectedCountry}. Os serviços serão adaptados para sua região.`,
           [{ text: 'OK' }]
         );
       }
@@ -203,7 +207,7 @@ export class LocationService {
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
         {
           headers: {
-            'User-Agent': 'HealthApp/1.0 (Angola Health Services Locator)',
+            'User-Agent': 'HealthApp/1.0 (International Health Services Locator)',
           },
         }
       );
@@ -234,12 +238,16 @@ export class LocationService {
     } catch (error) {
       console.error('❌ Erro no reverse geocoding:', error);
       
+      // Detectar país pelas coordenadas para fallback
+      const detectedCountry = detectCountryByCoordinates(latitude, longitude);
+      const fallbackCountryConfig = getCountryConfig(detectedCountry);
+      
       // Fallback: retornar coordenadas formatadas
       return {
         formattedAddress: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
         city: 'Localização Desconhecida',
-        region: 'Angola',
-        country: 'Angola',
+        region: fallbackCountryConfig?.name || 'Unknown',
+        country: fallbackCountryConfig?.name || 'Unknown',
       };
     }
   }
@@ -491,16 +499,22 @@ export class LocationService {
       console.log('⚠️ Fallback de rede falhou, usando localização padrão...', error);
     }
 
-    // Fallback 2: Localização padrão (Luanda, Angola)
-    console.log('📍 Usando localização padrão (Luanda, Angola)');
+    // Fallback 2: Localização padrão baseada no país padrão
+    const defaultCountryConfig = getCountryConfig(DEFAULT_COUNTRY);
+    const defaultCoords = defaultCountryConfig ? {
+      latitude: (defaultCountryConfig.coordinates.north + defaultCountryConfig.coordinates.south) / 2,
+      longitude: (defaultCountryConfig.coordinates.east + defaultCountryConfig.coordinates.west) / 2,
+    } : {
+      latitude: -8.8383, // Luanda como fallback final
+      longitude: 13.2344,
+    };
+    
+    console.log(`📍 Usando localização padrão (${defaultCountryConfig?.name || 'Angola'})`);
     return {
-      coordinates: {
-        latitude: -8.8383, // Coordenadas mais precisas de Luanda
-        longitude: 13.2344,
-      },
+      coordinates: defaultCoords,
       accuracy: 50000, // 50km de precisão (muito baixa)
       timestamp: Date.now(),
-      address: 'Luanda, Angola (Localização Padrão)',
+      address: `${defaultCountryConfig?.name || 'Angola'} (Localização Padrão)`,
     };
   }
 
@@ -531,7 +545,7 @@ export class LocationService {
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
         {
           headers: {
-            'User-Agent': 'HealthApp/1.0 (Angola Health Services Locator)',
+            'User-Agent': 'HealthApp/1.0 (International Health Services Locator)',
           },
         }
       );
@@ -561,22 +575,29 @@ export class LocationService {
   }
 
   /**
-   * Verificar se uma localização está dentro de uma área específica
+   * Verificar se uma localização está dentro de um país específico
+   */
+  static isLocationInCountry(coordinates: Coordinates, countryCode?: string): boolean {
+    const targetCountry = countryCode || DEFAULT_COUNTRY;
+    const countryConfig = getCountryConfig(targetCountry);
+    
+    if (!countryConfig) {
+      return false;
+    }
+
+    const bounds = countryConfig.coordinates;
+    return (
+      coordinates.latitude >= bounds.south &&
+      coordinates.latitude <= bounds.north &&
+      coordinates.longitude >= bounds.west &&
+      coordinates.longitude <= bounds.east
+    );
+  }
+
+  /**
+   * Função legada para compatibilidade - verifica se está em Angola
    */
   static isLocationInAngola(coordinates: Coordinates): boolean {
-    // Limites aproximados de Angola
-    const angolaBounds = {
-      north: -4.376,
-      south: -18.042,
-      east: 24.084,
-      west: 11.679,
-    };
-
-    return (
-      coordinates.latitude >= angolaBounds.south &&
-      coordinates.latitude <= angolaBounds.north &&
-      coordinates.longitude >= angolaBounds.west &&
-      coordinates.longitude <= angolaBounds.east
-    );
+    return this.isLocationInCountry(coordinates, 'AO');
   }
 }
