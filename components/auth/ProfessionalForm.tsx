@@ -195,11 +195,11 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         required
       />
 
-      {/* Seção de Coordenadas */}
+      {/* Seção de Coordenadas - Opcional */}
       <View style={styles.coordinatesSection}>
-        <Text style={styles.label}>{t('forms.exactLocation')}</Text>
+        <Text style={styles.label}>{t('forms.exactLocation')} ({t('common.optional') || 'Optional'})</Text>
         <Text style={styles.coordinatesHelp}>
-          {t('app.locationPrecisionProfessional')}
+          {t('app.locationPrivacyNote') || 'Your exact location helps patients find you. You can choose to show only your city/neighborhood for privacy.'}
         </Text>
         
         {coordinates ? (

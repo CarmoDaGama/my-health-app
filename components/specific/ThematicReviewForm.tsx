@@ -13,6 +13,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize } from '../../constants';
@@ -273,9 +275,18 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
   const progressPercent = (completedCategories / availableCategories.length) * 100;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.serviceName}>{typeof service.name === 'string' ? service.name : 'Service'}</Text>
@@ -416,7 +427,8 @@ export const ThematicReviewForm: React.FC<ThematicReviewFormProps> = ({
           <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

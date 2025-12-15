@@ -38,6 +38,7 @@ interface ReviewCardProps {
 
 interface CategoryStatsProps {
   insights: ServiceInsights;
+  t: (key: string) => string;
 }
 
 const StarDisplay: React.FC<{ rating: number; size?: number }> = ({ 
@@ -59,13 +60,13 @@ const StarDisplay: React.FC<{ rating: number; size?: number }> = ({
   );
 };
 
-const CategoryStatsCard: React.FC<CategoryStatsProps> = ({ insights }) => {
+const CategoryStatsCard: React.FC<CategoryStatsProps> = ({ insights, t }) => {
   const serviceType = insights.serviceType as ServiceType;
   const categories = REVIEW_CATEGORIES[serviceType] || [];
 
   return (
     <View style={styles.statsCard}>
-      <Text style={styles.statsTitle}>Reviews by Category</Text>
+      <Text style={styles.statsTitle}>{t('reviews.title') || 'Reviews by Category'}</Text>
       
       {insights.categoryStats.map((stat) => {
         const category = categories.find(cat => cat.id === stat.categoryId);
@@ -91,7 +92,7 @@ const CategoryStatsCard: React.FC<CategoryStatsProps> = ({ insights }) => {
               <View style={styles.categoryStatText}>
                 <Text style={styles.categoryStatName}>{category.name}</Text>
                 <Text style={styles.categoryStatCount}>
-                  {stat.reviewCount} avaliações
+                  {stat.reviewCount} {t('reviews.reviewsCount') || 'reviews'}
                 </Text>
               </View>
             </View>
@@ -120,12 +121,12 @@ const CategoryStatsCard: React.FC<CategoryStatsProps> = ({ insights }) => {
       {/* Overall Summary */}
       <View style={styles.overallSummary}>
         <View style={styles.overallRating}>
-          <Text style={styles.overallLabel}>Nota Geral:</Text>
+          <Text style={styles.overallLabel}>{t('reviews.overallRating') || 'Overall Rating'}:</Text>
           <Text style={styles.overallValue}>{insights.overallRating.toFixed(1)}</Text>
           <StarDisplay rating={Math.round(insights.overallRating)} size={18} />
         </View>
         <Text style={styles.totalReviews}>
-          Baseado em {insights.totalReviews} avaliações
+          {t('reviews.basedOn') || 'Based on'} {insights.totalReviews} {t('reviews.reviewsCount') || 'reviews'}
         </Text>
       </View>
     </View>
@@ -364,7 +365,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
         )
       );
     } catch (error) {
-      console.error('Erro ao marcar review como útil:', error);
+      console.error('Error marking review as helpful:', error);
     }
   };
 
@@ -372,7 +373,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Carregando avaliações...</Text>
+        <Text style={styles.loadingText}>{t('reviews.loadingReviews') || 'Loading reviews...'}</Text>
       </View>
     );
   }
@@ -396,7 +397,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
       {/* Statistics and Insights */}
       {insights && (
         <>
-          <CategoryStatsCard insights={insights} />
+          <CategoryStatsCard insights={insights} t={t} />
           <InsightsCard insights={insights} />
         </>
       )}
@@ -423,7 +424,7 @@ export const ServiceReviews: React.FC<ServiceReviewsProps> = ({
                 Be the first to rate this service and help other users!
             </Text>
             <TouchableOpacity style={styles.firstReviewButton} onPress={onWriteReview}>
-              <Text style={styles.firstReviewButtonText}>Fazer Primeira Avaliação</Text>
+                <Text style={styles.firstReviewButtonText}>Make First Assessment</Text>
             </TouchableOpacity>
           </View>
         )}

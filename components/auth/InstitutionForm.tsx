@@ -13,33 +13,6 @@ interface InstitutionFormProps {
   errors: Record<string, string>;
 }
 
-const AVAILABLE_SERVICES = [
-  'Emergência',
-  'Cirurgia',
-  'Pediatria',
-  'Cardiologia',
-  'Consultas',
-  'Exames',
-  'Vacinação',
-  'Check-up',
-  'Laboratório',
-  'Radiologia',
-  'Fisioterapia',
-  'Nutrição',
-  'Psicologia',
-  'Ginecologia',
-  'Urologia',
-  'Dermatologia',
-  'Oftalmologia',
-  'Ortopedia',
-  'Neurologia',
-  'Oncologia',
-  'Farmácia',
-  'Internação',
-  'UTI',
-  'Maternidade'
-];
-
 export default function InstitutionForm({ data, onChange, errors }: InstitutionFormProps) {
   const { t } = useTranslation();
   
@@ -48,6 +21,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
     t('medicalServices.emergency'),
     t('medicalServices.surgery'),
     t('medicalServices.pediatrics'),
+    t('medicalServices.caregiving'),
     t('medicalServices.cardiology'),
     t('medicalServices.consultations'),
     t('medicalServices.exams'),
@@ -78,6 +52,7 @@ export default function InstitutionForm({ data, onChange, errors }: InstitutionF
     { label: t('serviceTypes.types.clinic'), value: 'clinic' },
     { label: t('serviceTypes.types.laboratory'), value: 'laboratory' },
     { label: t('serviceTypes.types.pharmacy'), value: 'pharmacy' },
+    { label: t('serviceTypes.types.caregivingAgency'), value: 'caregiving_agency' },
     { label: t('common.other'), value: 'other' },
   ];
 

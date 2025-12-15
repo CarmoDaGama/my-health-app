@@ -57,7 +57,7 @@ const translations = {
       alreadyLoggedInMessage: 'You are already logged into the system.',
       user: 'User',
       selectAccountType: 'Account Type',
-      fullName: 'Full Name',
+      fullName: 'Your Full Name',
       fullNamePlaceholder: 'Your full name',
       emailAddress: 'Email Address',
       emailAddressPlaceholder: 'your@email.com',
@@ -98,6 +98,7 @@ const translations = {
       openEmailAppInstruction: 'Please open your email app to check for the verification message.',
       checkEmail: 'Check Email',
       emailNotVerified: 'Email Not Verified',
+      iVerified: 'I Verified My Email',
       
       // Account status validations
       accountInactive: 'Account Inactive',
@@ -251,6 +252,8 @@ const translations = {
       dental: 'Dental',
       physiotherapy: 'Physiotherapy',
       psychology: 'Psychology',
+      caregiving: 'Caregiving',
+      caregiver: 'Caregiver',
       
       // Errors
       errors: {
@@ -300,6 +303,7 @@ const translations = {
       no: 'No',
       contactSupport: 'Contact Support',
       other: 'Other',
+      optional: 'Optional',
       loading: 'Loading...',
       saving: 'Saving...',
       success: 'Success',
@@ -364,6 +368,7 @@ const translations = {
       loadingMap: 'Loading OpenStreetMap...',
       locationError: 'Location Error',
       locationGpsError: 'Could not get your location via GPS. Use manual selection on the map.',
+      locationPrivacyNote: 'Your exact location helps patients find you. You can choose to show only your city/neighborhood for privacy.',
       optimizingView: 'Optimizing view...',
       adjustOnMap: '📍 Adjust on Map',
       selectOnMap: '🗺️ Select on Map',
@@ -392,6 +397,7 @@ const translations = {
         clinic: 'Clinic',
         laboratory: 'Laboratory',
         pharmacy: 'Pharmacy',
+        caregivingAgency: 'Care Giving Agency',
       },
       healthProfessionals: 'Health Professionals',
       healthInstitutions: 'Health Institutions',
@@ -413,11 +419,14 @@ const translations = {
       verified: 'Verified',
       basedOn: 'Based on',
       reviews: 'reviews',
+      reviewsCount: 'reviews',
+      loadingReviews: 'Loading reviews...',
       noReviews: 'No reviews yet',
       firstReview: 'Be the first to review',
+      recentReviews: 'Recent Reviews',
+      reviewsOf: 'Reviews of',
       title: 'Reviews',
       allReviews: 'All Reviews',
-      reviewsCount: 'reviews',
       sortBy: 'Sort by:',
       loadingMore: 'Loading more reviews...',
       loading: 'Loading reviews...',
@@ -472,8 +481,6 @@ const translations = {
         lowestRating: 'Lowest Rating',
         mostHelpful: 'Most Helpful'
       },
-      reviewsOf: 'Reviews of',
-      recentReviews: 'Recent Reviews',
       overallAverage: 'Overall Average',
       review: 'Review',
       reviewCount: 'review',
@@ -901,7 +908,7 @@ const translations = {
       alreadyLoggedInMessage: 'Você já está logado no sistema.',
       user: 'Usuário',
       selectAccountType: 'Tipo de Conta',
-      fullName: 'Nome Completo',
+      fullName: 'Seu Nome Completo',
       fullNamePlaceholder: 'Seu nome completo',
       emailAddress: 'Email',
       emailAddressPlaceholder: 'seu@email.com',
@@ -942,6 +949,7 @@ const translations = {
       openEmailAppInstruction: 'Por favor, abra seu aplicativo de email para verificar a mensagem de verificação.',
       checkEmail: 'Verificar Email',
       emailNotVerified: 'Email Não Verificado',
+      iVerified: 'Já Verifiquei Meu Email',
       
       // Account status validations
       accountInactive: 'Conta Inativa',
@@ -1095,6 +1103,8 @@ const translations = {
       dental: 'Odontologia',
       physiotherapy: 'Fisioterapia',
       psychology: 'Psicologia',
+      caregiving: 'Cuidados',
+      caregiver: 'Cuidador',
       
       // Erros
       errors: {
@@ -1144,6 +1154,7 @@ const translations = {
       no: 'Não',
       contactSupport: 'Entrar em Contato',
       other: 'Outro',
+      optional: 'Opcional',
       loading: 'Carregando...',
       saving: 'Salvando...',
       success: 'Sucesso',
@@ -1208,6 +1219,7 @@ const translations = {
       loadingMap: 'Carregando mapa OpenStreetMap...',
       locationError: 'Erro ao obter localização',
       locationGpsError: 'Não foi possível obter sua localização via GPS. Use a seleção manual no mapa.',
+      locationPrivacyNote: 'Sua localização exata ajuda pacientes a encontrar você. Você pode optar por mostrar apenas sua cidade/bairro por privacidade.',
       optimizingView: 'Otimizando visualização...',
       adjustOnMap: '📍 Ajustar no Mapa',
       selectOnMap: '🗺️ Selecionar no Mapa',
@@ -1236,6 +1248,7 @@ const translations = {
         clinic: 'Clínica',
         laboratory: 'Laboratório',
         pharmacy: 'Farmácia',
+        caregivingAgency: 'Agência de Cuidadores',
       },
       healthProfessionals: 'Profissionais de Saúde',
       healthInstitutions: 'Instituições de Saúde',
@@ -1257,8 +1270,12 @@ const translations = {
       verified: 'Verificado',
       basedOn: 'Baseado em',
       reviews: 'avaliações',
+      reviewsCount: 'avaliações',
+      loadingReviews: 'Carregando avaliações...',
       noReviews: 'Nenhuma avaliação ainda',
       firstReview: 'Seja o primeiro a avaliar',
+      recentReviews: 'Avaliações Recentes',
+      reviewsOf: 'Avaliações de',
       categories: {
         infrastructure: 'Infraestrutura',
         medical_care: 'Atendimento Médico',
@@ -1297,8 +1314,6 @@ const translations = {
         lowestRating: 'Menor Nota',
         mostHelpful: 'Mais Úteis'
       },
-      reviewsOf: 'Avaliações de',
-      recentReviews: 'Avaliações Recentes',
       overallAverage: 'Média Geral',
       review: 'Avaliação',
       reviewCount: 'avaliação',

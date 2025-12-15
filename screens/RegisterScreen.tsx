@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { RegisterScreenNavigationProp } from '../types/navigation';
 import { RegisterData, UserType } from '../types';
 import { useAuth } from '../hooks/useAuth-firebase';
+import { validateInternationalPhone } from '../utils/validation';
 import { useTranslation } from '../hooks/useTranslation';
 import { Colors } from '../constants/colors';
 import { spacing } from '../constants/dimensions';
@@ -104,10 +105,11 @@ export default function RegisterScreen() {
     return emailRegex.test(email);
   };
 
-  const isValidAngolanPhone = (phone: string): boolean => {
-    // Formato angolano: +244 9xx xxx xxx ou 9xx xxx xxx
-    const phoneRegex = /^(\+244\s?)?9[0-9]{8}$/;
-    return phoneRegex.test(phone.replace(/\s/g, ''));
+  const isValidPhone = (phone: string): boolean => {
+    // International phone validation - supports multiple countries
+    if (!phone || phone.trim().length === 0) return false;
+    const result = validateInternationalPhone(phone);
+    return result.isValid;
   };
 
   const validateForm = (): boolean => {
@@ -127,10 +129,13 @@ export default function RegisterScreen() {
     // Validations specific to user type
     if (formData.userType === UserType.PROFESSIONAL) {
       if (!formData.professionalInfo?.specialty) {
-        newErrors.specialty = t('validation.specialtyRequired') || 'Especialidade é obrigatória';
+        newErrors.specialty = t('validation.specialtyRequired') || 'Specialty is required';
       }
-      if (!formData.professionalInfo?.license) {
-        newErrors.license = t('validation.licenseRequired') || 'Número da licença é obrigatório';
+      // License is not required for Caregivers
+      const isCaregiver = formData.professionalInfo?.specialty?.toLowerCase().includes('caregiver') || 
+                          formData.professionalInfo?.specialty?.toLowerCase().includes('cuidador');
+      if (!isCaregiver && !formData.professionalInfo?.license) {
+        newErrors.license = t('validation.licenseRequired') || 'License number is required';
       }
     }
 

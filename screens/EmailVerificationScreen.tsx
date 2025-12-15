@@ -160,11 +160,10 @@ export default function EmailVerificationScreen() {
           />
 
           <Button
-            title={isChecking ? t('common.loading') : 'Já Verifiquei'}
+            title={isChecking ? t('common.loading') : (t('auth.iVerified') || 'I Verified My Email')}
             onPress={handleCheckVerification}
             disabled={isChecking}
             loading={isChecking}
-            variant="outline"
           />
 
           <TouchableOpacity

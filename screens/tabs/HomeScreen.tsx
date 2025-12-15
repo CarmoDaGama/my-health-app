@@ -384,8 +384,8 @@ export const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Sub-tabs Header */}
       <View style={styles.subTabsContainer}>
-        {renderSubTabButton('map', 'map-outline', 'Map')}
-        {renderSubTabButton('list', 'list-outline', 'List')}
+        {renderSubTabButton('map', 'business-outline', t('serviceTypes.healthInstitutions') || 'Institutions')}
+        {renderSubTabButton('list', 'people-outline', t('serviceTypes.healthProfessionals') || 'Healthcare Professionals')}
       </View>
 
       {/* Content */}
