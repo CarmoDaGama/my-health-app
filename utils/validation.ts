@@ -24,15 +24,15 @@ export interface PhoneValidationResult {
  */
 export const validateInternationalPhone = (phone: string, countryCode?: string): PhoneValidationResult => {
   if (!phone) {
-    return { isValid: false, error: 'Número de telefone é obrigatório' };
+    return { isValid: false, error: 'Phone number is required' };
   }
 
   // Remover espaços, hífens e parênteses para validação
   const cleanPhone = phone.replace(/[\s\-\(\)\.]/g, '');
 
-  // Verificar se contém apenas números e + no início
+  // Check if contains only numbers and + at the beginning
   if (!/^\+?[0-9]+$/.test(cleanPhone)) {
-    return { isValid: false, error: 'Número deve conter apenas dígitos' };
+    return { isValid: false, error: 'Number must contain only digits' };
   }
 
   // Detectar país automaticamente ou usar o fornecido
@@ -42,7 +42,7 @@ export const validateInternationalPhone = (phone: string, countryCode?: string):
   if (!countryConfig) {
     return { 
       isValid: false, 
-      error: `País ${detectedCountry} não suportado`,
+      error: `Country ${detectedCountry} not supported`,
       country: detectedCountry 
     };
   }
@@ -53,12 +53,12 @@ export const validateInternationalPhone = (phone: string, countryCode?: string):
   if (!isValid) {
     return {
       isValid: false,
-      error: `Formato de telefone inválido para ${countryConfig.name}. Use o formato: ${countryConfig.phone.format}`,
+      error: `Invalid phone format for ${countryConfig.name}. Use format: ${countryConfig.phone.format}`,
       country: detectedCountry
     };
   }
 
-  // Formatar número
+  // Format number
   let formattedPhone = cleanPhone;
   const countryCodeNum = countryConfig.phone.countryCode.substring(1);
   
@@ -108,19 +108,19 @@ export const validateInternationalCoordinates = (
   const lng = typeof longitude === 'string' ? parseFloat(longitude) : longitude;
 
   if (isNaN(lat) || isNaN(lng)) {
-    return { isValid: false, error: 'Coordenadas devem ser números válidos' };
+    return { isValid: false, error: 'Coordinates must be valid numbers' };
   }
 
-  // Validações básicas globais
+  // Basic global validations
   if (lat < -90 || lat > 90) {
-    return { isValid: false, error: 'Latitude deve estar entre -90 e 90 graus' };
+    return { isValid: false, error: 'Latitude must be between -90 and 90 degrees' };
   }
 
   if (lng < -180 || lng > 180) {
-    return { isValid: false, error: 'Longitude deve estar entre -180 e 180 graus' };
+    return { isValid: false, error: 'Longitude must be between -180 and 180 degrees' };
   }
 
-  // Se não há país especificado, usar validação global
+  // If no country specified, use global validation
   if (!countryCode) {
     return {
       isValid: true,
@@ -132,7 +132,7 @@ export const validateInternationalCoordinates = (
   const countryConfig = getCountryConfig(countryCode);
   
   if (!countryConfig) {
-    // Se país não suportado, permitir coordenadas globais
+    // If country not supported, allow global coordinates
     return {
       isValid: true,
       coordinates: { latitude: lat, longitude: lng },
@@ -140,7 +140,7 @@ export const validateInternationalCoordinates = (
     };
   }
 
-  // Verificar se as coordenadas estão dentro do país
+  // Check if coordinates are within the country
   const bounds = countryConfig.coordinates;
   const isInCountry = lat <= bounds.north && 
                      lat >= bounds.south && 
@@ -150,7 +150,7 @@ export const validateInternationalCoordinates = (
   if (!isInCountry) {
     return { 
       isValid: false, 
-      error: `Coordenadas estão fora do território de ${countryConfig.name}`,
+      error: `Coordinates are outside the territory of ${countryConfig.name}`,
       country: countryCode
     };
   }
@@ -189,26 +189,26 @@ export interface AddressValidationResult {
  */
 export const validateAngolanAddress = (address: string): AddressValidationResult => {
   if (!address || address.trim().length === 0) {
-    return { isValid: false, error: 'Endereço é obrigatório' };
+    return { isValid: false, error: 'Address is required' };
   }
 
   const trimmedAddress = address.trim();
 
   if (trimmedAddress.length < 5) {
-    return { isValid: false, error: 'Endereço muito curto' };
+    return { isValid: false, error: 'Address too short' };
   }
 
   if (trimmedAddress.length > 200) {
-    return { isValid: false, error: 'Endereço muito longo' };
+    return { isValid: false, error: 'Address too long' };
   }
 
-  // Verificar se contém pelo menos algumas palavras
+  // Check if contains at least some words
   const words = trimmedAddress.split(/\s+/);
   if (words.length < 2) {
-    return { isValid: false, error: 'Endereço deve conter pelo menos duas palavras' };
+    return { isValid: false, error: 'Address must contain at least two words' };
   }
 
-  // Formatar endereço (primeira letra maiúscula de cada palavra)
+  // Format address (capitalize first letter of each word)
   const formatted = trimmedAddress
     .toLowerCase()
     .split(' ')
@@ -224,13 +224,13 @@ export const validateAngolanAddress = (address: string): AddressValidationResult
 // Validação de emails
 export const validateEmail = (email: string): { isValid: boolean; error?: string } => {
   if (!email) {
-    return { isValid: false, error: 'Email é obrigatório' };
+    return { isValid: false, error: 'Email is required' };
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
   if (!emailRegex.test(email)) {
-    return { isValid: false, error: 'Formato de email inválido' };
+    return { isValid: false, error: 'Invalid email format' };
   }
 
   return { isValid: true };
@@ -239,22 +239,22 @@ export const validateEmail = (email: string): { isValid: boolean; error?: string
 // Validação de nomes
 export const validateName = (name: string): { isValid: boolean; error?: string } => {
   if (!name || name.trim().length === 0) {
-    return { isValid: false, error: 'Nome é obrigatório' };
+    return { isValid: false, error: 'Name is required' };
   }
 
   const trimmedName = name.trim();
 
   if (trimmedName.length < 2) {
-    return { isValid: false, error: 'Nome deve ter pelo menos 2 caracteres' };
+    return { isValid: false, error: 'Name must be at least 2 characters' };
   }
 
   if (trimmedName.length > 100) {
-    return { isValid: false, error: 'Nome muito longo' };
+    return { isValid: false, error: 'Name too long' };
   }
 
-  // Verificar se contém apenas letras, espaços e caracteres acentuados
+  // Check if contains only letters, spaces and accented characters
   if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(trimmedName)) {
-    return { isValid: false, error: 'Nome deve conter apenas letras' };
+    return { isValid: false, error: 'Name must contain only letters' };
   }
 
   return { isValid: true };

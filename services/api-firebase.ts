@@ -298,7 +298,7 @@ export class HealthServiceAPIFirebase {
       return { services, lastDoc: newLastDoc };
     } catch (error) {
       console.error('❌ Error fetching services:', error);
-      throw new Error('Erro ao buscar serviços próximos');
+      throw new Error('Error fetching nearby services');
     }
   }
 
@@ -309,7 +309,7 @@ export class HealthServiceAPIFirebase {
     try {
       const user = auth.currentUser;
       if (!user) {
-        throw new Error('Usuário não autenticado');
+        throw new Error('User not authenticated');
       }
 
       // Find user's health service record
@@ -348,7 +348,7 @@ export class HealthServiceAPIFirebase {
         
         // Check if service type already exists
         if (currentServices.includes(serviceType)) {
-          throw new Error('Tipo de serviço já existe');
+          throw new Error('Service type already exists');
         }
         
         const updatedServices = [...currentServices, serviceType];
@@ -373,7 +373,7 @@ export class HealthServiceAPIFirebase {
     try {
       const user = auth.currentUser;
       if (!user) {
-        throw new Error('Usuário não autenticado');
+        throw new Error('User not authenticated');
       }
 
       const q = query(
@@ -384,7 +384,7 @@ export class HealthServiceAPIFirebase {
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
-        throw new Error('Nenhum registro de serviços encontrado');
+        throw new Error('No service records found');
       }
       
       const doc = querySnapshot.docs[0];
@@ -393,7 +393,7 @@ export class HealthServiceAPIFirebase {
       
       // Check if service type exists
       if (!currentServices.includes(serviceType)) {
-        throw new Error('Tipo de serviço não encontrado');
+        throw new Error('Service type not found');
       }
       
       const updatedServices = currentServices.filter((service: string) => service !== serviceType);
@@ -669,11 +669,11 @@ export class HealthServiceAPIFirebase {
   /**
    * Add new health service
    */
-  static async addService(service: Omit<HealthService, 'id'>): Promise<string> {
+  static async addService(serviceData: any): Promise<string> {
     try {
       const user = auth.currentUser;
       if (!user) {
-        throw new Error('Usuário não autenticado');
+        throw new Error('User not authenticated');
       }
 
       const serviceData = {
@@ -692,7 +692,7 @@ export class HealthServiceAPIFirebase {
       return docRef.id;
     } catch (error) {
       console.error('Error adding service:', error);
-      throw new Error('Erro ao adicionar serviço');
+      throw new Error('Error adding service');
     }
   }
 
@@ -725,7 +725,7 @@ export class HealthServiceAPIFirebase {
       await updateDoc(doc(db, 'healthServices', serviceId), updateData);
     } catch (error) {
       console.error('Error updating service:', error);
-      throw new Error('Erro ao atualizar serviço');
+      throw new Error('Error updating service');
     }
   }
 
@@ -736,13 +736,13 @@ export class HealthServiceAPIFirebase {
     try {
       const user = auth.currentUser;
       if (!user) {
-        throw new Error('Usuário não autenticado');
+        throw new Error('User not authenticated');
       }
 
       await deleteDoc(doc(db, 'healthServices', serviceId));
     } catch (error) {
       console.error('Error deleting service:', error);
-      throw new Error('Erro ao deletar serviço');
+      throw new Error('Error deleting service');
     }
   }
 

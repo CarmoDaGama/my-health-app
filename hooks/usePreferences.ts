@@ -25,7 +25,7 @@ export const usePreferences = () => {
    */
   const updatePreferences = async (newPreferences: Partial<UserPreferences>): Promise<void> => {
     if (!user || !preferences) {
-      throw new Error('Usuário não autenticado');
+      throw new Error('User not authenticated');
     }
 
     try {

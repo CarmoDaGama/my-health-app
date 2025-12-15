@@ -131,12 +131,6 @@ export default function RegisterScreen() {
       if (!formData.professionalInfo?.specialty) {
         newErrors.specialty = t('validation.specialtyRequired') || 'Specialty is required';
       }
-      // License is not required for Caregivers
-      const isCaregiver = formData.professionalInfo?.specialty?.toLowerCase().includes('caregiver') || 
-                          formData.professionalInfo?.specialty?.toLowerCase().includes('cuidador');
-      if (!isCaregiver && !formData.professionalInfo?.license) {
-        newErrors.license = t('validation.licenseRequired') || 'License number is required';
-      }
     }
 
     if (formData.userType === UserType.INSTITUTION) {

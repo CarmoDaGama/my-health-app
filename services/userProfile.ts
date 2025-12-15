@@ -84,10 +84,10 @@ export class UserProfileService {
       // Validar dados de entrada
       this.validateUpdateData(updateData);
       
-      // Obter usuário atual
+      // Get current user
       const currentUser = await this.getCurrentUser(userId);
       if (!currentUser) {
-        throw new Error('Usuário não encontrado');
+        throw new Error('User not found');
       }
       
       console.log('🔍 UserProfileService - Usuário atual:', {
@@ -304,8 +304,8 @@ export class UserProfileService {
         }
       }
     } catch (error) {
-      console.error('Erro ao salvar usuário atualizado:', error);
-      throw new Error('Falha ao salvar dados atualizados');
+      console.error('Error saving updated user:', error);
+      throw new Error('Failed to save updated data');
     }
   }
   
@@ -352,42 +352,42 @@ export class UserProfileService {
    * Validar dados de atualização
    */
   private static validateUpdateData(updateData: UpdateProfileData): void {
-    // Validações básicas
+    // Basic validations
     if (updateData.name !== undefined && !updateData.name.trim()) {
-      throw new Error('Nome não pode estar vazio');
+      throw new Error('Name cannot be empty');
     }
     
     if (updateData.phone !== undefined && updateData.phone && !/^\+?[\d\s\-\(\)]+$/.test(updateData.phone)) {
-      throw new Error('Formato de telefone inválido');
+      throw new Error('Invalid phone format');
     }
     
-    // Validações para usuários normais
+    // Validations for normal users
     if (updateData.emergencyContact) {
       if (!updateData.emergencyContact.name?.trim()) {
-        throw new Error('Nome do contato de emergência é obrigatório');
+        throw new Error('Emergency contact name is required');
       }
       if (!updateData.emergencyContact.phone?.trim()) {
-        throw new Error('Telefone do contato de emergência é obrigatório');
+        throw new Error('Emergency contact phone is required');
       }
       if (!updateData.emergencyContact.relationship?.trim()) {
-        throw new Error('Relacionamento do contato de emergência é obrigatório');
+        throw new Error('Emergency contact relationship is required');
       }
     }
     
-    // Validações para profissionais
+    // Validations for professionals
     if (updateData.professionalInfo) {
       if (updateData.professionalInfo.experience !== undefined && updateData.professionalInfo.experience < 0) {
-        throw new Error('Anos de experiência não pode ser negativo');
+        throw new Error('Years of experience cannot be negative');
       }
       if (updateData.professionalInfo.consultationFee !== undefined && updateData.professionalInfo.consultationFee < 0) {
-        throw new Error('Taxa de consulta não pode ser negativa');
+        throw new Error('Consultation fee cannot be negative');
       }
     }
     
-    // Validações para instituições
+    // Validations for institutions
     if (updateData.institutionInfo?.address) {
       if (!updateData.institutionInfo.address.trim()) {
-        throw new Error('Endereço é obrigatório');
+        throw new Error('Address is required');
       }
     }
   }

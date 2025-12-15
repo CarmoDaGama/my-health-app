@@ -115,15 +115,6 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         required
       />
       
-      <ValidatedInput
-        label={t('forms.licenseNumber') || 'Número da Licença'}
-        value={data.license || ''}
-        onChangeText={(value) => onChange('license', value)}
-        error={errors.license}
-        placeholder={t('forms.licenseNumberPlaceholder')}
-        required
-      />
-      
       <View style={styles.inputGroup}>
         <Text style={styles.label}>{t('forms.availableServices')} *</Text>
         <TouchableOpacity

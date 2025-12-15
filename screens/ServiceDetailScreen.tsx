@@ -371,7 +371,7 @@ export const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({
       {/* Serviços */}
       {service.services && Array.isArray(service.services) && service.services.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Available Services</Text>
+          <Text style={styles.sectionTitle}>Caregiving</Text>
           {service.services.filter(item => typeof item === 'string').map((serviceItem, index) => (
             <View key={index} style={styles.serviceItem}>
               <Ionicons name="medical" size={16} color={Colors.primary} />
