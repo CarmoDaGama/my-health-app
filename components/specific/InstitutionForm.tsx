@@ -57,12 +57,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
       acceptsInsurance: user?.institutionInfo?.acceptsInsurance || false,
       emergencyService: user?.institutionInfo?.emergencyService || false,
       coordinates: user?.institutionInfo?.coordinates || null,
-      address: {
-        street: user?.institutionInfo?.address?.street || '',
-        city: user?.institutionInfo?.address?.city || '',
-        state: user?.institutionInfo?.address?.state || '',
-        zipCode: user?.institutionInfo?.address?.zipCode || '',
-      },
+      address: user?.institutionInfo?.address || '',
       workingHours: user?.institutionInfo?.workingHours || {
         monday: { start: '', end: '', available: false },
         tuesday: { start: '', end: '', available: false },
@@ -98,12 +93,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
         acceptsInsurance: user.institutionInfo?.acceptsInsurance || false,
         emergencyService: user.institutionInfo?.emergencyService || false,
         coordinates: user.institutionInfo?.coordinates || null,
-        address: {
-          street: user.institutionInfo?.address?.street || '',
-          city: user.institutionInfo?.address?.city || '',
-          state: user.institutionInfo?.address?.state || '',
-          zipCode: user.institutionInfo?.address?.zipCode || '',
-        },
+        address: user.institutionInfo?.address || '',
         workingHours: user.institutionInfo?.workingHours || {
           monday: { start: '', end: '', available: false },
           tuesday: { start: '', end: '', available: false },
@@ -162,22 +152,18 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
   ];
 
   // Handlers para localização
-  const handleAddressChange = async (field: string, value: string) => {
+  const handleAddressChange = async (value: string) => {
     setFormData(prev => ({
       ...prev,
       institutionInfo: {
         ...prev.institutionInfo,
-        address: {
-          ...prev.institutionInfo.address,
-          [field]: value
-        }
+        address: value
       }
     }));
     
-    // Geocoding automático quando temos endereço da rua
-    if (field === 'street' && value.length > 5) {
-      const currentAddress = formData.institutionInfo.address;
-      const fullAddress = `${value}, ${currentAddress.city || ''}, ${currentAddress.state || ''}, Angola`.trim();
+    // Geocoding automático quando temos endereço
+    if (value.length > 5) {
+      const fullAddress = `${value}, Angola`.trim();
       
       if (fullAddress.length > 10) {
         setIsGeocodingAddress(true);
@@ -296,9 +282,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
       return;
     }
 
-    if (!formData.institutionInfo.address.street.trim() || 
-        !formData.institutionInfo.address.city.trim() || 
-        !formData.institutionInfo.address.state.trim()) {
+    if (!formData.institutionInfo.address || !formData.institutionInfo.address.trim()) {
       Alert.alert(
         t('errors.title') || 'Erro',
         t('profile.errors.addressRequired') || 'Endereço completo é obrigatório'
@@ -318,12 +302,7 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
         acceptsInsurance: formData.institutionInfo.acceptsInsurance,
         emergencyService: formData.institutionInfo.emergencyService,
         coordinates: coordinates || user.institutionInfo?.coordinates, // Usar coordinates do estado
-        address: {
-          street: formData.institutionInfo.address.street.trim(),
-          city: formData.institutionInfo.address.city.trim(),
-          state: formData.institutionInfo.address.state.trim(),
-          zipCode: formData.institutionInfo.address.zipCode.trim(),
-        },
+        address: formData.institutionInfo.address,
         workingHours: formData.institutionInfo.workingHours,
         verified: user.institutionInfo?.verified || false, // Manter status de verificação
         rating: user.institutionInfo?.rating || 0, // Manter rating
@@ -507,11 +486,12 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
             </Text>
             <TextInput
               style={styles.input}
-              value={formData.institutionInfo.address.street}
-              onChangeText={(text) => handleAddressChange('street', text)}
-              placeholder={t('profile.streetPlaceholder') || 'Rua, número, bairro'}
+              value={formData.institutionInfo.address}
+              onChangeText={handleAddressChange}
+              placeholder={t('profile.addressPlaceholder') || 'Rua, número, bairro, cidade, província'}
               placeholderTextColor={Colors.textSecondary}
               editable={!isLoading}
+              multiline={true}
             />
             {isGeocodingAddress && (
               <View style={styles.geocodingIndicator}>
@@ -521,68 +501,6 @@ export const InstitutionForm: React.FC<InstitutionFormProps> = ({
                 </Text>
               </View>
             )}
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, styles.flex1]}>
-              <Text style={styles.label}>
-                {t('profile.city') || 'Cidade'} *
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.institutionInfo.address.city}
-                onChangeText={(text) => setFormData(prev => ({
-                  ...prev,
-                  institutionInfo: {
-                    ...prev.institutionInfo,
-                    address: { ...prev.institutionInfo.address, city: text }
-                  }
-                }))}
-                placeholder={t('profile.cityPlaceholder') || 'Cidade'}
-                placeholderTextColor={Colors.textSecondary}
-                editable={!isLoading}
-              />
-            </View>
-
-            <View style={[styles.inputGroup, styles.flex1, { marginLeft: spacing.sm }]}>
-              <Text style={styles.label}>
-                {t('profile.state') || 'Província'} *
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={formData.institutionInfo.address.state}
-                onChangeText={(text) => setFormData(prev => ({
-                  ...prev,
-                  institutionInfo: {
-                    ...prev.institutionInfo,
-                    address: { ...prev.institutionInfo.address, state: text }
-                  }
-                }))}
-                placeholder={t('profile.statePlaceholder') || 'Província'}
-                placeholderTextColor={Colors.textSecondary}
-                editable={!isLoading}
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {t('profile.zipCode') || 'Código Postal'}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={formData.institutionInfo.address.zipCode}
-              onChangeText={(text) => setFormData(prev => ({
-                ...prev,
-                institutionInfo: {
-                  ...prev.institutionInfo,
-                  address: { ...prev.institutionInfo.address, zipCode: text }
-                }
-              }))}
-              placeholder={t('profile.zipCodePlaceholder') || 'Código postal'}
-              placeholderTextColor={Colors.textSecondary}
-              editable={!isLoading}
-            />
           </View>
         </View>
 

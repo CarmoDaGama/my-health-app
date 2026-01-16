@@ -65,11 +65,7 @@ export const ProfileDebug: React.FC<ProfileDebugProps> = ({ user }) => {
             <Text style={styles.item}>Emergência: {user.institutionInfo?.emergencyService ? 'Sim' : 'Não'}</Text>
             {user.institutionInfo?.address && (
               <View style={styles.subItem}>
-                <Text style={styles.item}>Endereço:</Text>
-                <Text style={styles.item}>  Rua: {user.institutionInfo.address.street || 'N/A'}</Text>
-                <Text style={styles.item}>  Cidade: {user.institutionInfo.address.city || 'N/A'}</Text>
-                <Text style={styles.item}>  Estado: {user.institutionInfo.address.state || 'N/A'}</Text>
-                <Text style={styles.item}>  CEP: {user.institutionInfo.address.zipCode || 'N/A'}</Text>
+                <Text style={styles.item}>Endereço: {user.institutionInfo.address}</Text>
               </View>
             )}
           </View>

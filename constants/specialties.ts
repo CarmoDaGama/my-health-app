@@ -36,7 +36,7 @@ export const MEDICAL_SPECIALTIES_KEYS = [
   'specialties.rheumatology'
 ];
 
-// Valores padrão em português (para compatibilidade)
+// Default values in Portuguese (for compatibility)
 export const MEDICAL_SPECIALTIES = [
   'Cardiologia',
   'Dermatologia', 

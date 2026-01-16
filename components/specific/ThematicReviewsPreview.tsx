@@ -240,7 +240,7 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator color="#2196F3" size="small" />
-        <Text style={styles.loadingText}>Carregando avaliações temáticas...</Text>
+        <Text style={styles.loadingText}>{t('reviews.loadingReviews') || 'Loading thematic reviews...'}</Text>
       </View>
     );
   }
@@ -249,9 +249,9 @@ export const ThematicReviewsPreview: React.FC<ThematicReviewsPreviewProps> = ({
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="warning-outline" size={24} color="#f44336" />
-        <Text style={styles.errorText}>Erro ao carregar avaliações</Text>
+        <Text style={styles.errorText}>{t('reviews.errorLoading') || 'Error loading reviews'}</Text>
         <TouchableOpacity onPress={loadThematicReviews} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Tentar novamente</Text>
+          <Text style={styles.retryButtonText}>{t('common.tryAgain') || 'Try again'}</Text>
         </TouchableOpacity>
       </View>
     );

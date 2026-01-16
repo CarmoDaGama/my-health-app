@@ -128,12 +128,7 @@ async function mockSearchAPI(filters: SearchFilters, userType: UserType): Promis
       institutionInfo: {
         type: 'hospital',
         coordinates: { latitude: -8.8383, longitude: 13.2344 },
-        address: {
-          street: 'Rua Exemplo 123',
-          city: 'Luanda',
-          state: 'Luanda',
-          zipCode: '1000',
-        },
+        address: 'Rua Exemplo 123, Luanda, Luanda, 1000',
         services: ['Emergência', 'Cardiologia', 'Pediatria'],
         workingHours: {
           monday: { start: '06:00', end: '22:00', available: true },
@@ -202,7 +197,7 @@ async function mockSearchAPI(filters: SearchFilters, userType: UserType): Promis
 
   if (filters.location) {
     filtered = filtered.filter(institution =>
-      institution.institutionInfo.address.city.toLowerCase().includes(filters.location!.toLowerCase())
+      institution.institutionInfo.address.toLowerCase().includes(filters.location!.toLowerCase())
     );
   }
 

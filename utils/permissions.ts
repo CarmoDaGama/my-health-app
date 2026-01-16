@@ -243,21 +243,21 @@ export class PermissionsManager {
   static getPermissionDeniedMessage(action: string): string {
     switch (action) {
       case 'save_favorite':
-        return 'Você precisa estar logado para salvar favoritos.';
+        return 'You need to be logged in to save favorites.';
       case 'write_review':
-        return 'Apenas pacientes podem escrever avaliações.';
+        return 'Only patients can write reviews.';
       case 'schedule_appointment':
-        return 'Apenas pacientes podem agendar consultas.';
+        return 'Only patients can schedule appointments.';
       case 'manage_service':
-        return 'Apenas profissionais e instituições podem gerenciar serviços.';
+        return 'Only professionals and institutions can manage services.';
       case 'view_analytics':
-        return 'Acesso restrito a profissionais e instituições.';
+        return 'Access restricted to professionals and institutions.';
       case 'manage_appointments':
-        return 'Apenas profissionais podem gerenciar agendamentos.';
+        return 'Only professionals can manage appointments.';
       case 'access_admin':
-        return 'Acesso restrito a administradores.';
+        return 'Access restricted to administrators.';
       default:
-        return 'Você não tem permissão para esta ação.';
+        return 'You do not have permission for this action.';
     }
   }
 }

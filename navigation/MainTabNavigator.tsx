@@ -46,9 +46,9 @@ export const MainTabNavigator: React.FC = () => {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopWidth: 0,
-          height: 65,
+          height: 60,
           paddingBottom: 8,
-          paddingTop: 6,
+          paddingTop: 4,
           paddingHorizontal: 16,
           ...shadows.neumorphic.medium,
           borderRadius: 20,

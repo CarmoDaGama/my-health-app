@@ -60,7 +60,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   // Refs and control variables
   const inputRef = useRef<TextInput>(null);
   const shouldMaintainFocus = useRef(false);
-  const focusTimeout = useRef<NodeJS.Timeout>();
+  const focusTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Get user location on mount
   useEffect(() => {

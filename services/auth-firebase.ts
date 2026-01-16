@@ -660,21 +660,21 @@ export class AuthServiceFirebase {
   private static getErrorMessage(errorCode: string): string {
     switch (errorCode) {
       case 'auth/user-not-found':
-        return 'Usuário não encontrado';
+        return 'User not found';
       case 'auth/wrong-password':
-        return 'Senha incorreta';
+        return 'Incorrect password';
       case 'auth/email-already-in-use':
-        return 'Este email já está em uso';
+        return 'This email is already in use';
       case 'auth/weak-password':
-        return 'A senha deve ter pelo menos 6 caracteres';
+        return 'Password must be at least 6 characters';
       case 'auth/invalid-email':
-        return 'Email inválido';
+        return 'Invalid email';
       case 'auth/too-many-requests':
-        return 'Muitas tentativas. Tente novamente mais tarde';
+        return 'Too many attempts. Please try again later';
       case 'auth/network-request-failed':
-        return 'Erro de conexão. Verifique sua internet';
+        return 'Connection error. Check your internet';
       default:
-        return 'Erro de autenticação. Tente novamente';
+        return 'Authentication error. Please try again';
     }
   }
 }

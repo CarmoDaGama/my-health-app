@@ -115,6 +115,15 @@ export default function ProfessionalForm({ data, onChange, errors }: Professiona
         required
       />
       
+      <ValidatedInput
+        label={t('forms.licenseNumber') || 'License Number'}
+        value={data.license || ''}
+        onChangeText={(value) => onChange('license', value)}
+        error={errors.license}
+        placeholder={t('forms.licenseNumberPlaceholder') || 'Professional registration number (optional for caregivers)'}
+        required={false}
+      />
+      
       <View style={styles.inputGroup}>
         <Text style={styles.label}>{t('forms.availableServices')} *</Text>
         <TouchableOpacity

@@ -134,6 +134,7 @@ const CategoryStatsCard: React.FC<CategoryStatsProps> = ({ insights, t }) => {
 };
 
 const InsightsCard: React.FC<{ insights: ServiceInsights }> = ({ insights }) => {
+  const { t } = useTranslation();
   if (insights.insights.length === 0) return null;
 
   const getInsightIcon = (type: string) => {
@@ -155,7 +156,7 @@ const InsightsCard: React.FC<{ insights: ServiceInsights }> = ({ insights }) => 
 
   return (
     <View style={styles.insightsCard}>
-      <Text style={styles.insightsTitle}>Insights Automáticos</Text>
+      <Text style={styles.insightsTitle}>{t('reviews.automaticInsights') || 'Automatic Insights'}</Text>
       
       {insights.insights.slice(0, 3).map((insight) => {
         const color = getInsightColor(insight.type, insight.priority);
@@ -179,7 +180,7 @@ const InsightsCard: React.FC<{ insights: ServiceInsights }> = ({ insights }) => 
       {insights.insights.length > 3 && (
         <TouchableOpacity style={styles.viewMoreInsights}>
           <Text style={styles.viewMoreText}>
-            Ver mais {insights.insights.length - 3} insights
+            {t('reviews.viewMore') || 'View more'} {insights.insights.length - 3} {t('reviews.insights') || 'insights'}
           </Text>
         </TouchableOpacity>
       )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize, shadows, borderRadius } from '../../constants';
 import { NeumorphicCard } from '../../components/ui/NeumorphicCard';
 import { NeumorphicButton } from '../../components/ui/NeumorphicButton';
-import { createNeumorphicStyle } from '../../utils/neumorphicStyles';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InteractiveMap } from '../../components/specific/InteractiveMap';
 import { CategoryFilter } from '../../components/specific/CategoryFilter';
@@ -22,10 +21,11 @@ import { RootStackParamList } from '../../types/navigation';
 import { HealthServiceAPIFirebase } from '../../services/api-firebase';
 import { LocationService } from '../../services/location';
 import { calculateCategoryStats, CategoryStats } from '../../constants/categories';
+import { devLog } from '../../utils/performance';
 
 type HomeSubTab = 'map' | 'list';
 
-export const HomeScreen: React.FC = () => {
+const HomeScreenComponent: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState<HomeSubTab>('map');
@@ -39,48 +39,18 @@ export const HomeScreen: React.FC = () => {
   React.useEffect(() => {
     loadServices();
     // Automatic geolocation on startup (ATM Locator style)
-    console.log('🚀 Starting automatic geolocation on app startup');
+    devLog.log('🚀 Starting automatic geolocation on app startup');
     getUserLocationAutomatically();
   }, []);
 
-  const loadServices = async () => {
+  const loadServices = useCallback(async () => {
     try {
       setLoading(true);
       const servicesResult = await HealthServiceAPIFirebase.getAllServices();
       const servicesData = servicesResult?.services || [];
       setServices(Array.isArray(servicesData) ? servicesData : []);
       
-      // Debug: Verificar se HospGama está nos dados carregados da API
-      console.log(`📊 [HomeScreen] Loaded ${servicesData.length} total services from API`);
-      const hospGamaFromAPI = servicesData.find(s => s.name && s.name.includes('HospGama'));
-      if (hospGamaFromAPI) {
-        console.log('✅ [HomeScreen] HospGama FOUND in API response - DETAILED DATA:', {
-          id: hospGamaFromAPI.id,
-          name: hospGamaFromAPI.name,
-          type: hospGamaFromAPI.type,
-          serviceType: (hospGamaFromAPI as any).serviceType,
-          specialty: hospGamaFromAPI.specialty,
-          professionalInfo: (hospGamaFromAPI as any).professionalInfo,
-          coordinates: hospGamaFromAPI.coordinates,
-          status: (hospGamaFromAPI as any).status,
-          verified: (hospGamaFromAPI as any).verified,
-          // Mostrar todas as propriedades para debug
-          allProperties: Object.keys(hospGamaFromAPI)
-        });
-      } else {
-        console.log('❌ [HomeScreen] HospGama NOT FOUND in API response');
-        console.log('🔍 [HomeScreen] Available services:', servicesData.map(s => ({
-          id: s.id,
-          name: s.name,
-          type: s.type
-        })).slice(0, 10)); // Mostrar apenas os primeiros 10
-      }
-      
-      // MENDLINK Debug: Log service types for debugging
-      console.log(`📊 Loaded ${servicesData.length} total services:`);
-      servicesData.forEach((service, index) => {
-        console.log(`  ${index + 1}. ${service.name} - Type: ${service.type}${service.specialty ? ` - Specialty: ${service.specialty}` : ''}`);
-      });
+      devLog.log(`📊 [HomeScreen] Loaded ${servicesData.length} total services from API`);
       
       // Calculate category statistics
       if (servicesData.length > 0) {
@@ -88,13 +58,13 @@ export const HomeScreen: React.FC = () => {
         setCategoryStats(stats);
       }
     } catch (error) {
-      console.error('Error loading services:', error);
+      devLog.error('Error loading services:', error);
       setServices([]);
       setCategoryStats([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const getUserLocationAutomatically = async () => {
     try {
@@ -138,64 +108,84 @@ export const HomeScreen: React.FC = () => {
 
   const getUserLocation = getUserLocationAutomatically;
 
-  const handleServicePress = (service: HealthService) => {
-    console.log('Service selected:', service.name);
+  const handleServicePress = useCallback((service: HealthService) => {
+    devLog.log('Service selected:', service.name);
     navigation.navigate('ServiceDetail', { service });
-  };
+  }, [navigation]);
 
-  const handleLocationChange = (location: { latitude: number; longitude: number }) => {
+  const handleLocationChange = useCallback((location: { latitude: number; longitude: number }) => {
     setUserLocation(location);
-  };
+  }, []);
 
-  const handleCategoryToggle = (categoryId: string) => {
-    console.log('🎯 [HomeScreen] Category toggle requested for:', categoryId);
+  const handleCategoryToggle = useCallback((categoryId: string) => {
+    devLog.log('🎯 [HomeScreen] Category toggle requested for:', categoryId);
     setSelectedCategories(prev => {
-      console.log('🎯 [HomeScreen] Current selectedCategories:', prev);
-      
       if (prev.length === 0) {
-        // If no categories selected (showing all), select only this category
-        console.log('🎯 [HomeScreen] No categories selected, selecting:', categoryId);
         return [categoryId];
       } else if (prev.includes(categoryId)) {
-        // If category is selected, remove it
-        const newCategories = prev.filter(id => id !== categoryId);
-        console.log('🎯 [HomeScreen] Removing category, new selection:', newCategories);
-        // If removing last category, show all (empty array)
-        return newCategories;
+        return prev.filter(id => id !== categoryId);
       } else {
-        // Add category to selection
-        const newSelection = [...prev, categoryId];
-        console.log('🎯 [HomeScreen] Adding category, new selection:', newSelection);
-        return newSelection;
+        return [...prev, categoryId];
       }
     });
-  };
+  }, []);
 
-  const handleSelectAllCategories = () => {
+  const handleSelectAllCategories = useCallback(() => {
     setSelectedCategories([]);
-  };
+  }, []);
 
-  const handleClearAllCategories = () => {
-    // Select all available categories (essentially hiding everything until something is selected)
+  const handleClearAllCategories = useCallback(() => {
     const allCategoryIds = categoryStats.map(stat => stat.categoryId);
     setSelectedCategories(allCategoryIds);
-  };
+  }, [categoryStats]);
 
-  const renderSubTabButton = (tab: HomeSubTab, icon: string, label: string) => (
-    <NeumorphicButton
-      title={label}
-      icon={icon}
-      variant={activeSubTab === tab ? 'primary' : 'tertiary'}
-      size="small"
+  const facilities = useMemo(() => services.filter(service => {
+    const isFacility = 
+      service.type === 'hospital' ||
+      service.type === 'pharmacy' ||
+      service.type === 'laboratory' ||
+      service.type === 'emergency' ||
+      (service.type === 'clinic' && !service.specialty) ||
+      (service as any).serviceType === 'institution' ||
+      service.type === 'diagnostic_center' ||
+      service.type === 'rehabilitation' ||
+      service.type === 'mental_health_center';
+    
+    const isProfessional = 
+      service.type === 'professional' ||
+      service.specialty ||
+      (service as any).serviceType === 'professional' ||
+      (service as any).professionalInfo;
+    
+    return isFacility && !isProfessional;
+  }), [services]);
+
+  const professionals = useMemo(() => services.filter(service => {
+    return service.type === 'professional' || 
+           service.specialty ||
+           (service as any).serviceType === 'professional' ||
+           (service as any).professionalInfo;
+  }), [services]);
+
+  const renderSubTabButton = useCallback((tab: HomeSubTab, icon: string, label: string) => (
+    <TouchableOpacity
       onPress={() => setActiveSubTab(tab)}
-      style={{
-        ...styles.subTabButton,
-        ...(activeSubTab === tab && styles.subTabButtonActive)
-      }}
-    />
-  );
+      style={[
+        styles.subTabButton,
+        activeSubTab === tab && styles.subTabButtonActive
+      ]}
+    >
+      <Ionicons name={icon as any} size={20} color={activeSubTab === tab ? Colors.primary : Colors.textSecondary} />
+      <Text style={[
+        styles.subTabButtonText,
+        activeSubTab === tab && styles.subTabButtonTextActive
+      ]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  ), [activeSubTab]);
 
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     if (loading === true) {
       return (
         <View style={styles.loadingContainer}>
@@ -206,60 +196,7 @@ export const HomeScreen: React.FC = () => {
     switch (activeSubTab) {
       case 'map':
         // MENDLINK Requirement: Map view shows ONLY facilities, not individual professionals
-        const facilities = services.filter(service => {
-          const isFacility = 
-            // Core facility types
-            service.type === 'hospital' ||
-            service.type === 'pharmacy' ||
-            service.type === 'laboratory' ||
-            service.type === 'emergency' ||
-            // Clinics without individual specialties (institution, not professional)
-            (service.type === 'clinic' && !service.specialty) ||
-            // Services explicitly marked as institutions
-            (service as any).serviceType === 'institution' ||
-            // Other facility types
-            service.type === 'diagnostic_center' ||
-            service.type === 'rehabilitation' ||
-            service.type === 'mental_health_center';
-          
-          // EXCLUDE individual professionals from map
-          const isProfessional = 
-            service.type === 'professional' ||
-            service.specialty ||
-            (service as any).serviceType === 'professional' ||
-            (service as any).professionalInfo;
-          
-          // Correção específica para HospGama - sempre incluir como facility
-          const isHospGama = service.name && service.name.includes('HospGama');
-          const shouldInclude = isHospGama || (isFacility && !isProfessional);
-          
-          // Debug específico para HospGama
-          if (service.name && service.name.includes('HospGama')) {
-            console.log('🏥 [HomeScreen] HospGama facility filter analysis:', {
-              name: service.name,
-              type: service.type,
-              specialty: service.specialty,
-              serviceType: (service as any).serviceType,
-              professionalInfo: (service as any).professionalInfo,
-              isFacility,
-              isProfessional,
-              isHospGama,
-              shouldInclude: shouldInclude ? '✅ INCLUDED (FORCED)' : '❌ FILTERED OUT'
-            });
-          }
-          
-          return shouldInclude;
-        });
-        
-        console.log(`🗺️ [HomeScreen] Map showing ${facilities.length} facilities (excluding ${services.length - facilities.length} professionals)`);
-        
-        // Debug: Verificar se HospGama está nos facilities
-        const hospGamaInFacilities = facilities.find(s => s.name && s.name.includes('HospGama'));
-        if (hospGamaInFacilities) {
-          console.log('✅ [HomeScreen] HospGama FOUND in facilities list - will be passed to InteractiveMap');
-        } else {
-          console.log('❌ [HomeScreen] HospGama NOT FOUND in facilities list - will NOT be passed to InteractiveMap');
-        }
+        devLog.log(`Map showing ${facilities.length} facilities (excluding ${services.length - facilities.length} professionals)`);
         
         return (
           <View style={styles.mapContainer}>
@@ -290,49 +227,23 @@ export const HomeScreen: React.FC = () => {
             
             {/* Interactive Map - Only Facilities */}
             {Array.isArray(facilities) && facilities.length >= 0 && (
-              <>
-                {console.log('🗺️ [HomeScreen] Rendering InteractiveMap with selectedCategories:', selectedCategories)}
-                <InteractiveMap
-                  services={facilities}
-                  userLocation={userLocation || undefined}
-                  onServicePress={handleServicePress}
-                  onLocationChange={handleLocationChange}
-                  showUserLocation={true}
-                  autoZoomToServices={true}
-                  enableClustering={true}
-                  selectedCategories={selectedCategories || []}
-                  onCategoryToggle={handleCategoryToggle}
-                  showCategoryLegend={true}
-                />
-              </>
+              <InteractiveMap
+                services={facilities}
+                userLocation={userLocation || undefined}
+                onServicePress={handleServicePress}
+                onLocationChange={handleLocationChange}
+                showUserLocation={true}
+                autoZoomToServices={true}
+                enableClustering={true}
+                selectedCategories={selectedCategories || []}
+                onCategoryToggle={handleCategoryToggle}
+                showCategoryLegend={true}
+              />
             )}
           </View>
         );
       case 'list':
         // MENDLINK Requirement: List view shows ONLY professionals, not facilities
-        const professionals = services.filter(service => {
-          const isProfessional = 
-            // Direct professional types
-            service.type === 'professional' ||
-            // Has specialty (indicates individual professional)
-            service.specialty ||
-            // ServiceType explicitly set as professional  
-            (service as any).serviceType === 'professional' ||
-            // Has professional info (registered professional)
-            (service as any).professionalInfo ||
-            // Individual practitioners in clinics (not the clinic itself)
-            (service.verified && service.type === 'practitioner');
-          
-          // EXCLUDE facilities (hospitals, pharmacies, labs) from professionals list
-          const isFacility = 
-            service.type === 'hospital' ||
-            service.type === 'pharmacy' ||
-            service.type === 'laboratory' ||
-            service.type === 'clinic' && !service.specialty; // Clinic without specialty = facility
-          
-          return isProfessional && !isFacility;
-        });
-        
         return (
           <View style={styles.listContainer}>
             <Text style={styles.contentTitle}>Healthcare Professionals</Text>
@@ -378,7 +289,7 @@ export const HomeScreen: React.FC = () => {
       default:
         return null;
     }
-  };
+  }, [activeSubTab, loading, facilities, professionals, categoryStats, selectedCategories, userLocation, t, handleServicePress, handleLocationChange, handleCategoryToggle, handleSelectAllCategories, handleClearAllCategories, services.length]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -411,15 +322,27 @@ const styles = StyleSheet.create({
   subTabButton: {
     flex: 1,
     marginHorizontal: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: Colors.cardBackground,
+    ...shadows.neumorphic.small,
   },
   subTabButtonActive: {
-    // Handled by NeumorphicButton variant
+    backgroundColor: Colors.primary,
+    ...shadows.neumorphic.medium,
   },
-  subTabText: {
-    // Handled by NeumorphicButton
+  subTabButtonText: {
+    fontSize: fontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: '600',
   },
-  subTabTextActive: {
-    // Handled by NeumorphicButton
+  subTabButtonTextActive: {
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -532,3 +455,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
 });
+
+export const HomeScreen = memo(HomeScreenComponent);
+HomeScreen.displayName = 'HomeScreen';
