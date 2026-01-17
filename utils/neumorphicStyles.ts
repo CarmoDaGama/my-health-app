@@ -1,5 +1,7 @@
 import { ViewStyle } from 'react-native';
-import { Colors, shadows, borderRadius } from '../constants';
+import { Colors } from '../constants/colors';
+import { shadows } from '../constants/shadows';
+import { borderRadius } from '../constants/dimensions';
 
 interface NeumorphicOptions {
   size?: 'small' | 'medium' | 'large';
@@ -12,42 +14,45 @@ interface NeumorphicOptions {
 /**
  * Generates neumorphic styles for components
  */
-export const createNeumorphicStyle = ({
+export function createNeumorphicStyle({
   size = 'medium',
   pressed = false,
   elevated = true,
   rounded = true,
-  backgroundColor = Colors.surface,
-}: NeumorphicOptions = {}): ViewStyle => {
-  const shadowStyle = pressed ? shadows.neumorphic.inset : shadows.neumorphic[size];
-  const lightShadowStyle = pressed ? {} : shadows.light[size === 'large' ? 'medium' : 'small'];
-  
+  backgroundColor,
+}: NeumorphicOptions = {}): ViewStyle {
+  // Default background color
+  const bgColor = backgroundColor || Colors.surface || '#ffffff';
+
+  // Get shadow style
+  const shadowStyle = pressed
+    ? (shadows?.neumorphic?.inset || {})
+    : (shadows?.neumorphic?.[size] || {});
+
+  // Calculate border radius
   let borderRadiusValue: number;
   if (typeof rounded === 'number') {
     borderRadiusValue = rounded;
   } else if (rounded === true) {
-    borderRadiusValue = size === 'small' ? borderRadius.md : 
-                      size === 'medium' ? borderRadius.lg : borderRadius.xl;
+    borderRadiusValue = size === 'small' ? (borderRadius?.md || 12) :
+      size === 'medium' ? (borderRadius?.lg || 18) : (borderRadius?.xl || 24);
   } else {
     borderRadiusValue = 0;
   }
 
-  return {
-    backgroundColor,
+  // Build base style
+  const baseStyle: ViewStyle = {
+    backgroundColor: bgColor,
     borderRadius: borderRadiusValue,
-    ...(elevated && !pressed && shadowStyle),
-    // Add light shadow for complete neumorphic effect on iOS
-    ...(elevated && !pressed && {
-      shadowColor: Colors.neumorphic.lightShadow,
-      shadowOffset: {
-        width: -shadowStyle.shadowOffset.width,
-        height: -shadowStyle.shadowOffset.height,
-      },
-      shadowOpacity: 0.9,
-      shadowRadius: shadowStyle.shadowRadius * 0.5,
-    }),
   };
-};
+
+  // Add main shadow if elevated and not pressed
+  if (elevated && !pressed && shadowStyle) {
+    Object.assign(baseStyle, shadowStyle);
+  }
+
+  return baseStyle;
+}
 
 /**
  * Pre-defined styles for neumorphic buttons
@@ -57,27 +62,24 @@ export const neumorphicButton = {
   small: createNeumorphicStyle({ size: 'small' }),
   large: createNeumorphicStyle({ size: 'large' }),
   pressed: createNeumorphicStyle({ size: 'medium', pressed: true }),
-  circular: createNeumorphicStyle({ size: 'medium', rounded: borderRadius.round }),
+  circular: createNeumorphicStyle({ size: 'medium', rounded: 50 }),
 };
 
 /**
  * Pre-defined styles for neumorphic cards
  */
 export const neumorphicCard = {
-  default: createNeumorphicStyle({ 
-    size: 'medium', 
-    backgroundColor: Colors.surface,
-    rounded: borderRadius.lg 
+  default: createNeumorphicStyle({
+    size: 'medium',
+    rounded: 18
   }),
-  elevated: createNeumorphicStyle({ 
-    size: 'large', 
-    backgroundColor: Colors.surface,
-    rounded: borderRadius.xl 
+  elevated: createNeumorphicStyle({
+    size: 'large',
+    rounded: 24
   }),
-  flat: createNeumorphicStyle({ 
-    size: 'small', 
-    backgroundColor: Colors.surfaceDark,
-    rounded: borderRadius.md 
+  flat: createNeumorphicStyle({
+    size: 'small',
+    rounded: 12
   }),
 };
 
@@ -85,17 +87,15 @@ export const neumorphicCard = {
  * Estilos para inputs neumórficos
  */
 export const neumorphicInput = {
-  default: createNeumorphicStyle({ 
-    size: 'small', 
+  default: createNeumorphicStyle({
+    size: 'small',
     pressed: true,
-    backgroundColor: Colors.backgroundDark,
-    rounded: borderRadius.lg 
+    rounded: 18
   }),
-  focused: createNeumorphicStyle({ 
-    size: 'medium', 
+  focused: createNeumorphicStyle({
+    size: 'medium',
     pressed: false,
-    backgroundColor: Colors.surface,
-    rounded: borderRadius.lg 
+    rounded: 18
   }),
 };
 

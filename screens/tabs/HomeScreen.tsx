@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, spacing, fontSize, shadows, borderRadius } from '../../constants';
 import { NeumorphicCard } from '../../components/ui/NeumorphicCard';
 import { NeumorphicButton } from '../../components/ui/NeumorphicButton';
+import { createNeumorphicStyle } from '../../utils/neumorphicStyles';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InteractiveMap } from '../../components/specific/InteractiveMap';
 import { CategoryFilter } from '../../components/specific/CategoryFilter';
@@ -49,9 +50,9 @@ const HomeScreenComponent: React.FC = () => {
       const servicesResult = await HealthServiceAPIFirebase.getAllServices();
       const servicesData = servicesResult?.services || [];
       setServices(Array.isArray(servicesData) ? servicesData : []);
-      
+
       devLog.log(`📊 [HomeScreen] Loaded ${servicesData.length} total services from API`);
-      
+
       // Calculate category statistics
       if (servicesData.length > 0) {
         const stats = calculateCategoryStats(servicesData);
@@ -70,7 +71,7 @@ const HomeScreenComponent: React.FC = () => {
     try {
       console.log('📍 Attempting automatic geolocation (ATM Locator style)...');
       setLoading(true);
-      
+
       // First try high accuracy GPS
       const locationResult = await LocationService.getCurrentLocationHighAccuracy();
       if (locationResult && locationResult.coordinates) {
@@ -81,7 +82,7 @@ const HomeScreenComponent: React.FC = () => {
         });
         return;
       }
-      
+
       // Fallback to regular location
       const fallbackResult = await LocationService.getLocationWithFallback();
       if (fallbackResult) {
@@ -92,7 +93,7 @@ const HomeScreenComponent: React.FC = () => {
         });
         return;
       }
-      
+
       throw new Error('No location methods available');
     } catch (error) {
       console.error('❌ Automatic geolocation failed, using Luanda fallback:', error);
@@ -140,7 +141,7 @@ const HomeScreenComponent: React.FC = () => {
   }, [categoryStats]);
 
   const facilities = useMemo(() => services.filter(service => {
-    const isFacility = 
+    const isFacility =
       service.type === 'hospital' ||
       service.type === 'pharmacy' ||
       service.type === 'laboratory' ||
@@ -150,21 +151,21 @@ const HomeScreenComponent: React.FC = () => {
       service.type === 'diagnostic_center' ||
       service.type === 'rehabilitation' ||
       service.type === 'mental_health_center';
-    
-    const isProfessional = 
+
+    const isProfessional =
       service.type === 'professional' ||
       service.specialty ||
       (service as any).serviceType === 'professional' ||
       (service as any).professionalInfo;
-    
+
     return isFacility && !isProfessional;
   }), [services]);
 
   const professionals = useMemo(() => services.filter(service => {
-    return service.type === 'professional' || 
-           service.specialty ||
-           (service as any).serviceType === 'professional' ||
-           (service as any).professionalInfo;
+    return service.type === 'professional' ||
+      service.specialty ||
+      (service as any).serviceType === 'professional' ||
+      (service as any).professionalInfo;
   }), [services]);
 
   const renderSubTabButton = useCallback((tab: HomeSubTab, icon: string, label: string) => (
@@ -197,7 +198,7 @@ const HomeScreenComponent: React.FC = () => {
       case 'map':
         // MENDLINK Requirement: Map view shows ONLY facilities, not individual professionals
         devLog.log(`Map showing ${facilities.length} facilities (excluding ${services.length - facilities.length} professionals)`);
-        
+
         return (
           <View style={styles.mapContainer}>
             {/* Category Filter */}
@@ -212,7 +213,7 @@ const HomeScreenComponent: React.FC = () => {
                 horizontal={true}
               />
             )}
-            
+
             {/* MENDLINK Info: Facilities vs Professionals indicator */}
             <View style={styles.mapInfoBanner}>
               <Text style={styles.mapInfoText}>
@@ -224,7 +225,7 @@ const HomeScreenComponent: React.FC = () => {
                 )}
               </Text>
             </View>
-            
+
             {/* Interactive Map - Only Facilities */}
             {Array.isArray(facilities) && facilities.length >= 0 && (
               <InteractiveMap
@@ -250,7 +251,7 @@ const HomeScreenComponent: React.FC = () => {
             <Text style={styles.contentDescription}>
               {professionals.length} professionals available in your area
             </Text>
-            
+
             <ScrollView style={styles.professionalsList} showsVerticalScrollIndicator={false}>
               {professionals.length > 0 ? (
                 professionals.map((professional, index) => (
@@ -433,10 +434,10 @@ const styles = StyleSheet.create({
   },
   // MENDLINK: Map info banner styles
   mapInfoBanner: {
-    ...createNeumorphicStyle({ 
-      size: 'small', 
+    ...createNeumorphicStyle({
+      size: 'small',
       backgroundColor: Colors.primary + '10',
-      rounded: borderRadius.lg 
+      rounded: borderRadius.lg
     }),
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
