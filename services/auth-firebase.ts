@@ -660,19 +660,21 @@ export class AuthServiceFirebase {
   private static getErrorMessage(errorCode: string): string {
     switch (errorCode) {
       case 'auth/user-not-found':
-        return 'User not found';
       case 'auth/wrong-password':
-        return 'Incorrect password';
+      case 'auth/invalid-credential':
+        return 'Incorrect email or password. Please check your credentials and try again.';
       case 'auth/email-already-in-use':
         return 'This email is already in use';
       case 'auth/weak-password':
         return 'Password must be at least 6 characters';
       case 'auth/invalid-email':
-        return 'Invalid email';
+        return 'Invalid email address';
       case 'auth/too-many-requests':
-        return 'Too many attempts. Please try again later';
+        return 'Too many login attempts. Please try again later';
       case 'auth/network-request-failed':
-        return 'Connection error. Check your internet';
+        return 'Connection error. Please check your internet connection';
+      case 'auth/user-disabled':
+        return 'This account has been disabled. Please contact support';
       default:
         return 'Authentication error. Please try again';
     }
