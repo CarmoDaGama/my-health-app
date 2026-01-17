@@ -1,5 +1,5 @@
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
@@ -7,38 +7,38 @@ import {
   updateProfile,
   User
 } from 'firebase/auth';
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
+import {
+  doc,
+  setDoc,
+  getDoc,
   updateDoc,
-  serverTimestamp 
+  serverTimestamp
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { AuthCredentials, RegisterData, AuthResponse, UserType } from '../types';
 import { AuthService } from './auth';
 
 export class AuthServiceFirebase {
-  
+
   /**
    * Login with email and password
    */
   static async login(credentials: AuthCredentials): Promise<AuthResponse> {
     try {
       const userCredential = await signInWithEmailAndPassword(
-        auth, 
-        credentials.email, 
+        auth,
+        credentials.email,
         credentials.password
       );
-      
+
       // Get additional user data from Firestore
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       const userData = userDoc.data();
-      
+
       if (!userData) {
         throw new Error('Dados do usuário não encontrados');
       }
-      
+
       // Validate if user is active
       if (userData.isActive === false || userData.isActive === null || userData.isActive === undefined) {
         // Sign out the user immediately since account is inactive
@@ -57,10 +57,10 @@ export class AuthServiceFirebase {
           needsEmailVerification: true
         };
       }
-      
+
       // Get Firebase token
       const token = await userCredential.user.getIdToken();
-      
+
       return {
         success: true,
         user: {
@@ -91,11 +91,11 @@ export class AuthServiceFirebase {
     try {
       // Create user with Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        data.email, 
+        auth,
+        data.email,
         data.password
       );
-      
+
       // Update profile with display name
       await updateProfile(userCredential.user, {
         displayName: data.name
@@ -109,7 +109,7 @@ export class AuthServiceFirebase {
         console.warn('⚠️ Erro ao enviar email de verificação:', emailError);
         // Não falha o registro se não conseguir enviar o email de verificação
       }
-      
+
       // Save additional user data to Firestore
       const userData: any = {
         name: data.name,
@@ -160,14 +160,14 @@ export class AuthServiceFirebase {
         userData.professionals = [];
         console.log('🏥 Salvando dados de instituição:', data.institutionInfo);
       }
-      
+
       console.log('💾 Salvando dados do usuário no Firestore:', JSON.stringify(userData, null, 2));
       await setDoc(doc(db, 'users', userCredential.user.uid), userData);
       console.log('✅ Dados salvos com sucesso no Firestore');
-      
+
       // Get token
       const token = await userCredential.user.getIdToken();
-      
+
       const newUser = {
         id: userCredential.user.uid,
         email: data.email,
@@ -179,7 +179,7 @@ export class AuthServiceFirebase {
         emailVerified: userCredential.user.emailVerified,
         preferences: userData.preferences
       };
-      
+
       // Adicionar aos serviços de saúde se for profissional ou instituição
       // Registro direto em healthServices com status ativo e verificado
       if (data.userType === UserType.PROFESSIONAL || data.userType === UserType.INSTITUTION) {
@@ -202,7 +202,7 @@ export class AuthServiceFirebase {
           // Não falha o registro se houver erro na adição aos serviços
         }
       }
-      
+
       return {
         success: true,
         user: newUser as any, // Usar any para contornar problemas de tipos
@@ -226,9 +226,9 @@ export class AuthServiceFirebase {
       return { success: true };
     } catch (error: any) {
       console.error('Logout error:', error);
-      return { 
-        success: false, 
-        error: 'Erro ao fazer logout' 
+      return {
+        success: false,
+        error: 'Erro ao fazer logout'
       };
     }
   }
@@ -286,7 +286,7 @@ export class AuthServiceFirebase {
 
       // Reload user to get latest verification status
       await currentUser.reload();
-      
+
       const isVerified = currentUser.emailVerified;
 
       // Update Firestore if email was verified
@@ -330,7 +330,7 @@ export class AuthServiceFirebase {
     try {
       console.log('🔄 Atualizando perfil do usuário:', userId);
       console.log('📝 Dados de atualização recebidos:', JSON.stringify(updates, null, 2));
-      
+
       // Remove campos undefined para evitar sobrescrever dados existentes
       const cleanUpdates = Object.keys(updates).reduce((acc, key) => {
         if (updates[key] !== undefined) {
@@ -345,21 +345,21 @@ export class AuthServiceFirebase {
         ...cleanUpdates,
         updatedAt: serverTimestamp()
       });
-      
+
       console.log('✅ Perfil atualizado no Firestore com sucesso');
-      
+
       // Update Firebase Auth profile if name changed
       if (updates.name && auth.currentUser) {
         await updateProfile(auth.currentUser, {
           displayName: updates.name
         });
       }
-      
+
       // Se for profissional ou instituição, atualizar também em healthServices
       if (cleanUpdates.professionalInfo || cleanUpdates.institutionInfo) {
         await this.updateHealthService(userId, cleanUpdates);
       }
-      
+
       return { success: true };
     } catch (error: any) {
       console.error('❌ Profile update error detalhado:', {
@@ -384,11 +384,11 @@ export class AuthServiceFirebase {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         console.log('📥 Dados brutos do Firestore:', JSON.stringify(userData, null, 2));
-        
+
         // Verificar se precisa migrar campos faltantes
         const migratedData = await this.ensureUserFieldsExist(userId, userData);
         console.log('🔄 Dados após migração (se necessária):', JSON.stringify(migratedData, null, 2));
-        
+
         return migratedData;
       }
       return null;
@@ -417,7 +417,7 @@ export class AuthServiceFirebase {
       }
       // Não inicializar dateOfBirth, gender, address, emergencyContact como null
       // pois o usuário pode querer deixá-los vazios intencionalmente
-      
+
       console.log('👤 Verificando campos de usuário normal...');
     }
 
@@ -431,7 +431,7 @@ export class AuthServiceFirebase {
         updates.professionalInfo = {};
         needsUpdate = true;
       }
-      
+
       console.log('👨‍⚕️ Verificando campos de profissional...');
     }
 
@@ -445,7 +445,7 @@ export class AuthServiceFirebase {
         updates.institutionInfo = {};
         needsUpdate = true;
       }
-      
+
       console.log('🏥 Verificando campos de instituição...');
     }
 
@@ -457,7 +457,7 @@ export class AuthServiceFirebase {
           ...updates,
           updatedAt: serverTimestamp()
         });
-        
+
         // Retornar dados atualizados
         return { ...userData, ...updates };
       } catch (error) {
@@ -476,20 +476,20 @@ export class AuthServiceFirebase {
     try {
       console.log('🏥 Atualizando dados do serviço de saúde para usuário:', userId);
       console.log('📝 Updates recebidos:', JSON.stringify(updates, null, 2));
-      
+
       // Verificar se o serviço existe em healthServices
       const serviceRef = doc(db, 'healthServices', userId);
       const serviceDoc = await getDoc(serviceRef);
-      
+
       if (!serviceDoc.exists()) {
         console.log('⚠️ Serviço não encontrado em healthServices, pulando atualização');
         return;
       }
-      
+
       const serviceUpdates: any = {
         updatedAt: serverTimestamp()
       };
-      
+
       // Atualizar campos básicos
       if (updates.name) {
         serviceUpdates.name = updates.name;
@@ -497,7 +497,7 @@ export class AuthServiceFirebase {
       if (updates.phone) {
         serviceUpdates.contactPhone = updates.phone;
       }
-      
+
       // Atualizar campos específicos de profissionais
       if (updates.professionalInfo) {
         const prof = updates.professionalInfo;
@@ -509,7 +509,7 @@ export class AuthServiceFirebase {
         if (prof.acceptsInsurance !== undefined) serviceUpdates.acceptsInsurance = prof.acceptsInsurance;
         if (prof.services) serviceUpdates.services = prof.services;
       }
-      
+
       // Atualizar campos específicos de instituições
       if (updates.institutionInfo) {
         const inst = updates.institutionInfo;
@@ -536,10 +536,10 @@ export class AuthServiceFirebase {
         if (inst.emergencyService !== undefined) serviceUpdates.emergencyService = inst.emergencyService;
         if (inst.services) serviceUpdates.services = inst.services;
       }
-      
+
       console.log('🔄 Atualizando healthServices com:', JSON.stringify(serviceUpdates, null, 2));
       await updateDoc(serviceRef, serviceUpdates);
-      
+
       console.log('✅ Dados do serviço de saúde atualizados com sucesso');
     } catch (error) {
       console.error('❌ Erro ao atualizar serviço de saúde:', error);
@@ -559,16 +559,16 @@ export class AuthServiceFirebase {
         console.warn('⚠️ Usuário não autenticado ao criar serviço. Tentando novamente...');
         // Aguardar um momento para a autenticação se completar
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         const retryUser = auth.currentUser;
         if (!retryUser) {
           throw new Error('Usuário não autenticado para criar serviço');
         }
       }
-      
+
       const professionalInfo = data.professionalInfo || {};
       const institutionInfo = data.institutionInfo || {};
-      
+
       const serviceData = {
         // Informações do serviço
         name: institutionInfo.name || professionalInfo.name || data.name,
@@ -576,20 +576,20 @@ export class AuthServiceFirebase {
         serviceType: data.userType === UserType.PROFESSIONAL ? 'professional' : 'institution',
         specialty: professionalInfo.specialty || institutionInfo.specialty || 'Geral',
         description: professionalInfo.description || institutionInfo.description || '',
-        
+
         // Localização
         address: professionalInfo.address || institutionInfo.address || '',
         city: professionalInfo.city || institutionInfo.city || 'Luanda',
         province: professionalInfo.province || institutionInfo.province || 'Luanda',
-        coordinates: professionalInfo.coordinates || institutionInfo.coordinates || { 
-          latitude: -8.8383, 
-          longitude: 13.2344 
+        coordinates: professionalInfo.coordinates || institutionInfo.coordinates || {
+          latitude: -8.8383,
+          longitude: 13.2344
         },
-        
+
         // Contato
         contactEmail: data.email,
         contactPhone: data.phone || professionalInfo.phone || institutionInfo.phone || '',
-        
+
         // Metadata de registro - ATIVO E VERIFICADO
         createdBy: user.id,
         createdAt: new Date().toISOString(),
@@ -597,21 +597,21 @@ export class AuthServiceFirebase {
         status: 'active', // Status ativo imediatamente
         verified: true, // Verificado automaticamente
         isActive: true,
-        
+
         // Informações de avaliação
         rating: 0,
         reviewCount: 0,
         totalReviews: 0,
-        
+
         // Informações adicionais
         userType: data.userType,
         userId: user.id, // Referência ao usuário
-        
+
         // Serviços oferecidos (para instituições)
-        services: data.userType === UserType.INSTITUTION ? 
-          (data.institutionInfo?.services || []) : 
+        services: data.userType === UserType.INSTITUTION ?
+          (data.institutionInfo?.services || []) :
           [professionalInfo.specialty || 'Consulta Geral'],
-        
+
         // Horários de funcionamento
         workingHours: professionalInfo.workingHours || institutionInfo.workingHours || {
           monday: { start: '08:00', end: '17:00', available: true },
@@ -622,7 +622,7 @@ export class AuthServiceFirebase {
           saturday: { start: '08:00', end: '12:00', available: false },
           sunday: { start: '00:00', end: '00:00', available: false }
         },
-        
+
         // Informações de seguro e emergência
         acceptsInsurance: professionalInfo.acceptsInsurance || institutionInfo.acceptsInsurance || false,
         emergencyService: institutionInfo.emergencyService || false,
@@ -630,7 +630,7 @@ export class AuthServiceFirebase {
 
       // Criar documento em healthServices com ID do usuário
       const serviceRef = doc(db, 'healthServices', user.id);
-      
+
       console.log('💾 Tentando salvar em healthServices:', {
         userId: user.id,
         serviceName: serviceData.name,
@@ -638,7 +638,7 @@ export class AuthServiceFirebase {
         verified: serviceData.verified,
         currentUser: auth.currentUser?.uid
       });
-      
+
       await setDoc(serviceRef, serviceData);
 
       console.log('✅ Serviço registrado em healthServices:', user.id);
