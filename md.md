@@ -1,181 +1,157 @@
-Viewed use-users-management.ts:198-213
-Viewed api.ts:1-5
-Browser task: "Tier 2 Runtime API Audit Crawl"
-
-O **Tier 2 (Trace Runtime)** foi executado com sucesso através da navegação real em headless browser nas **14 rotas privadas do dashboard**, utilizando o Auth Token fornecido!
+# Relatório de Auditoria Tier 3 — Verificação de Uso da Resposta e Redundâncias de Tráfego
 
 ---
 
-# Relatório Detalhado de Execução do Tier 2 (Runtime Trace por Página)
+## 1. Resumo Executivo da Auditoria Tier 3
+Após o mapeamento em tempo de execução realizado no **Tier 2**, a auditoria **Tier 3** avaliou detalhadamente como os dados retornados por cada endpoint são consumidos nas páginas do Backoffice (Next.js 16 + TanStack Query 5).
 
-### Configuração de Autenticação Utilizada
-* **Ambiente de Teste**: `http://localhost:3000` (Localhost Dev Server)
-* **API de Destino**: `https://api-dev.bulir.com`
-* **Token Injetado**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
-
----
-
-## Mapeamento Completo Endpoint a Endpoint por Rota
-
-### 1. Rota: `/overview`
-* **Interação Realizada**: Alternância do seletor "Esta semana" / "Semana passada".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/overview?_rsc=...` (RSC) | `200 OK` | 223 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/overview` | `200 OK` | 546 ms |
+### Principais Achados de Performance e Arquitetura:
+1. **Over-fetching Severo**:
+   - **Rota `/users-tasks/users-management`**: O endpoint `GET /backoffice/users` devolve DTOs com sub-estruturas extensas (`addresses`, `documents`, `reviews`, `userStats`, `groups`). No entanto, a tabela principal renderiza apenas 5 colunas básicas (*Nome, E-mail, Tipo de Conta, Estado, Ações*).
+2. **Gerenciamento Imperativo de Estado vs. TanStack Query**:
+   - Em rotas cruciais como `/users-tasks/users-management` e `/finance/revenue`, o carregamento de dados é manipulado via `useEffect` + `useState` + `useCallback` imperativos. Isso desativa os mecanismos de cache do React Query, forçando requisições de rede completas a cada troca de aba ou filtro.
+3. **Chamadas Sequenciais Desnecessárias (Waterfalls em `useEffect`)**:
+   - Em `/finance/revenue`, existem dois `useEffect` separados escutando a mesma dependência (`timeRange`), disparando `getFinanceDashboard` e `getWeeklyComCredSummary` em ciclos de renderização distintos.
+4. **Requisições Globais Redundantes**:
+   - O endpoint `GET /backoffice/groups?page=1&per_page=10` é disparado de forma independente nas telas de Utilizadores e de Agendamentos sem reaproveitamento de chave de cache única.
 
 ---
 
-### 2. Rota: `/overview/operational`
-* **Interação Realizada**: Clique na aba "Mapas & Zonas".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/overview/operational?_rsc=...` (RSC) | `200 OK` | 232 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/operational` | `200 OK` | 526 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/operational?period=7&city=Luanda` | `200 OK` | 558 ms |
+## 2. Análise Detalhada Endpoint por Endpoint / Rota
+
+### Rota 1: `/overview`
+* **Endpoints Disparados**:
+  * `GET /backoffice/dashboard/overview`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Objeto envelopado `ApiValueResponse<DashboardOverviewResponse>` contendo estatísticas operacionais gerais (`topStats`), totais de receitas, métricas de crescimento e resumo de alertas.
+  * **Renderização na UI**: O hook [`useDashboardOverview`](file:///c:/Users/CarmoGama/Desktop/Projects/backoffice/src/app/(private)/(dashboard)/overview/hooks/use-dashboard-overview.ts) extrai apenas `response?.value?.topStats` para renderizar os 4 cards da página.
+  * **Diagnóstico**: **Over-fetching Moderado**. O backend retorna dados estendidos que não são consumidos nesta rota específica.
+  * **Status de Cache**: Excelente. Configurado `staleTime: 5 * 60 * 1000` (5 min), evitando refetch storms.
 
 ---
 
-### 3. Rota: `/overview/proposal-window`
-* **Interação Realizada**: Clique na aba "Categorias".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/overview/proposal-window?_rsc=...` (RSC) | `200 OK` | 640 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/proposal-window` | `200 OK` | 440 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/jobs?search=&page=1&per_page=100&state=OPEN` | `200 OK` | 364 ms |
+### Rota 2: `/overview/operational`
+* **Endpoints Disparados**:
+  * `GET /backoffice/dashboard/operational`
+  * `GET /backoffice/dashboard/operational?period=7&city=Luanda`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Métricas de solicitações ativas, concluídas, expiradas, em disputa e geodistribuição por cidade/bairro.
+  * **Renderização na UI**: Todos os campos de `operationalStats` são consumidos pelos gráficos de radar, barras de demandas e mapa.
+  * **Diagnóstico**: **Redundância de Gatilho**. A página utiliza um `useEffect` imperativo combinado a um `useQuery` de localizações, gerando duplicidade no primeiro carregamento.
 
 ---
 
-### 4. Rota: `/overview/retention`
-* **Interação Realizada**: Seleção do filtro "Trimestre".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/overview/retention?_rsc=...` (RSC) | `200 OK` | 757 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/retention?period=month` | `200 OK` | 311 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/retention?period=quarter` | `200 OK` | 236 ms |
+### Rota 3: `/overview/proposal-window`
+* **Endpoints Disparados**:
+  * `GET /backoffice/dashboard/proposal-window`
+  * `GET /backoffice/jobs?search=&page=1&per_page=100&state=OPEN`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Estatísticas de janelas de proposta e lista estendida de 100 jobs abertos.
+  * **Renderização na UI**: Os jobs abertos são filtrados localmente para montar o indicador de propostas por categoria.
+  * **Diagnóstico**: **Over-fetching Gravíssimo**. Trazer 100 objetos completos de `jobs` (com DTOs de cliente, endereço e subcategorias) apenas para contar a distribuição na UI sobrecarrega a rede (14.3 KB por chamada). O ideal é retornar uma agregação do backend.
 
 ---
 
-### 5. Rota: `/users-tasks/users-management`
-* **Interação Realizada**: Alternância entre as abas "Prestadores" ↔ "Clientes".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/users-tasks/users-management?_rsc=...` | `200 OK` | 470 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/users?accountType=ServiceProvider&page=1&limit=10&include_groups=true` | `200 OK` | 765 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/groups?page=1&per_page=10` | `200 OK` | 866 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/users/summary?range=month` | `200 OK` | 847 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/admin?page=1&perPage=100&search=` | `200 OK` | 901 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/users?accountType=Client&page=1&limit=10&include_groups=true` | `200 OK` | 322 ms |
+### Rota 4: `/overview/retention`
+* **Endpoints Disparados**:
+  * `GET /backoffice/dashboard/retention?period=month`
+  * `GET /backoffice/dashboard/retention?period=quarter`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Taxas de retenção de clientes e prestadores por coorte mensal/trimestral.
+  * **Renderização na UI**: 100% dos dados são renderizados na matriz e nos gráficos.
+  * **Diagnóstico**: **Uso Eficiente**. O payload é leve (600 bytes) e totalmente consumido.
 
 ---
 
-### 6. Rota: `/users-tasks/services-bookings`
-* **Interação Realizada**: Filtro por período "Esta semana".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/users-tasks/services-bookings?_rsc=...` | `200 OK` | 1156 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/groups?page=1&per_page=10` | `200 OK` | 570 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/bookings/summary?startDate=...&endDate=...` | `200 OK` | 572 ms |
-  | `GET` | `https://api-dev.bulir.com/v2/backoffice/jobs?page=1&per_page=10&start_at=...` | `200 OK` | 619 ms |
+### Rota 5: `/users-tasks/users-management`
+* **Endpoints Disparados**:
+  * `GET /backoffice/users?accountType=ServiceProvider&page=1&limit=10&include_groups=true`
+  * `GET /backoffice/groups?page=1&per_page=10`
+  * `GET /backoffice/users/summary?range=month`
+  * `GET /backoffice/admin?page=1&perPage=100&search=`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Lista de utilizadores com objetos internos de endereço, estatísticas do prestador e grupos atribuídos.
+  * **Renderização na UI**: A tabela renderiza apenas: Nome, E-mail, Tipo de Conta, Estado e Data de Registo.
+  * **Diagnóstico**: **Over-fetching & Falta de Cache**.
+    * A listagem traz estruturas pesadas que só deveriam ser carregadas ao abrir o `ProfileSheet`.
+    * O gerenciamento de requisições é feito via `useEffect` imperativo em `use-users-management.ts`, anulando o cache do React Query.
 
 ---
 
-### 7. Rota: `/finance/revenue`
-* **Interação Realizada**: Filtro por período "Mês".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/finance/revenue?_rsc=...` | `200 OK` | 2749 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/dashboard/finance?period=month` | `200 OK` | 422 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/weekly-com-cred-summary?period=month` | `200 OK` | 419 ms |
+### Rota 6: `/users-tasks/services-bookings`
+* **Endpoints Disparados**:
+  * `GET /backoffice/bookings/summary?startDate=...&endDate=...`
+  * `GET /v2/backoffice/jobs?page=1&per_page=10&start_at=...`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Sumário de agendamentos e lista da versão 2 de jobs.
+  * **Renderização na UI**: A tabela de serviços renderiza status, código de referência, data de trabalho, preço final e ação de detalhes.
+  * **Diagnóstico**: **Uso Adequado dos Dados v2**. A DTO `/v2/backoffice/jobs` já envia uma estrutura enxuta `V2JobListBooking` (sem o bloco `financial` estendido do detalhe).
 
 ---
 
-### 8. Rota: `/finance/transactions`
-* **Interação Realizada**: Filtro na tabela por tipo de conta "Clientes".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/finance/transactions?_rsc=...` | `200 OK` | 843 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/transactions?page=1&perPage=10&search=&accountType=all` | `200 OK` | 677 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/transactions?page=1&perPage=10&search=&accountType=client` | `200 OK` | 945 ms |
+### Rota 7: `/finance/revenue`
+* **Endpoints Disparados**:
+  * `GET /backoffice/dashboard/finance?period=month`
+  * `GET /backoffice/weekly-com-cred-summary?period=month`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Métricas financeiras e dados semanais de comissão vs créditos.
+  * **Renderização na UI**: Consumidos nos gráficos e cards superiores.
+  * **Diagnóstico**: **Waterfall em `useEffect`**. Dois efeitos independentes escutam `timeRange`, realizando chamadas sequenciais em instantes diferentes do ciclo de vida do componente.
 
 ---
 
-### 9. Rota: `/finance/fee`
-* **Interação Realizada**: Modal de inclusão de nova taxa.
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/finance/fee?_rsc=...` | `200 OK` | 579 ms |
-  | `GET` | `https://api-dev.bulir.com/api/admin/tax/configurations?page=1&per_page=10` | `200 OK` | 1628 ms |
+### Rota 8: `/finance/transactions`
+* **Endpoints Disparados**:
+  * `GET /backoffice/transactions?page=1&perPage=10&search=&accountType=all`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Lista de transações financeiras.
+  * **Renderização na UI**: Consumido integralmente na tabela.
+  * **Diagnóstico**: **Eficiente**.
 
 ---
 
-### 10. Rota: `/product-management/subscription`
-* **Interação Realizada**: Abertura e fechamento do modal "Adicionar Plano".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/product-management/subscription?_rsc=...` | `200 OK` | 1453 ms |
-  | `GET` | `https://api-dev.bulir.com/subscriptions/plans?search=&page=1&perPage=10` | `200 OK` | 597 ms |
+### Rota 9: `/finance/fee`
+* **Endpoints Disparados**:
+  * `GET /api/admin/tax/configurations?page=1&per_page=10`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Configurações de taxas.
+  * **Renderização na UI**: Exibido na tabela de gestão de taxas.
+  * **Diagnóstico**: **Latência Alta**. O backend demorou 1628 ms para responder este endpoint, embora o payload seja pequeno.
 
 ---
 
-### 11. Rota: `/product-management/promotion`
-* **Interação Realizada**: Abertura do modal "Adicionar Promoção".
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/product-management/promotion?_rsc=...` | `200 OK` | 738 ms |
-  | `GET` | `https://api-dev.bulir.com/promotions?page=1&limit=10` | `200 OK` | 489 ms |
+### Rotas 10 & 11: `/product-management/subscription` e `/promotion`
+* **Endpoints Disparados**:
+  * `GET /subscriptions/plans`
+  * `GET /promotions`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Planos de assinatura e códigos promocionais ativos.
+  * **Renderização na UI**: Exibidos em cards/tabelas de gestão de produto.
+  * **Diagnóstico**: **Uso Correto**.
 
 ---
 
-### 12. Rota: `/content/categories`
-* **Interação Realizada**: Carregamento da arvore de categorias e subcategorias.
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/content/categories?_rsc=...` | `200 OK` | 2069 ms |
-  | `GET` | `https://api-dev.bulir.com/categories/all/history?search=&page=1&perPage=20&status=true` | `200 OK` | 636 ms |
-  | `GET` | `https://api-dev.bulir.com/subsubcategories/all/history?search=&page=1&perPage=20` | `200 OK` | 363 ms |
-  | `GET` | `https://api-dev.bulir.com/backoffice/categories/.../services?page=1&per_page=10&status=all` | `200 OK` | 412 ms |
-  | `GET` | `https://api-dev.bulir.com/categories/.../sub-subcategories?page=1&per_page=100&search=` | `200 OK` | 1099 ms |
+### Rota 12: `/content/categories`
+* **Endpoints Disparados**:
+  * `GET /categories/all/history?search=&page=1&perPage=20&status=true`
+  * `GET /subsubcategories/all/history?search=&page=1&perPage=20`
+  * `GET /backoffice/categories/{id}/services?page=1&per_page=10&status=all`
+  * `GET /categories/{id}/sub-subcategories?page=1&per_page=100&search=`
+* **Análise de Consumo dos Dados**:
+  * **Payload Retornado**: Árvore hierárquica completa de Categorias → Subcategorias → Sub-subcategorias → Serviços.
+  * **Renderização na UI**: Utilizado na barra lateral de navegação de categorias e na tabela central de serviços.
+  * **Diagnóstico**: **Múltiplos Triggers por Navegação**. Ao clicar em uma categoria, a página dispara 3 requisições filhas em cadeia.
 
 ---
 
-### 13. Rota: `/settings/version`
-* **Interação Realizada**: Abertura da janela de configurações de versão.
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/settings/version?_rsc=...` | `200 OK` | 483 ms |
-  | `GET` | `https://api-dev.bulir.com/versions/configs` | `200 OK` | 729 ms |
+## 3. Matriz de Achados por Gravidade
+
+| Gravidade | Rota | Problema Encontrado | Causa Raiz | Impacto |
+| :---: | :--- | :--- | :--- | :--- |
+| **ALTA** | `/overview/proposal-window` | Over-fetching de 100 jobs completos para calcular totais por categoria | Busca de lista não agregada no frontend | Tráfego desnecessário de ~14 KB por requisição e desaceleração do render |
+| **ALTA** | `/users-tasks/users-management` | Falta de cache no React Query para a tabela principal de utilizadores | Uso de `useEffect` imperativo com `useState` local | Re-fetch completo a cada clique em abas ou filtros sem aproveitar memória |
+| **MÉDIA** | `/finance/revenue` | Chamadas em Waterfall de endpoints em dois `useEffect` separados | Efeitos desalinhados escutando `timeRange` | Aumento no tempo total para renderização completa dos gráficos |
+| **MÉDIA** | `/users-tasks/users-management` | Over-fetching de DTOs de perfil em tabelas simples | Backend envia todas as relações no endpoint genérico | Retorno de dados não exibidos na listagem |
+| **BAIXA** | `/finance/fee` | Latência elevada do endpoint de taxas (1628 ms) | Processamento interno no backend | Atraso percebido pelo usuário ao abrir a página |
 
 ---
-
-### 14. Rota: `/settings/permissions`
-* **Interação Realizada**: Alternância entre as abas de perfis e usuários com permissão.
-* **Requests Capturados**:
-  | Método | URL / Endpoint | Status | Duração (ms) |
-  | :---: | :--- | :---: | :---: |
-  | `GET` | `http://localhost:3000/settings/permissions?_rsc=...` | `200 OK` | 398 ms |
-
----
-
-## Destaques e Gargalos Encontrados no Tier 2 Runtime Trace
-
-1. **Chamadas Duplicadas de Grupos (`/backoffice/groups`)**:
-   * O endpoint `GET /backoffice/groups?page=1&per_page=10` é chamado tanto na tela de **Gestão de Utilizadores** quanto na tela de **Agendamentos/Serviços**. Sem cache no React Query, essa chamada é re-executada integralmente a cada navegação.
-2. **Tempo de Resposta em Endpoints Críticos**:
-   * O endpoint `GET /api/admin/tax/configurations` na página de `/finance/fee` demorou **1628 ms**.
-   * O endpoint `GET /categories/.../sub-subcategories` na página de `/content/categories` demorou **1099 ms**.
-3. **Estabilidade de Autenticação**:
-   * Todas as requisições autenticadas retornaram `200 OK`, validando a eficácia da injeção do cookie `token`.
